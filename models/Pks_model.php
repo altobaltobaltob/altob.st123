@@ -35,7 +35,7 @@ class Pks_model extends CI_Model
                 $rows_pks = $this->db
         					->select('cario_no, lpr, status, confirms')
         					->from('pks')
-                			->where(array('pksno' => $parms['pksno'], 'station_no' => $this->vars['station_no']))
+                			->where(array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']))
                   			->limit(1)
                 			->get()
                 			->row_array();
@@ -60,7 +60,7 @@ class Pks_model extends CI_Model
             	$rows_cario = $this->db
         					->select('cario_no, in_time')
         					->from('cario')
-                			->where(array('in_out' => 'CI', 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0, 'station_no' => $this->vars['station_no']))
+                			->where(array('in_out' => 'CI', 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0, 'station_no' => $parms['sno']))
                   			->order_by('cario_no', 'desc')
                   			->limit(1)
                 			->get()
@@ -75,19 +75,22 @@ class Pks_model extends CI_Model
                     	'pksno' => $parms['pksno'],
                         'pks_time' => date('Y-m-d H:i:s')
                     );
-                    $this->db->update('cario', $data_cario, array('cario_no' => $cario_no, 'station_no' => $this->vars['station_no']));
+                    $this->db->update('cario', $data_cario, array('cario_no' => $cario_no, 'station_no' => $parms['sno']));
                 }
                 else	// 查無入場資料, 即時通知
                 {
                 	$cario_no = 0;
                  	$in_time = date('Y-m-d H:i:s');
+					
+					/*
                     $jdata = json_encode(array
                     (
                     	'pksno' => $parms['pksno'],
                         'lpr' => $parms['lpr'],
-                        'in_time' => $in_time,
-                        'pic_name' => $parms['pic_name']
+                        'in_time' => $in_time
+						,'pic_name' => $parms['pic_name']
                     ), JSON_UNESCAPED_UNICODE);
+					*/
                     // $this->vars['mqtt']-lish('PKS_WITHOUT_IN', "{$jdata}", 0);	// 待web完成 ???
                     trigger_error('在席無進場資料:'. print_r($parms, true));
                 }
@@ -121,13 +124,13 @@ class Pks_model extends CI_Model
                     'in_time' => $in_time
             	);
             	// 車號及照片檔名填入資料庫內
-            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $this->vars['station_no']));
+            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
             	break;
 
           	case 'KI':	// 車輛入席, 各區空車位與佔位各加減1
     			$rows = $this->db->select('status')
         			->from('pks')
-                    ->where(array('pksno' => $parms['pksno'], 'station_no' => $this->vars['station_no']))
+                    ->where(array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']))
                     ->get()
                     ->row_array();
                 // if (!empty($rows['status']) && $rows['status'] == 'LR')	break;	// 仍有車在席, 不應再有KI, ignore
@@ -142,7 +145,7 @@ class Pks_model extends CI_Model
                 	'pic_name' => '',
                     'in_time' => null
             	);
-            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $this->vars['station_no']));
+            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
             	break;
 
           	case 'KO':	// 車輛離席, 各區空車位與佔位各加減1
@@ -155,7 +158,7 @@ class Pks_model extends CI_Model
                 	'pic_name' => '',
                     'in_time' => null
             	);
-            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $this->vars['station_no']));
+            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
             	break;
         }
 
@@ -185,7 +188,7 @@ class Pks_model extends CI_Model
     	$sql = "select group_id, tot, renum, availables
         		from pks_groups
 				where group_id in
-        		(select group_id from pks_group_member where station_no = {$this->vars['station_no']} and pksno = {$parms['pksno']})";
+        		(select group_id from pks_group_member where station_no = {$parms['sno']} and pksno = {$parms['pksno']})";
 
         $retults = $this->db->query($sql)->result_array();
 

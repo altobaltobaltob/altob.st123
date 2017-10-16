@@ -199,6 +199,10 @@ class Pks extends CI_Controller
     public function cameras()
 	{                             
     	$parms = $this->uri->uri_to_assoc(3);
+		
+		// 調整 pksno 為 pks 格式
+		$parms['pksno'] = intval(implode('', explode('F_', $parms['pksno'])));
+		
         trigger_error('在席參數傳入:'.print_r($parms, true));  
         
         // array_map('unlink', glob(PKS_PIC."pks-{$parms['pksno']}-*")); 
@@ -226,6 +230,7 @@ class Pks extends CI_Controller
         	} 
         }      
         */
+		
         $this->pks_model->pksio($parms);	// 車輛進出車格資料庫處理 
         exit;          
 	}   

@@ -581,7 +581,7 @@ class Carpark_model extends CI_Model
 		$sql = "SELECT 
 					pks_groups.station_no, pks_groups.group_name as group_name, pks_groups.tot as tot, pks_groups.parked as parked, pks_groups.availables as availables, pks_groups.group_id as group_id, pks_groups.renum as renum 
 				FROM pks_groups 
-				ORDER BY pks_groups.group_id DESC";
+				ORDER BY pks_groups.group_name * 1 DESC";
 				
         return $this->db->query($sql)->result_array(); 
     } 
