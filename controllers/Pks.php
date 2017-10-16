@@ -201,10 +201,10 @@ class Pks extends CI_Controller
     	$parms = $this->uri->uri_to_assoc(3);
 		
 		// 調整 pksno 為 pks 格式
-		if (strpos($test_string, 'B') !== false)
-			$parms['pksno'] = '9' . intval(preg_replace('/[^0-9\-]/', '', $test_string));	// 地下 B
+		if (strpos($parms['pksno'], 'B') !== false)
+			$parms['pksno'] = '9' . intval(preg_replace('/[^0-9\-]/', '', $parms['pksno']));	// 地下 B
 		else
-			$parms['pksno'] = intval(preg_replace('/[^0-9\-]/', '', $test_string));
+			$parms['pksno'] = intval(preg_replace('/[^0-9\-]/', '', $parms['pksno']));
 		
         trigger_error('在席參數傳入:'.print_r($parms, true));  
         
