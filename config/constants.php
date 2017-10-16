@@ -48,7 +48,7 @@ define('EXPORT_BASE', '/home/data/export/');			// 檔案匯出根路徑
    
 define('STATION_NAME', '未設定');						// 本場站名稱
 define('STATION_NO', 54321);							// 本場站編號
-define('STATION_IP', '192.168.0.201');					// 本場站IP
+define('STATION_IP', '192.168.10.201');					// 本場站IP
 define('STATION_URL', 'http://'.STATION_IP.'/');		// 本場站URL
 
 define('PHPLIBS_BASE', '/home/bigbang/libs/phplibs/');	// phplibs 根路徑
@@ -63,7 +63,7 @@ define('ALLPAY_FILE', PHPLIBS_BASE.'AllPay.Payment.Integration.php');	// 歐付�
 define('ALLPAY_INVOICE_FILE', PHPLIBS_BASE.'AllPay_Invoice.php');		// 歐付寶 (電子發票)
 
 define('MQ_CLASS_FILE', PHPLIBS_BASE.'phpMQTT.php');	// MQTT: class file name    
-define('MQ_HOST', 'localhost');							// MQTT: host   
+define('MQ_HOST', '192.168.10.202');					// MQTT: host   
 define('MQ_PORT', 1883);								// MQTT: port (default:1883) 
 define('MQ_TOPIC_SUBLEVEL', 'SUBLEVEL');				// MQTT TOPIC: 樓層在席顯示
 define('MQ_TOPIC_SUBTEXT', 'SUBTEXT');					// MQTT TOPIC: 出入口字幕機
