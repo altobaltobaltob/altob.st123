@@ -572,10 +572,12 @@ class Sync_data_model extends CI_Model
 	// 重新載入場站設定
 	public function reload_station_setting()
 	{
+		$port_info = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != 60123) ? '/' . $_SERVER['SERVER_PORT'] : '';
+		
 		try{
 			// 查現況
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, SYNC_API_URL . 'station_setting_query');
+			curl_setopt($ch, CURLOPT_URL, SYNC_API_URL . 'station_setting_query' . $port_info);
 			curl_setopt($ch, CURLOPT_HEADER, FALSE);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);

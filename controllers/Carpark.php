@@ -11,7 +11,8 @@ define('APP_VERSION', '100');		// 版本號
 define('MAX_AGE', 604800);			// cache秒數, 此定義1個月     
 define('APP_NAME', 'carpark');		// 應用系統名稱
 define('PAGE_PATH', APP_BASE.'ci_application/views/'.APP_NAME.'/');						// path of views        
-define('SERVER_URL', 'http://'.(isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost').'/');	// URL
+//define('SERVER_URL', 'http://'.(isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost').'/');	// URL
+define('SERVER_URL', 'http://'.(isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost') . ($_SERVER['SERVER_PORT'] != 60123 ? ':' . $_SERVER['SERVER_PORT'] : '') .'/');	// URL
 define('APP_URL', SERVER_URL.APP_NAME.'.html/');										// controller路徑 
 define('WEB_URL', SERVER_URL.APP_NAME.'/');												// 網頁路徑
 define('WEB_LIB', SERVER_URL.'libs/');													// 網頁lib
