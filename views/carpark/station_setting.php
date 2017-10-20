@@ -64,8 +64,8 @@ function reset_station_setting()
 			},
             success: function(jdata)
             {       
-				var station_service_url = jdata['station_ip'] + ' : ' + jdata['station_port']
-				var station_mqtt_url = jdata['mqtt_ip'] + ' : ' + jdata['mqtt_port']
+				var station_service_url = jdata['station_ip'] + ' : ' + jdata['station_port'];
+				var station_mqtt_url = jdata['mqtt_ip'] + ' : ' + jdata['mqtt_port'];
 				
 				if(jdata == 'fail')
 				{
