@@ -89,10 +89,23 @@ class Cars extends CI_Controller
         $this->vars['mcache'] = new Memcache;
 		$this->vars['mcache']->pconnect(MEMCACHE_HOST, MEMCACHE_PORT) or die ('Could not connect memcache');   
 		
+		/*
 		// mqtt subscribe
 		$this->vars['mqtt'] = new phpMQTT(MQ_HOST, MQ_PORT, uniqid());  
 		//if(!$this->vars['mqtt']->connect()){ die ('Could not connect mqtt');  }	
 		if(!$this->vars['mqtt']->connect()){ trigger_error('..Could not connect mqtt..go on..'); }			
+		*/
+		
+		// 資料介接模組
+		$this->load->model('sync_data_model'); 
+		$this->sync_data_model->init($this->vars);
+		
+		// mqtt subscribe
+		$station_setting = $this->sync_data_model->station_setting_query();
+		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
+		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
+		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt']->connect();
         
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
@@ -170,8 +183,6 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
 		
 		// 同步並送出一次出入口 888
-		$this->load->model('sync_data_model'); 
-		$this->sync_data_model->init($this->vars);
 		$this->sync_data_model->sync_888($parms);
                                                                   
         $pic_folder = CAR_PIC.$this->vars['date_num'].'/';		// 今日資料夾名(yyyymmdd)

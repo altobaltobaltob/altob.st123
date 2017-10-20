@@ -60,10 +60,11 @@ class Pks extends CI_Controller
         }  
         set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log  
 
+		/*
 		// mqtt subscribe
 		$this->vars['mqtt'] = new phpMQTT(MQ_HOST, MQ_PORT, uniqid());  
-		
 		if(!$this->vars['mqtt']->connect()){ die ('Could not connect mqtt');  }		
+		*/
         
         // ----- 定義常數(路徑, cache秒數) -----       
         define('APP_VERSION', '100');		// 版本號
@@ -83,6 +84,17 @@ class Pks extends CI_Controller
         
 		$this->load->model('pks_model'); 
         $this->pks_model->init($this->vars);
+		
+		// 資料介接模組
+		$this->load->model('sync_data_model'); 
+		$this->sync_data_model->init($this->vars);
+		
+		// mqtt subscribe
+		$station_setting = $this->sync_data_model->station_setting_query();
+		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
+		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
+		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt']->connect();
 	}
        
     

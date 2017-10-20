@@ -10,20 +10,6 @@ define('SYNC_PKS_GROUP_ID_MI', 'M888');		// 機車	888
 
 define('SYNC_API_URL', 'http://61.219.172.11:60123/admins_station.html/');
 
-define('SYNC_DELIMITER_ST_NAME', 	' & ');	// (拆分) 場站名稱
-define('SYNC_DELIMITER_ST_NO', 		',');	// (拆分) 場站編號
-define('SYNC_DELIMITER_ST_INFO',	'|');	// (拆分) 其它
-
-define('MCACHE_STATION_NO_STR', 'station_no_str');
-define('MCACHE_STATION_NAME_STR', 'station_name_str');
-define('MCACHE_STATION_IP_STR', 'station_ip_str');
-define('MCACHE_STATION_PORT_STR', 'station_port_str');
-define('MCACHE_STATION_888_STR', 'station_888_str');
-define('MCACHE_MQTT_IP_STR', 'mqtt_ip_str');
-define('MCACHE_MQTT_PORT_STR', 'mqtt_port_str');
-
-define('MCACHE_SYNC_888_TMP_LOG', 'sync_888_tmp_log');	// 暫存 888 進出
-
 class Sync_data_model extends CI_Model 
 {             
 	var $vars = array();
@@ -614,21 +600,27 @@ class Sync_data_model extends CI_Model
 		$station_no_arr = array();
 		$station_name_arr = array();
 		$station_888_arr = array();
-		$mqtt_ip_arr = array();
-		$mqtt_port_arr = array();
+		
+		$settings = array();
 		foreach($station_setting_arr as $data)
 		{
-			array_push($station_no_arr, $data['station_no']);
+			$station_no = $data['station_no'];
+			
+			array_push($station_no_arr, $station_no);
 			array_push($station_name_arr, $data['short_name']);
 			array_push($station_888_arr, $data['station_888']);
-			array_push($mqtt_ip_arr, empty($data['mqtt_ip']) ? MQ_HOST : $data['mqtt_ip']);
-			array_push($mqtt_port_arr, empty($data['mqtt_port']) ? MQ_PORT : $data['mqtt_port']);
+			
+			if(!isset($settings[$station_no]))
+			{
+				$settings[$station_no] = array();
+			}
+			$settings[$station_no]['station_888'] = empty($data['station_888']) ? 1 : $data['station_888'];
+			$settings[$station_no]['mqtt_ip'] = empty($data['mqtt_ip']) ? MQ_HOST : $data['mqtt_ip'];
+			$settings[$station_no]['mqtt_port'] = empty($data['mqtt_port']) ? MQ_PORT : $data['mqtt_port'];
 		}
 		$station_no_str = implode(SYNC_DELIMITER_ST_NO, $station_no_arr);		// 取值時會用到
 		$station_name_str = implode(SYNC_DELIMITER_ST_NAME, $station_name_arr);	// 純顯示
 		$station_888_str = implode(SYNC_DELIMITER_ST_INFO, $station_888_arr);	// 場站	888 設定
-		$mqtt_ip_str = implode(SYNC_DELIMITER_ST_INFO, $mqtt_ip_arr);			// 場站	MQTT ip
-		$mqtt_port_str = implode(SYNC_DELIMITER_ST_INFO, $mqtt_port_arr);		// 場站	MQTT port
 		
 		// 設定到 mcache
 		$this->vars['mcache']->set(MCACHE_STATION_NO_STR, $station_no_str);
@@ -636,8 +628,7 @@ class Sync_data_model extends CI_Model
 		$this->vars['mcache']->set(MCACHE_STATION_IP_STR, $station_ip_str);
 		$this->vars['mcache']->set(MCACHE_STATION_PORT_STR, $station_port_str);
 		$this->vars['mcache']->set(MCACHE_STATION_888_STR, $station_888_str);
-		$this->vars['mcache']->set(MCACHE_MQTT_IP_STR, $mqtt_ip_str);
-		$this->vars['mcache']->set(MCACHE_MQTT_PORT_STR, $mqtt_port_str);
+		$this->vars['mcache']->set(MCACHE_STATION_SETTINGS, $settings);
 		return 'ok';
 	}
 	
@@ -649,14 +640,13 @@ class Sync_data_model extends CI_Model
 		$station_ip_str = $this->vars['mcache']->get(MCACHE_STATION_IP_STR);
 		$station_port_str = $this->vars['mcache']->get(MCACHE_STATION_PORT_STR);
 		$station_888_str = $this->vars['mcache']->get(MCACHE_STATION_888_STR);
-		$mqtt_ip_str = $this->vars['mcache']->get(MCACHE_MQTT_IP_STR);
-		$mqtt_port_str = $this->vars['mcache']->get(MCACHE_MQTT_PORT_STR);
+		$settings = $this->vars['mcache']->get(MCACHE_STATION_SETTINGS);
 	
 		if(	$reload	|| 
 			empty($station_no_str) 		|| 	empty($station_name_str)	|| 
 			empty($station_ip_str) 		|| 	empty($mqtt_ip_str)			||	
-			empty($station_port_str)	|| 	empty($mqtt_port_str)		||
-			empty($station_888_str)
+			empty($station_888_str)		||
+			empty($settings)
 		)
 		{
 			$result = $this->reload_station_setting();
@@ -668,8 +658,7 @@ class Sync_data_model extends CI_Model
 				$station_ip_str = $this->vars['mcache']->get(MCACHE_STATION_IP_STR);
 				$station_port_str = $this->vars['mcache']->get(MCACHE_STATION_PORT_STR);
 				$station_888_str = $this->vars['mcache']->get(MCACHE_STATION_888_STR);
-				$mqtt_ip_str = $this->vars['mcache']->get(MCACHE_MQTT_IP_STR);
-				$mqtt_port_str = $this->vars['mcache']->get(MCACHE_MQTT_PORT_STR);
+				$settings = $this->vars['mcache']->get(MCACHE_STATION_SETTINGS);
 			}
 			else
 			{
@@ -684,14 +673,19 @@ class Sync_data_model extends CI_Model
 			}
 		}
 		
+		// 第一個場站編號
+		$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_no_str);
+		$first_station_no = $station_no_arr[0];
+		
 		$station_setting = array();
 		$station_setting['station_no'] = $station_no_str;
 		$station_setting['station_name'] = $station_name_str;
 		$station_setting['station_ip'] = $station_ip_str;
 		$station_setting['station_port'] = $station_port_str;
 		$station_setting['station_888'] = $station_888_str;
-		$station_setting['mqtt_ip'] = $mqtt_ip_str;
-		$station_setting['mqtt_port'] = $mqtt_port_str;
+		$station_setting['settings'] = $settings;
+		$station_setting['mqtt_ip']	= $settings[$first_station_no]['mqtt_ip'];		
+		$station_setting['mqtt_port'] = $settings[$first_station_no]['mqtt_port'];
 		return $station_setting;
 	}
 	

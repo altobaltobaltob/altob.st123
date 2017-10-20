@@ -24,8 +24,9 @@
                                             <input id="ss_station_service_url" name='station_service_url' class="form-control"  style="font-size:28px" readonly>
                                         </div> 
 										<div class="form-group">
-                                            <label style="font-size:22px">場站 MQTT</label>
-                                            <input id="ss_station_mqtt" name='station_mqtt' class="form-control"  style="font-size:28px" readonly>
+                                            <label style="font-size:22px">其它設定</label>
+                                            <textarea readonly id="ss_station_info" name='station_info' class="form-control" style="font-size:28px" rows="4">
+											</textarea>
                                         </div> 
 										<!--button type="submit" class="btn btn-default">存檔</button>
                                         <button type="reset" class="btn btn-default">重填</button-->
@@ -49,13 +50,25 @@
 function reset_station_setting()
 {
 	event.preventDefault();
-           
+	do_reload_station_setting(1);
+}
+	
+
+// 載入目前設定
+function reload_station_setting(type)
+{
+	do_reload_station_setting(0);
+}
+
+// 執行
+function do_reload_station_setting(reload=0)
+{
 	$.ajax
         ({
         	url: "<?=APP_URL?>station_setting_query",
             type: "post", 
             dataType:"json",
-			data:{ 'reload': 1 },
+			data:{ 'reload': reload },
 			error:function(xhr, ajaxOptions, thrownError)
 			{
 				alertify_msg(xhr.responseText);
@@ -65,14 +78,14 @@ function reset_station_setting()
             success: function(jdata)
             {       
 				var station_service_url = jdata['station_ip'] + ' : ' + jdata['station_port'];
-				var station_mqtt_url = jdata['mqtt_ip'] + ' : ' + jdata['mqtt_port'];
+				var station_info = JSON.stringify(jdata['settings']);
 				
 				if(jdata == 'fail')
 				{
 					$("#ss_station_name").val('未設定');
 					$("#ss_station_no").val('');
 					$("#ss_station_service_url").val(station_service_url);
-					$("#ss_station_mqtt").val(station_mqtt_url);
+					$("#ss_station_info").val(station_info);
 					alertify_error('載入失敗。。');		
 					return false;
 				}
@@ -80,42 +93,7 @@ function reset_station_setting()
 				$("#ss_station_name").val(jdata['station_name']);
 				$("#ss_station_no").val(jdata['station_no']);
 				$("#ss_station_service_url").val(station_service_url);
-				$("#ss_station_mqtt").val(station_mqtt_url);
-				alertify_success('完成。。');	
-            }
-        }); 
-}
-	
-
-// 載入目前設定
-function reload_station_setting(type)
-{
-	$.ajax
-        ({
-        	url: "<?=APP_URL?>station_setting_query",
-            type: "post", 
-            dataType:"json",
-			data:{ 'reload': 0 },
-			error:function(xhr, ajaxOptions, thrownError)
-			{
-				alertify_msg(xhr.responseText);
-				console.log("error:"+xhr.responseText+"|"+ajaxOptions+"|"+thrownError);  
-				return false;
-			},
-            success: function(jdata)
-            {       
-				if(jdata == 'fail')
-				{
-					$("#ss_station_name").val('未設定');
-					$("#ss_station_no").val('');
-					$("#ss_station_ip").val(jdata['station_ip']);
-					alertify_error('載入失敗。。');		
-					return false;
-				}
-				
-				$("#ss_station_name").val(jdata['station_name']);
-				$("#ss_station_no").val(jdata['station_no']);
-				$("#ss_station_ip").val(jdata['station_ip']);
+				$("#ss_station_info").val(station_info);
 				alertify_success('完成。。');	
             }
         }); 

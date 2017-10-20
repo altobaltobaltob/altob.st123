@@ -82,6 +82,31 @@ define('MEMCACHE_PORT', 11211);							// memcache post no (default:11211)
 
 /*
 |--------------------------------------------------------------------------
+| DELIMITER - 共用設定
+|--------------------------------------------------------------------------
+*/
+
+define('SYNC_DELIMITER_ST_NAME', 	' & ');	// (拆分) 場站名稱
+define('SYNC_DELIMITER_ST_NO', 		',');	// (拆分) 場站編號
+define('SYNC_DELIMITER_ST_INFO',	'|');	// (拆分) 其它
+
+/*
+|--------------------------------------------------------------------------
+| MEMCACHE KEY - 共用設定
+|--------------------------------------------------------------------------
+*/
+
+define('MCACHE_STATION_NO_STR', 'station_no_str');
+define('MCACHE_STATION_NAME_STR', 'station_name_str');
+define('MCACHE_STATION_IP_STR', 'station_ip_str');
+define('MCACHE_STATION_PORT_STR', 'station_port_str');
+define('MCACHE_STATION_888_STR', 'station_888_str');
+define('MCACHE_SYNC_888_TMP_LOG', 'sync_888_tmp_log');	// 暫存 888 進出
+
+define('MCACHE_STATION_SETTINGS', 'altob_station_settings');	// 場站設定匯整
+
+/*
+|--------------------------------------------------------------------------
 | 自定義連結 - 共用設定
 |--------------------------------------------------------------------------
 */
