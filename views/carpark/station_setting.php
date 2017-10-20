@@ -20,8 +20,12 @@
                                             <input id="ss_station_no" name='station_no' class="form-control"  style="font-size:28px" readonly>
                                         </div> 
 										<div class="form-group">
-                                            <label style="font-size:22px">場站 IP</label>
-                                            <input id="ss_station_ip" name='station_ip' class="form-control"  style="font-size:28px" readonly>
+                                            <label style="font-size:22px">場站 NAT</label>
+                                            <input id="ss_station_service_url" name='station_service_url' class="form-control"  style="font-size:28px" readonly>
+                                        </div> 
+										<div class="form-group">
+                                            <label style="font-size:22px">場站 MQTT</label>
+                                            <input id="ss_station_mqtt" name='station_mqtt' class="form-control"  style="font-size:28px" readonly>
                                         </div> 
 										<!--button type="submit" class="btn btn-default">存檔</button>
                                         <button type="reset" class="btn btn-default">重填</button-->
@@ -60,18 +64,23 @@ function reset_station_setting()
 			},
             success: function(jdata)
             {       
+				var station_service_url = jdata['station_ip'] + ' : ' + jdata['station_port']
+				var station_mqtt_url = jdata['mqtt_ip'] + ' : ' + jdata['mqtt_port']
+				
 				if(jdata == 'fail')
 				{
 					$("#ss_station_name").val('未設定');
 					$("#ss_station_no").val('');
-					$("#ss_station_ip").val(jdata['station_ip']);
+					$("#ss_station_service_url").val(station_service_url);
+					$("#ss_station_mqtt").val(station_mqtt_url);
 					alertify_error('載入失敗。。');		
 					return false;
 				}
 				
 				$("#ss_station_name").val(jdata['station_name']);
 				$("#ss_station_no").val(jdata['station_no']);
-				$("#ss_station_ip").val(jdata['station_ip']);
+				$("#ss_station_service_url").val(station_service_url);
+				$("#ss_station_mqtt").val(station_mqtt_url);
 				alertify_success('完成。。');	
             }
         }); 

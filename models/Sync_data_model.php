@@ -17,8 +17,10 @@ define('SYNC_DELIMITER_ST_INFO',	'|');	// (拆分) 其它
 define('MCACHE_STATION_NO_STR', 'station_no_str');
 define('MCACHE_STATION_NAME_STR', 'station_name_str');
 define('MCACHE_STATION_IP_STR', 'station_ip_str');
+define('MCACHE_STATION_PORT_STR', 'station_port_str');
 define('MCACHE_STATION_888_STR', 'station_888_str');
 define('MCACHE_MQTT_IP_STR', 'mqtt_ip_str');
+define('MCACHE_MQTT_PORT_STR', 'mqtt_port_str');
 
 define('MCACHE_SYNC_888_TMP_LOG', 'sync_888_tmp_log');	// 暫存 888 進出
 
@@ -603,6 +605,11 @@ class Sync_data_model extends CI_Model
 		
 		$station_ip_str	= $station_setting_result['station_ip'];	// 場站目前對外IP
 		
+		if(empty($port_info))
+			$station_port_str = '80';
+		else
+			$station_port_str = substr($port_info, 1);				// 場站目前對外PORT
+		
 		$station_setting_arr = $station_setting_result['results'];
 		$station_no_arr = array();
 		$station_name_arr = array();
@@ -627,6 +634,7 @@ class Sync_data_model extends CI_Model
 		$this->vars['mcache']->set(MCACHE_STATION_NO_STR, $station_no_str);
 		$this->vars['mcache']->set(MCACHE_STATION_NAME_STR, $station_name_str);
 		$this->vars['mcache']->set(MCACHE_STATION_IP_STR, $station_ip_str);
+		$this->vars['mcache']->set(MCACHE_STATION_PORT_STR, $station_port_str);
 		$this->vars['mcache']->set(MCACHE_STATION_888_STR, $station_888_str);
 		$this->vars['mcache']->set(MCACHE_MQTT_IP_STR, $mqtt_ip_str);
 		$this->vars['mcache']->set(MCACHE_MQTT_PORT_STR, $mqtt_port_str);
@@ -639,16 +647,15 @@ class Sync_data_model extends CI_Model
 		$station_no_str = $this->vars['mcache']->get(MCACHE_STATION_NO_STR);
 		$station_name_str = $this->vars['mcache']->get(MCACHE_STATION_NAME_STR);
 		$station_ip_str = $this->vars['mcache']->get(MCACHE_STATION_IP_STR);
+		$station_port_str = $this->vars['mcache']->get(MCACHE_STATION_PORT_STR);
 		$station_888_str = $this->vars['mcache']->get(MCACHE_STATION_888_STR);
 		$mqtt_ip_str = $this->vars['mcache']->get(MCACHE_MQTT_IP_STR);
 		$mqtt_port_str = $this->vars['mcache']->get(MCACHE_MQTT_PORT_STR);
 	
 		if(	$reload	|| 
-			empty($station_no_str) 		|| 
-			empty($station_name_str)	|| 
-			empty($station_ip_str) 		|| 
-			empty($mqtt_ip_str)			|| 
-			empty($mqtt_port_str)		||
+			empty($station_no_str) 		|| 	empty($station_name_str)	|| 
+			empty($station_ip_str) 		|| 	empty($mqtt_ip_str)			||	
+			empty($station_port_str)	|| 	empty($mqtt_port_str)		||
 			empty($station_888_str)
 		)
 		{
@@ -659,6 +666,7 @@ class Sync_data_model extends CI_Model
 				$station_no_str = $this->vars['mcache']->get(MCACHE_STATION_NO_STR);
 				$station_name_str = $this->vars['mcache']->get(MCACHE_STATION_NAME_STR);
 				$station_ip_str = $this->vars['mcache']->get(MCACHE_STATION_IP_STR);
+				$station_port_str = $this->vars['mcache']->get(MCACHE_STATION_PORT_STR);
 				$station_888_str = $this->vars['mcache']->get(MCACHE_STATION_888_STR);
 				$mqtt_ip_str = $this->vars['mcache']->get(MCACHE_MQTT_IP_STR);
 				$mqtt_port_str = $this->vars['mcache']->get(MCACHE_MQTT_PORT_STR);
@@ -680,6 +688,7 @@ class Sync_data_model extends CI_Model
 		$station_setting['station_no'] = $station_no_str;
 		$station_setting['station_name'] = $station_name_str;
 		$station_setting['station_ip'] = $station_ip_str;
+		$station_setting['station_port'] = $station_port_str;
 		$station_setting['station_888'] = $station_888_str;
 		$station_setting['mqtt_ip'] = $mqtt_ip_str;
 		$station_setting['mqtt_port'] = $mqtt_port_str;
