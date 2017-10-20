@@ -87,7 +87,7 @@ class Cars extends CI_Controller
 
 		// 共用記憶體 
         $this->vars['mcache'] = new Memcache;
-		$this->vars['mcache']->pconnect(MEMCACHE_HOST, MEMCACHE_PORT) or die ('Could not connect memcache');   
+		$this->vars['mcache']->pconnect(MEMCACHE_HOST, MEMCACHE_PORT); // or die ('Could not connect memcache');   
 		
 		/*
 		// mqtt subscribe

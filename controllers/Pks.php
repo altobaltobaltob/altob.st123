@@ -85,6 +85,10 @@ class Pks extends CI_Controller
 		$this->load->model('pks_model'); 
         $this->pks_model->init($this->vars);
 		
+		// 共用記憶體 
+        $this->vars['mcache'] = new Memcache;
+		$this->vars['mcache']->pconnect(MEMCACHE_HOST, MEMCACHE_PORT); // or die ('Could not connect memcache');   
+		
 		// 資料介接模組
 		$this->load->model('sync_data_model'); 
 		$this->sync_data_model->init($this->vars);
