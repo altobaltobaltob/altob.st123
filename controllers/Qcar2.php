@@ -91,7 +91,14 @@ class Qcar2 extends CI_Controller
         echo '</pre></body></html>';
 	}    
     
-    
+    // 車位查詢結果頁
+    public function show_result()
+	{
+    	$lpr = $this->uri->segment(3);	// 車牌號碼
+        $data = $this->qcar2_model->q_pks($lpr);
+		$data['lpr'] = $lpr;
+		$this->show_page('result_page', $data);
+	}
 
     // 車位查詢
     public function q_pks()
