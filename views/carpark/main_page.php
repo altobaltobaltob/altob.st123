@@ -466,6 +466,7 @@
                                             <th style="text-align:center;">功能</th-->
 											<th style="text-align:center;">有效期限</th>
 											<th style="text-align:center;">場站編號</th>
+											<th style="text-align:center;">更新時間</th>
                                         </tr>
                                     </thead>
                                     <tbody id="member_list" style="font-size:14px;"></tbody>
@@ -1112,6 +1113,7 @@ function show_item(tags, type)
                     		//"<td style='text-align:center, '><select id='sel_", mno, "' onChange='member_modify(", mno, "); '><option value='choice'>請選擇</option><option value='modify'>修改</option><option value='delete'>刪除</option></select></td>", 	
 							"<td id='valid_time_", mno, "' style='text-align:center; '>", jdata[idx]['valid_time'], "</td>", 	    
 							"<td id='station_no_", mno, "' style='text-align:center; '>", jdata[idx]['station_no'], "</td>", 	    
+							"<td id='update_time_", mno, "' style='text-align:center; '>", jdata[idx]['update_time'], "</td>", 	    
                     	"</tr>"]);
                     }
                 	$("#member_list").append(member_list.join(''));  
