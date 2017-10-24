@@ -1249,7 +1249,7 @@ class Cars_model extends CI_Model
 	// 呼叫acer
 	function call_acer($cmd, $parms)
 	{
-		//return false; // 尚未啟用
+		return false; // 尚未啟用
 		
 		try{
             $ch = curl_init();
