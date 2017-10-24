@@ -63,8 +63,9 @@ $mqtt = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
 if(!$mqtt->connect()){ die ('Could not connect mqtt');  }
 
 // 場站資料庫資訊
-$topics['#'] = array('qos'=>2, 'function'=>'procmsg');
-$mqtt->subscribe($topics, 2);
+$topics['#'] = array('qos'=> 0, 'function'=>'procmsg');
+$mqtt->subscribe($topics, 0);
+trigger_error("..mqtt subscribe..".print_r($topics, true));
 
 while($mqtt->proc()){ }
 $mqtt->close();
@@ -80,5 +81,5 @@ function procmsg($topic, $msg)
 	curl_setopt($ch, CURLOPT_URL, 'http://localhost/carpark.html/mqtt_service/'); 
 	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));   
 	$result = curl_exec($ch);      
-	trigger_error( __FUNCTION__ . "..{$topic}|{$msg}..curl:{$result}..");	
+	trigger_error("..{$topic}|{$msg}..curl:{$result}..");
 }
