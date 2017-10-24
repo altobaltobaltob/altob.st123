@@ -141,6 +141,27 @@ class Carpark extends CI_Controller
 	//
 	// ------------------------------------------------
 	
+	// [mqtt] 接收端 
+	public function mqtt_service()
+	{
+		$topic = $this->input->post('topic', true);
+		$msg = $this->input->post('msg', true);
+		$ck = $this->input->post('ck', true);
+		
+		if(md5($topic.'altob'.$msg) != $ck)
+		{
+			echo 'ck_error';
+			exit;
+		}
+		
+		trigger_error(__FUNCTION__ . "|{$topic}|{$msg}");
+		
+		
+		
+		echo 'ok';
+		exit;
+	}
+	
 	// [設定檔] 取得設定
 	public function station_setting_query()
 	{
