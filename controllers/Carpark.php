@@ -156,7 +156,35 @@ class Carpark extends CI_Controller
 		
 		trigger_error(__FUNCTION__ . "|{$topic}|{$msg}");
 		
-		
+		if($topic == 'altob.888.mqtt')
+		{
+			// 第一個場站編號	先不管場站
+			$station_setting = $this->sync_data_model->station_setting_query();
+			$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
+			$first_station_no = $station_no_arr[0];
+			
+			$msg_arr = explode(',', $msg);
+			
+			if(sizeof($msg_arr) != 4)
+			{
+				trigger_error(__FUNCTION__ . "..error_size.." . print_r($msg_arr, true));
+				echo 'error_size';
+				exit;
+			}
+			
+			if($msg_arr[0] != 'N888' || $msg_arr[3] != 'altob')
+			{
+				trigger_error(__FUNCTION__ . "..unknown_msg.." . print_r($msg_arr, true));
+				echo 'unknown_msg';
+				exit;
+			}
+			
+			$msg_arr = explode(',', $msg);
+			$group_id = isset($msg_arr[1]) && $msg_arr[1] == 2 ? 'M888' : 'C888';
+			$value = isset($msg_arr[2]) ? $msg_arr[2] : 0;
+			$result = $this->sync_data_model->force_sync_888($first_station_no, $group_id, $value);
+			trigger_error(__FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
+		}
 		
 		echo 'ok';
 		exit;

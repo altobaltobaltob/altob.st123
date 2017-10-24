@@ -37,6 +37,30 @@ class Sync_data_model extends CI_Model
 	// 在席系統同步 (START)
 	//
 	// ------------------------------------------------
+	
+	// 強制更新顯示
+	public function force_sync_888($station_no, $group_id, $value)
+	{
+		$where_group_arr = array('group_id' => $group_id, 'station_no' => $station_no);
+		
+		$rows = $this->db->select('renum, parked, tot, availables')
+        		->from('pks_groups')
+                ->where($where_group_arr)	     
+                ->limit(1)
+                ->get()  
+                ->row_array(); 
+		
+		// force upd
+		$new_renum = 0;
+		$new_ava = $value;
+		$new_parked = $rows['tot'] - $new_ava;
+		
+		trigger_error(__FUNCTION__ . "..{$rows['renum']}|{$rows['parked']}|{$rows['availables']}|{$rows['tot']}..to..{$new_renum}|{$new_parked}|{$new_ava}|{$rows['tot']}");
+		
+		$this->db->where($where_group_arr)->update('pks_groups', array('renum' => $new_renum, 'parked' => $new_parked, 'availables' => $new_ava));
+		
+		return $this->db->affected_rows();
+	}
     
 	// 同步 888
 	public function sync_888($parms)
