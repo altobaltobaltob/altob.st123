@@ -81,27 +81,27 @@ class Pks extends CI_Controller
         define('BOOTSTRAPS', WEB_LIB.'bootstrap_sb/');											// bootstrap lib  
         define('LOG_PATH', FILE_BASE.APP_NAME.'/logs/');		// log path name
         define('LOG_FILE', FILE_BASE.APP_NAME.'/logs/pks.');	// log file name
-        
-		$this->load->model('pks_model'); 
-        $this->pks_model->init($this->vars);
 		
 		// 共用記憶體 
         $this->vars['mcache'] = new Memcache;
 		$this->vars['mcache']->pconnect(MEMCACHE_HOST, MEMCACHE_PORT); // or die ('Could not connect memcache');   
 		
-		// 資料介接模組
+		// mqtt subscribe
 		$this->load->model('sync_data_model'); 
 		$this->sync_data_model->init($this->vars);	// for memcache
 		
-		// mqtt subscribe
 		$station_setting = $this->sync_data_model->station_setting_query();
 		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
 		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
 		$this->vars['mqtt']->connect();
 		
-		// init again
-		$this->sync_data_model->init($this->vars);	// for mqtt
+		// init sync model
+		$this->sync_data_model->init($this->vars);
+		
+		// init pks model
+		$this->load->model('pks_model'); 
+        $this->pks_model->init($this->vars);
 	}
        
     
