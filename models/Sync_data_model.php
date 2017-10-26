@@ -586,11 +586,11 @@ class Sync_data_model extends CI_Model
 	public function reload_station_setting()
 	{
 		$port_info = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != 60123) ? '/' . $_SERVER['SERVER_PORT'] : '';
-		
+		$reload_url = SYNC_API_URL . 'station_setting_query' . $port_info;
 		try{
 			// 查現況
 			$ch = curl_init();
-			curl_setopt($ch, CURLOPT_URL, SYNC_API_URL . 'station_setting_query' . $port_info);
+			curl_setopt($ch, CURLOPT_URL, $reload_url);
 			curl_setopt($ch, CURLOPT_HEADER, FALSE);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
 			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
@@ -600,6 +600,8 @@ class Sync_data_model extends CI_Model
 			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array()));
 			$return_result = curl_exec($ch);
 			curl_close($ch);
+			
+			trigger_error(__FUNCTION__ . "..curl {$reload_url}.." . print_r($return_result, true));
 
 		}catch (Exception $e){
 			trigger_error('error msg:'.$e->getMessage());
@@ -668,7 +670,7 @@ class Sync_data_model extends CI_Model
 	
 		if(	$reload	|| 
 			empty($station_no_str) 		|| 	empty($station_name_str)	|| 
-			empty($station_ip_str) 		|| 	empty($mqtt_ip_str)			||	
+			empty($station_ip_str) 		|| 	empty($station_port_str)			||	
 			empty($station_888_str)		||
 			empty($settings)
 		)
