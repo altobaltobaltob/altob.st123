@@ -47,7 +47,7 @@
 
 			<?php /* ----- 查詢結果 ----- */ ?>
             <!-- div data-items="rent_sync" class="row" style="display:none;"-->
-            <div data-items="output_pks" class="row" style="display:none;">
+            <div data-items="output_pks" class="row" style="display:none; height:100%">
                 <div class="col-lg-3 col-sm-6">
                     <div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;"><?php /* 資料顯示區灰色小表頭 */ ?>
@@ -102,6 +102,30 @@
                     </div>
                     <!-- /.panel -->
                 </div>
+				
+				<!--div class="col-lg-9 col-sm-9">
+					<table class="table table-striped table-hover">
+						<thead><tr><th style="text-align:center;">停車位置 : B1 樓層</th></tr></thead>
+						<tbody>
+							<canvas id="b1canvas"></canvas>
+						</tbody>
+					</table>
+				</div-->
+				
+				<div class="col-lg-9 col-sm-9">
+					<div class="panel panel-default" style="min-height: 1200px">
+						<div class="panel-heading" style="font-size:28px;"><span>停車位置 : B1 樓層</span></div>
+						<div class="panel-body"><canvas id="b1canvas"></canvas></div>
+					</div>
+				</div>
+				
+				<!--div class="col-lg-9 col-sm-9" style="height=1000px">
+					<div class="panel panel-default">
+						<div class="panel-heading"><span>停車位置 : B1 樓層</span></div>
+						<div class="panel-body"><canvas id="b1canvas"></canvas></div>
+					</div>
+				</div-->
+				
 				<!--div class="col-lg-3 col-sm-6">
 					<div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;">
@@ -159,6 +183,9 @@
 	
 	<!-- jQuery validate -->
 	<script src="<?=WEB_LIB?>form-validator/jquery.form-validator.min.js"></script>
+	
+	<!-- altob ats map -->
+	<script src="<?=WEB_LIB?>js/altob-ats-map.js"></script> 
 
     <!-- Custom Theme JavaScript -->
     <script src="<?=BOOTSTRAPS?>dist/js/sb-admin-2.js"></script>
@@ -228,7 +255,7 @@ if(PKS_RESULT.pksno == '')
 else
 {
 	$("#show_lpr").text(PKS_RESULT.lpr);
-	$("#show_floors").html(PKS_RESULT.group_name+"<br/> ( 車格: " + PKS_RESULT.pksno.substr(-3, 3) +" )");
+	$("#show_floors").html(PKS_RESULT.group_name+" ( 車格: " + PKS_RESULT.pksno.substr(-3, 3) +" )");
 	$("#show_update_time").text(PKS_RESULT.in_time);
     $("#show_img").attr("src", "<?=SERVER_URL?>pkspic/" + PKS_RESULT.pic_name);
 
@@ -423,35 +450,23 @@ $(document).ready(function()
   		}
 
   	});
-
-	// 定時自動更新頁面
-	(function autoReloadPage(){
-		var pageReloadTimeMillis = 60000;			// 頁面, 自動重新載入週期 ( 1 min )
-		var pageCheckReloadTimeMillis = 10000;		// 頁面, 判斷重新載入週期 ( 10 sec )
-		var pageShowReloadTimeMillis = 50000;		// 頁面, 開始顯示倒數週期 ( 50 sec )
-		var aliveTime = moment();
-		var countdownTimeMillis = pageReloadTimeMillis;
-		$(document.body).bind("mousemove keypress", function(e) {
-			aliveTime = moment();
-			countdownTimeMillis = pageReloadTimeMillis;
-		});
-		function refresh() {
-			if(moment() - aliveTime >= pageReloadTimeMillis) // 如果頁面沒動作, 才更新
-				window.location.reload(true);
-			else{
-				countdownTimeMillis -= pageCheckReloadTimeMillis;
-				if(countdownTimeMillis < pageCheckReloadTimeMillis)
-				{
-					alertify_count_down("重新載入中..請稍候..", pageCheckReloadTimeMillis);	
-				}
-				else if(countdownTimeMillis < pageShowReloadTimeMillis){
-					alertify_count_down("倒數: " + (countdownTimeMillis / 1000) + " 秒, 重新載入畫面..", pageCheckReloadTimeMillis);	
-				}
-				setTimeout(refresh, pageCheckReloadTimeMillis);
+	
+	<?php /* 樓層平面圖 */ ?>
+	AltobObject.AtsMap({
+		mapInfo: {
+			map1: {
+				floorName: 'B1',
+				canvasId: 'b1canvas',
+				src: '<?=SERVER_URL?>i3/pics/b1_map.png',
+				initialImageRatio: 0.8,
+				shiftLeft: 250,
+				shiftUp: 0
 			}
 		}
-		setTimeout(refresh, pageCheckReloadTimeMillis);
-	})();
+	});
+	
+	// 畫出指定位置
+	AltobObject.AtsMap.drawPosition(PKS_RESULT.floors, PKS_RESULT.posx, PKS_RESULT.posy);
 
 });
 </script>
