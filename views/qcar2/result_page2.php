@@ -36,10 +36,10 @@
 			
 			<?php /* ----- 查詢結果 ----- */ ?>
             <div data-items="not_found" class="row">
-                <div class="col-lg-6">
+                <div class="col-lg-12">
                     <div class="panel panel-default">
-                        <div class="panel-heading" style="font-size:28px;"><?php /* 資料顯示區灰色小表頭 */ ?>
-                            查車結果：查無 <span id="not_found_lpr" style="font-size:28px;color:blue;"></span> 在席資料
+                        <div class="panel-heading" style="font-size:64px;"><?php /* 資料顯示區灰色小表頭 */ ?>
+                            查車結果：查無 <span id="not_found_lpr" style="font-size:64px;color:blue;"></span> 在席資料
                         </div>
 					</div>
 				</div>
@@ -75,6 +75,22 @@
 												<button type="button" class="btn btn-large btn-success pull-right" style="font-size:28px;" onclick="show_item('input_lpr');">結束查詢</button>
                                             </td>
                                         </tr-->
+										
+										<tr>
+                                            <td style="text-align:right;vertical-align: middle;">在席照片</td>
+                                            <td style="text-align:left;vertical-align: middle;">
+												<table class="table table-striped table-bordered table-hover"">
+													<tbody>
+														<tr>
+															<td style="text-align:center;vertical-align: middle;">
+																<img id="show_img" style="max-height:200px" />
+															</td>
+														</tr>
+													</tbody>
+												</table>
+											</td>
+                                        </tr>
+										
                                         </tbody>
                                 </table>
                                 </div>
@@ -86,7 +102,7 @@
                     </div>
                     <!-- /.panel -->
                 </div>
-				<div class="col-lg-3 col-sm-6">
+				<!--div class="col-lg-3 col-sm-6">
 					<div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;">
                             在席照片
@@ -105,7 +121,7 @@
 							</table>
 						</div>
 					</div>
-				</div>
+				</div-->
                 <!-- /.col-lg-12 -->
 
 		</div>

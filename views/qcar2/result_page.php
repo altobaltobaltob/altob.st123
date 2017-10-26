@@ -35,10 +35,10 @@
 			
 			<?php /* ----- 查詢結果 ----- */ ?>
             <div data-items="not_found" class="row">
-                <div class="col-lg-6">
+                <div class="col-lg-12">
                     <div class="panel panel-default">
-                        <div class="panel-heading" style="font-size:28px;"><?php /* 資料顯示區灰色小表頭 */ ?>
-                            查車結果：查無 <span id="not_found_lpr" style="font-size:28px;color:blue;"></span> 在席資料
+                        <div class="panel-heading" style="font-size:32px;"><?php /* 資料顯示區灰色小表頭 */ ?>
+                            查車結果：查無 <span id="not_found_lpr" style="font-size:32px;color:blue;"></span> 在席資料
                         </div>
 					</div>
 				</div>

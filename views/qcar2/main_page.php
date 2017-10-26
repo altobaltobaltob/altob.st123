@@ -46,7 +46,7 @@
 								<div class="col-lg-8">
 									<form id="fuzzy_search_lpr" role="form" method="post">
 										<div class="form-group">
-											<input type="text" id="fuzzy_input" name="fuzzy_input" class="form-control" style="text-transform:uppercase;height:64px;font-size:32px"
+											<input type="text" id="fuzzy_input" name="fuzzy_input" class="form-control" style="text-transform:uppercase;height:64px;font-size:32px;"
 												placeholder="請輸入車牌關鍵字 ( 3 到 7 碼 ex. 111)"
 												autofocus required pattern="[A-Za-z0-9]*"
 												data-validation="length"
