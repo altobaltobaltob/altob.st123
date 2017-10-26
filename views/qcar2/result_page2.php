@@ -30,6 +30,7 @@
                     <!--h1 class="page-header">歐特儀自動化服務機</h1--><?php /* 右側小表頭 */ ?>
 					&nbsp;
                 </div>
+                <!-- /.col-lg-12 -->
             </div>
             <!-- /.row -->
 			
@@ -47,7 +48,7 @@
 			<?php /* ----- 查詢結果 ----- */ ?>
             <!-- div data-items="rent_sync" class="row" style="display:none;"-->
             <div data-items="output_pks" class="row" style="display:none;">
-                <div class="col-lg-6 col-sm-6">
+                <div class="col-lg-3 col-sm-6">
                     <div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;"><?php /* 資料顯示區灰色小表頭 */ ?>
                             查車結果
@@ -85,7 +86,7 @@
                     </div>
                     <!-- /.panel -->
                 </div>
-				<div class="col-lg-6 col-sm-6">
+				<div class="col-lg-3 col-sm-6">
 					<div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;">
                             在席照片

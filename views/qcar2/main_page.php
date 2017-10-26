@@ -27,7 +27,8 @@
         <div id="page-wrapper"><?php /* 主要資料顯示區 */ ?>
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">歐特儀自動化服務機</h1><?php /* 右側小表頭 */ ?>
+                    <!--h1 class="page-header">歐特儀自動化服務機</h1--><?php /* 右側小表頭 */ ?>
+					&nbsp;
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
@@ -65,19 +66,36 @@
 
 							<br/>
 
-							<div id="carin_query_list" class="col-lg-12 dataTable_wrapper" style="display:none; font-size:28px;">
+							<!--div id="carin_query_list" class="col-lg-12 dataTable_wrapper" style="display:none; font-size:20px; max-height:300px">
                                 <table id="lpr_query_list" class="table table-striped table-bordered table-hover">
-                                <thead>
-                                        <tr>
-											<th style="text-align:center;">車號</th>
-                                            <th style="text-align:center;">進場時間</th>
-											<th style="text-align:center;">在席照片</th>
-											<th style="text-align:center;">功能</th>
-                                        </tr>
-    							</thead>
-    							<tbody id="carin_query_tbody" style="font-size:28px;"></tbody>
+									<thead>
+											<tr>
+												<th style="text-align:center;">車號</th>
+												<th style="text-align:center;">進場時間</th>
+												<th style="text-align:center;">在席照片</th>
+												<th style="text-align:center;">功能</th>
+											</tr>
+									</thead>
+									<tbody id="carin_query_tbody" style="font-size:28px;"></tbody>
                                 </table>
-                            </div><?php /* ----- end of dataTable_wrapper ----- */?>
+                            </div-->
+							
+							<div id="carin_query_list" class="col-lg-12 dataTable_wrapper" style="display:none; max-height: 300px; overflow-y: auto">
+								<table id="lpr_query_list" class="table table-striped table-hover">
+									<thead>
+										<tr>
+										<th style="text-align:center;">車號</th>
+										<th style="text-align:center;">進場時間</th>
+										<th style="text-align:center;">在席照片</th>
+										<th style="text-align:center;">功能</th>
+										</tr>
+									</thead>
+									<tbody id="carin_query_tbody" style="font-size:28px;"></tbody>
+								</table>
+							</div><!-- end of modal-body --> 
+							
+							
+							
                         </div>
                         <!-- /.panel-body -->
                     </div>
@@ -90,7 +108,7 @@
 			<?php /* ----- 查詢結果 ----- */ ?>
             <!-- div data-items="rent_sync" class="row" style="display:none;"-->
             <div data-items="output_pks" class="row" style="display:none;">
-                <div class="col-lg-6">
+                <div class="col-lg-6 col-sm-6">
                     <div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;"><?php /* 資料顯示區灰色小表頭 */ ?>
                             查車結果
@@ -128,7 +146,7 @@
                     </div>
                     <!-- /.panel -->
                 </div>
-				<div class="col-lg-6">
+				<div class="col-lg-6 col-sm-6">
 					<div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;">
                             在席照片
@@ -140,7 +158,7 @@
 								<tbody>
 									<tr>
 										<td colspan="2" style="text-align:center;vertical-align: middle;">
-											<img id="show_img" height="280" width="400" />
+											<img id="show_img" style="max-width:400px" />
                                         </td>
 									</tr>
 								</tbody>

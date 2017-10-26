@@ -73,10 +73,8 @@ class Qcar2 extends CI_Controller
         	
 	public function index()
 	{                   
-		$this->show_page('main_page');
+		$this->show_page('main_page');				// 1122x630
 	}
-	         
-    
     
     // 顯示logs
 	public function show_logs()
@@ -97,7 +95,16 @@ class Qcar2 extends CI_Controller
     	$lpr = $this->uri->segment(3);	// 車牌號碼
         $data = $this->qcar2_model->q_pks($lpr);
 		$data['lpr'] = $lpr;
-		$this->show_page('result_page', $data);
+		$this->show_page('result_page', $data);		// 1280x1080
+	}
+	
+	// 車位查詢結果頁 (2)
+    public function show_result2()
+	{
+    	$lpr = $this->uri->segment(3);	// 車牌號碼
+        $data = $this->qcar2_model->q_pks($lpr);
+		$data['lpr'] = $lpr;
+		$this->show_page('result_page2', $data);	// 2560x1440
 	}
 
     // 車位查詢
