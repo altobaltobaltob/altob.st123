@@ -74,12 +74,16 @@ function procmsg($topic, $msg)
 {     
 	$data = array('topic' => $topic, 'msg' => $msg, 'ck' => md5($topic.'altob'.$msg));
 	
-	// dispatch
-	$ch = curl_init();
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	curl_setopt($ch, CURLOPT_POST, true); // 啟用POST
-	curl_setopt($ch, CURLOPT_URL, 'http://localhost/carpark.html/mqtt_service/'); 
-	curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));   
-	$result = curl_exec($ch);      
+	if($topic == 'altob.888.mqtt')
+	{
+		// dispatch
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_POST, true); // 啟用POST
+		curl_setopt($ch, CURLOPT_URL, 'http://localhost/carpark.html/mqtt_service/'); 
+		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));   
+		$result = curl_exec($ch);      
+	}
+	
 	trigger_error("..{$topic}|{$msg}..curl:{$result}..");
 }

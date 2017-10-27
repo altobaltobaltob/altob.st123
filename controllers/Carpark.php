@@ -154,10 +154,10 @@ class Carpark extends CI_Controller
 			exit;
 		}
 		
+		trigger_error(__FUNCTION__ . "|{$topic}|{$msg}");
+		
 		if($topic == 'altob.888.mqtt')
 		{
-			trigger_error(__FUNCTION__ . "|{$topic}|{$msg}");
-			
 			// 第一個場站編號	先不管場站
 			$station_setting = $this->sync_data_model->station_setting_query();
 			$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
