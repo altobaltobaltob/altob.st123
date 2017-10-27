@@ -72,6 +72,8 @@ $mqtt->close();
 
 function procmsg($topic, $msg)
 {     
+	trigger_error("..{$topic}|{$msg}..");
+
 	$data = array('topic' => $topic, 'msg' => $msg, 'ck' => md5($topic.'altob'.$msg));
 	
 	if(in_array($topic, array('altob.888.mqtt')))
@@ -82,8 +84,7 @@ function procmsg($topic, $msg)
 		curl_setopt($ch, CURLOPT_POST, true); // 啟用POST
 		curl_setopt($ch, CURLOPT_URL, 'http://localhost/carpark.html/mqtt_service/'); 
 		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));   
-		$result = curl_exec($ch);      
+		$result = curl_exec($ch);   
+		trigger_error("..curl|{$result}..");		
 	}
-	
-	trigger_error("..{$topic}|{$msg}..curl:{$result}..");
 }
