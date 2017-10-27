@@ -74,7 +74,7 @@ function procmsg($topic, $msg)
 {     
 	$data = array('topic' => $topic, 'msg' => $msg, 'ck' => md5($topic.'altob'.$msg));
 	
-	if($topic == 'altob.888.mqtt')
+	if(in_array($topic, array('altob.888.mqtt')))
 	{
 		// dispatch
 		$ch = curl_init();
