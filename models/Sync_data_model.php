@@ -643,6 +643,7 @@ class Sync_data_model extends CI_Model
 			$settings[$station_no]['station_888'] = empty($data['station_888']) ? 1 : $data['station_888'];
 			$settings[$station_no]['mqtt_ip'] = empty($data['mqtt_ip']) ? MQ_HOST : $data['mqtt_ip'];
 			$settings[$station_no]['mqtt_port'] = empty($data['mqtt_port']) ? MQ_PORT : $data['mqtt_port'];
+			$settings[$station_no]['local_ip'] = empty($data['local_ip']) ? MQ_HOST : $data['local_ip'];
 		}
 		$station_no_str = implode(SYNC_DELIMITER_ST_NO, $station_no_arr);		// 取值時會用到
 		$station_name_str = implode(SYNC_DELIMITER_ST_NAME, $station_name_arr);	// 純顯示

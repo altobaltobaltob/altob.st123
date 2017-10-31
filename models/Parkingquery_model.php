@@ -126,8 +126,6 @@ class Parkingquery_model extends CI_Model
 	*/
 	
 	// 空車位導引
-    // http://203.75.167.89/parkingquery.html/get_valid_seat 
-    // 註記現在時間, 並保留10分鐘
 	public function get_valid_seat($pksno, $group_type=1)
 	{           
     	$data = array();   
