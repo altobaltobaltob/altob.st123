@@ -26,7 +26,7 @@ class Parkingquery_model extends CI_Model
     	$data = array();         
     	$results = $this->db->select('group_id, availables, tot')
         		->from('pks_groups')
-                ->where('group_type', 1)	
+                ->where('group_type', $group_type)	
                 ->get()  
                 ->result_array();  
                          
