@@ -186,6 +186,9 @@
 	
 	<!-- altob ats map -->
 	<script src="<?=WEB_LIB?>js/altob-ats-map.js"></script> 
+	
+	<!-- altob settings -->
+	<script src="<?=WEB_LIB?>js/altob.settings.js"></script>
 
     <!-- Custom Theme JavaScript -->
     <script src="<?=BOOTSTRAPS?>dist/js/sb-admin-2.js"></script>
@@ -458,9 +461,9 @@ $(document).ready(function()
 				floorName: 'B1',
 				canvasId: 'b1canvas',
 				src: '<?=SERVER_URL?>i3/pics/b1_map.png',
-				initialImageRatio: 0.7,
-				shiftLeft: 400,
-				shiftUp: 100
+				initialImageRatio: AltobObject.settings.qcar2.result_page2.B1.initialImageRatio,
+				shiftLeft: AltobObject.settings.qcar2.result_page2.B1.shiftLeft,
+				shiftUp: AltobObject.settings.qcar2.result_page2.B1.shiftUp
 			}
 		}
 	});
