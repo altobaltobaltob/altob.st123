@@ -21,7 +21,7 @@ class Parkingquery_model extends CI_Model
     
     // 查詢各樓層剩餘車位 
     // http://203.75.167.89/parkingquery.html/check_space/12345
-	public function check_space($seqno) 
+	public function check_space($seqno, $group_type=1) 
 	{           
     	$data = array();         
     	$results = $this->db->select('group_id, availables, tot')
@@ -90,6 +90,7 @@ class Parkingquery_model extends CI_Model
         return $data; 
     }          
     
+	/*
     // 空車位導引
     // http://203.75.167.89/parkingquery.html/get_valid_seat 
     // 註記現在時間, 並保留10分鐘
@@ -122,6 +123,86 @@ class Parkingquery_model extends CI_Model
         $this->db->trans_complete(); 
         return $data; 
     }  
+	*/
+	
+	// 空車位導引
+    // http://203.75.167.89/parkingquery.html/get_valid_seat 
+    // 註記現在時間, 並保留10分鐘
+	public function get_valid_seat($pksno, $group_type=1)
+	{           
+    	$data = array();   
+        $this->db->trans_start(); 
+        if ($pksno > 0)	// 限制從某一個車位開始指派車位
+        {   
+        	//$sql = "select pksno from pks where status = 'VA' and pksno >= {$pksno} and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
+			
+			// 2017/04/12 調整為支援找最近
+			//$sql_xy = "select posx, posy from pks where pksno = {$pksno}";
+			$sql_xy = "
+						select pks.posx, pks.posy, RIGHT(pks_group_member.group_id, 1 ) as group_idx
+							from pks
+							left join pks_group_member on (pks_group_member.pksno = pks.pksno)
+							left join pks_groups on (pks_groups.group_id = pks_group_member.group_id)
+						where pks.pksno = {$pksno} AND pks_groups.group_type = {$group_type}
+						";
+			
+			$rows_xy = $this->db->query($sql_xy)->row_array(); 
+			if(!empty($rows_xy['posx']) && !empty($rows_xy['posy']))
+			{
+				// 找最近
+				$sql = "
+						select pks.pksno, pks.posx, pks.posy, pks_group_member.group_id, 
+							( 
+								ABS(cast(pks.pksno as signed) - {$pksno}) +
+								ABS(cast(pks.posx as signed) - {$rows_xy['posx']}) + 
+								ABS(cast(pks.posy as signed) - {$rows_xy['posy']}) +
+								ABS(RIGHT(pks_group_member.group_id, 1 ) - {$rows_xy['group_idx']}) * 1000
+							) AS v
+							from pks 
+							left join pks_group_member on (pks_group_member.pksno = pks.pksno)
+							left join pks_groups on (pks_groups.group_id = pks_group_member.group_id)
+						where 
+							pks.status = 'VA' and prioritys != 0 and (pks.book_time is null or pks.book_time <= now()) 
+							and pks_groups.group_type = 1
+						order by v asc limit 10 for update;
+						";
+				
+				/*
+				$sql = "select pksno, 
+						( ABS(cast(pksno as signed) - {$pksno}) + ABS(cast(posx as signed) - {$rows_xy['posx']}) + ABS(cast(posy as signed) - {$rows_xy['posy']}) ) AS v
+						from pks where status = 'VA' and prioritys != 0 and (book_time is null or book_time <= now()) 
+						order by v asc limit 1 for update;"; 
+				*/
+			}
+			else
+			{
+				// 依順序
+				$sql = "select pksno from pks where status = 'VA' and pksno >= {$pksno} and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
+			}
+        }   
+        else
+        {
+        	$sql = "select pksno from pks where status = 'VA' and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
+        }
+        
+        $rows = $this->db->query($sql)->row_array(); 
+        if (!empty($rows['pksno']))
+        {
+        	$data['result']['location_no'] = "{$rows['pksno']}";
+        	$data['result_code'] = 'OK';  
+            $sql = "update pks set book_time = addtime(now(), '00:10:00') where pksno = {$rows['pksno']};";
+            $this->db->query($sql);
+			
+			trigger_error(__FUNCTION__ . "[{$pksno}]:" .  print_r($rows, true));
+        }      
+        else   
+        {
+        	$data['result']['location_no'] = '0';
+        	$data['result_code'] = 'FAIL';
+        }      
+        $this->db->trans_complete(); 
+        return $data; 
+    } 
     
     
     // 緊急求救

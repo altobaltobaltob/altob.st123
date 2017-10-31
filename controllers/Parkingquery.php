@@ -99,7 +99,6 @@ class Parkingquery extends CI_Controller
     
     	   
     // 查詢各樓層剩餘車位 
-    // http://203.75.167.89/parkingquery.html/check_space/12345
 	public function check_space() 
 	{       
     	$seqno = $this->uri->segment(3);
@@ -108,6 +107,16 @@ class Parkingquery extends CI_Controller
         $data['result_code'] = 'OK'; 
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }    
+	
+	// 查詢各樓層剩餘車位 (身障)
+	public function check_space2() 
+	{       
+    	$seqno = $this->uri->segment(3);
+        $data = $this->parkingquery_model->check_space($seqno, 2);
+        $data['result']['num'] = $seqno; 
+        $data['result_code'] = 'OK'; 
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }
     
      
     // 停車位置查詢(板橋好停車)
@@ -128,6 +137,15 @@ class Parkingquery extends CI_Controller
         $data = $this->parkingquery_model->get_valid_seat($pksno);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }    
+	
+	// 空車位導引 (身障)
+    // http://203.75.167.89/parkingquery.html/get_valid_seat2
+	public function get_valid_seat2() 
+	{                                          
+    	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
+        $data = $this->parkingquery_model->get_valid_seat($pksno, 2);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }
     
     
     // 緊急求救
