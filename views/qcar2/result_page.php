@@ -418,7 +418,7 @@ $(document).ready(function()
 				floorName: 'B1',
 				canvasId: 'b1canvas',
 				src: '<?=SERVER_URL?>i3/pics/b1_map.png',
-				initialImageRatio: 0.9,
+				initialImageRatio: 0.95,
 				shiftLeft: 50,
 				shiftUp: 0
 			}
