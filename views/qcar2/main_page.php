@@ -158,7 +158,7 @@
 								<tbody>
 									<tr>
 										<td colspan="2" style="text-align:center;vertical-align: middle;">
-											<img id="show_img" style="max-width:400px" />
+											<img id="show_img" style="max-width:300px" />
                                         </td>
 									</tr>
 								</tbody>

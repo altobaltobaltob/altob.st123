@@ -48,7 +48,7 @@
 			<?php /* ----- 查詢結果 ----- */ ?>
             <!-- div data-items="rent_sync" class="row" style="display:none;"-->
             <div data-items="output_pks" class="row" style="display:none; height:100%">
-                <div class="col-lg-2 col-sm-2">
+                <div class="col-lg-3 col-sm-3">
                     <div class="panel panel-default">
                         <div class="panel-heading" style="font-size:28px;"><?php /* 資料顯示區灰色小表頭 */ ?>
                             查車結果
@@ -83,7 +83,7 @@
 													<tbody>
 														<tr>
 															<td style="text-align:center;vertical-align: middle;">
-																<img id="show_img" style="max-width:250px" />
+																<img id="show_img" style="max-width:150px" />
 															</td>
 														</tr>
 													</tbody>
@@ -112,7 +112,7 @@
 					</table>
 				</div-->
 				
-				<div class="col-lg-10 col-sm-10">
+				<div class="col-lg-9 col-sm-9">
 					<div class="panel panel-default" style="min-height: 1200px">
 						<div class="panel-heading" style="font-size:28px;"><span>停車位置 : B1 樓層</span></div>
 						<div class="panel-body"><canvas id="b1canvas"></canvas></div>
