@@ -94,7 +94,7 @@ class Qcar2 extends CI_Controller
 	{
     	$lpr = $this->uri->segment(3);	// 車牌號碼
         $data = $this->qcar2_model->q_pks($lpr);
-		$data['lpr'] = $lpr;
+		$data['lpr'] = strtoupper($lpr);
 		$this->show_page('result_page', $data);		// 1280x1080
 	}
 	
@@ -103,7 +103,7 @@ class Qcar2 extends CI_Controller
 	{
     	$lpr = $this->uri->segment(3);	// 車牌號碼
         $data = $this->qcar2_model->q_pks($lpr);
-		$data['lpr'] = $lpr;
+		$data['lpr'] = strtoupper($lpr);
 		$this->show_page('result_page2', $data);	// 2560x1440
 	}
 
