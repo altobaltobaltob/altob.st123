@@ -132,8 +132,142 @@ class Carpark extends CI_Controller
 	
 	
 	
+	// ------------------------------------------------
+	//
+	// CRM (START)
+	//
+	// ------------------------------------------------
 	
+	// [test] zzz
+	public function gen_test_case()
+	{
+		$sno = '12302';
+		$ivsno = 0;
+		$io = 'CI';
+		$lpr = 'TEST1109A';
+		$ts = date('YmdHis');
+		
+		$parms = array();
+		$parms['sno'] = $sno;
+		$parms['ivsno'] = $ivsno;
+		$parms['io'] = $io;
+		$parms['lpr'] = $lpr;
+		$parms['ts'] = $ts;
+		
+		$function_name = 'remote_lprio';
+		$ck = $this->gen_cms_ck($parms, $function_name);
+		echo "http://localhost/carpark.html/{$function_name}/sno/{$sno}/ivsno/{$ivsno}/io/{$io}/type/C/lpr/{$lpr}/color/NONE/sq/0/ts/{$ts}/sq2/0/etag/NONE/ant/1/ck/{$ck}";
+		echo "\n\n";
+		
+		$function_name = 'remote_opendoor_lprio';
+		$ck = $this->gen_cms_ck($parms, $function_name);
+		echo "http://localhost/carpark.html/{$function_name}/sno/{$sno}/ivsno/{$ivsno}/io/{$io}/type/C/lpr/{$lpr}/color/NONE/sq/0/ts/{$ts}/sq2/0/etag/NONE/ant/1/ck/{$ck}";
+		echo "\n\n";
+		
+		$function_name = 'remote_opendoor_anyway';
+		$ck = $this->gen_cms_ck($parms, $function_name);
+		echo "http://localhost/carpark.html/{$function_name}/sno/{$sno}/ivsno/{$ivsno}/io/{$io}/lpr/{$lpr}/ts/{$ts}/ck/{$ck}";
+		echo "\n\n";
+		exit;
+	}
 	
+	// 產生 CK
+	function gen_cms_ck($parms, $function_name)
+	{
+		return md5($parms['sno']. 'a' . date('dmh') . 'l' . $parms['ts'] . 't'. $parms['lpr']. 'o'. $parms['ivsno'] . 'b'. $parms['io'] . $function_name);
+	}
+	
+	// [remote] 新增車辨記錄
+	public function remote_lprio()
+	{
+		$LOG_FLAG = 'cms://';
+		$parms = $this->uri->uri_to_assoc(3);
+		
+		// ck
+		if($parms['ck'] != $this->gen_cms_ck($parms, __FUNCTION__))
+		{
+			echo 'ck_error';	// 中斷
+			exit;
+		}
+		
+		$parms['lpr'] = urldecode($parms['lpr']);
+		$parms['obj_type'] = 1;
+        $parms['curr_time_str'] = date('Y-m-d H:i:s');
+        $parms['pic_name'] = '';
+		
+		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
+		
+		// 載入模組
+		$this->load->model('cars_model'); 
+        $this->cars_model->init($this->vars);
+		$this->cars_model->lprio($parms);
+		
+		echo 'ok';
+		exit;
+	}
+	
+	// [remote] 車辨開門
+	public function remote_opendoor_lprio()
+	{
+		$LOG_FLAG = 'cms://';
+		$parms = $this->uri->uri_to_assoc(3);
+		
+		// ck
+		if($parms['ck'] != $this->gen_cms_ck($parms, __FUNCTION__))
+		{
+			echo 'ck_error';	// 中斷
+			exit;
+		}
+		
+		$parms['lpr'] = urldecode($parms['lpr']);
+		
+		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
+		
+		// 載入模組
+		$this->load->model('cars_model'); 
+        $this->cars_model->init($this->vars);
+		$this->cars_model->opendoor_lprio($parms);
+		
+		echo 'ok';
+		exit;
+	}
+	
+	// [remote] 直接開門
+	public function remote_opendoor_anyway()
+	{
+		$LOG_FLAG = 'cms://';
+		$parms = $this->uri->uri_to_assoc(3);
+		
+		// ck
+		if($parms['ck'] != $this->gen_cms_ck($parms, __FUNCTION__))
+		{
+			echo 'ck_error';	// 中斷
+			exit;
+		}
+		
+		$parms['lpr'] = urldecode($parms['lpr']);
+		
+		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
+		
+		// 載入模組
+		$this->load->model('cars_model'); 
+        $this->cars_model->init($this->vars);
+		
+		// 判斷會員身份
+		$rows = $this->cars_model->get_member($lpr);
+		
+		if ($rows['member_no'] == 0)
+		{
+			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");	// 臨停訊號
+		}
+		else
+		{
+			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
+		}
+		
+		echo 'ok';
+		exit;
+	}
 	
 	// ------------------------------------------------
 	//
@@ -144,6 +278,7 @@ class Carpark extends CI_Controller
 	// [mqtt] 接收端 
 	public function mqtt_service()
 	{
+		$LOG_FLAG = 'mqtt://';
 		$topic = $this->input->post('topic', true);
 		$msg = $this->input->post('msg', true);
 		$ck = $this->input->post('ck', true);
@@ -154,7 +289,7 @@ class Carpark extends CI_Controller
 			exit;
 		}
 		
-		trigger_error(__FUNCTION__ . "|{$topic}|{$msg}");
+		trigger_error($LOG_FLAG . __FUNCTION__ . "|{$topic}|{$msg}");
 		
 		if($topic == 'altob.888.mqtt')
 		{
@@ -167,14 +302,14 @@ class Carpark extends CI_Controller
 			
 			if(sizeof($msg_arr) != 4)
 			{
-				trigger_error(__FUNCTION__ . "..error_size.." . print_r($msg_arr, true));
+				trigger_error($LOG_FLAG . __FUNCTION__ . "..error_size.." . print_r($msg_arr, true));
 				echo 'error_size';
 				exit;
 			}
 			
 			if($msg_arr[0] != 'N888' || $msg_arr[3] != 'altob')
 			{
-				trigger_error(__FUNCTION__ . "..unknown_msg.." . print_r($msg_arr, true));
+				trigger_error($LOG_FLAG . __FUNCTION__ . "..unknown_msg.." . print_r($msg_arr, true));
 				echo 'unknown_msg';
 				exit;
 			}
@@ -183,7 +318,7 @@ class Carpark extends CI_Controller
 			$group_id = isset($msg_arr[1]) && $msg_arr[1] == 2 ? 'M888' : 'C888';
 			$value = isset($msg_arr[2]) ? $msg_arr[2] : 0;
 			$result = $this->sync_data_model->force_sync_888($first_station_no, $group_id, $value);
-			trigger_error(__FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
+			trigger_error($LOG_FLAG . __FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
 		}
 		
 		echo 'ok';
