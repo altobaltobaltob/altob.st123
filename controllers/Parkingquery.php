@@ -172,6 +172,20 @@ class Parkingquery extends CI_Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
 	
+	// 查詢樓層總覽
+	public function q_local_pks() 
+	{       
+		$seqno = $this->uri->segment(3);
+		
+		if(empty($seqno))
+			$seqno = 'B1';
+		
+        $data = $this->parkingquery_model->q_local_pks($seqno);
+        $data['result']['num'] = $seqno; 
+		$data['result_code'] = 'OK'; 
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }    
+	
 	// 警急求救地圖
 	public function floor_map()
 	{
