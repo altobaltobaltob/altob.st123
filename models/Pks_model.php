@@ -98,10 +98,20 @@ class Pks_model extends CI_Model
 				// upd 2017/11/11避免圖檔拿不到
 				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('YmdH') .".jpg";
 				$test_check_str = file_exists(PKS_PIC . $new_file_name) ? 'exists' : 'not_exists';
-				trigger_error(__FUNCTION__ . '..' . PKS_PIC.$new_file_name . '..' . $test_check_str);
+				trigger_error(__FUNCTION__ . '..' . PKS_PIC . $new_file_name . '..' . $test_check_str);
 				
 				// 車入格後的車牌辨識(lpr), 傅送圖檔
 				//array_map('unlink', glob(PKS_PIC."pks-{$parms['pksno']}-*.jpg"));	// 刪除舊照片
+				
+				// 清除舊照片
+				foreach(glob(PKS_PIC."pks-{$parms['pksno']}-*.jpg") as $old_file_path)
+				{
+					if($old_file_path != PKS_PIC . $new_file_name)
+					{
+						unlink($old_file_path);
+						trigger_error('remove old image:'. $old_file_path. ', replace by: ' . $new_file_name);
+					}
+				}
 				
 				$parms['pic_name'] = $new_file_name;
 				
@@ -125,7 +135,7 @@ class Pks_model extends CI_Model
 						trigger_error('入席傳檔錯誤:'. print_r($parms, true));
 					}	
 				}
-
+				
         		$data = array
             	(
                     'cario_no' => $cario_no,
