@@ -100,7 +100,8 @@ class Pks_model extends CI_Model
         		$config['upload_path'] = PKS_PIC;
         		$config['allowed_types'] = 'gif|jpg|png';
         		// ex. pks-2016-1625AB-1-2015080526.jpg -> pks-車位編號-車號-設備編號-時間.jpg
-	        	$config['file_name'] = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-{$this->vars['time_num']}.jpg";
+	        	//$config['file_name'] = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-{$this->vars['time_num']}.jpg";
+				$config['file_name'] = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('YmdH') .".jpg";	// upd 2017/11/11避免圖檔拿不到
         		$this->load->library('upload', $config);
 
             	$parms['pic_name'] = $config['file_name'];
