@@ -22,8 +22,54 @@ class Carpayment_model extends CI_Model
 	{                        
     	$this->vars = $vars;
     } 
+	
+	/*
+	// MITAC 通知付款完成
+	public function mitac2payed($parms) 
+	{           
+		$where_arr = array('obj_type' => 1, 'cario_no' => $parms['cario_no'], 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0);
+		$result = $this->db->select("in_time, cario_no, station_no")
+        		->from('cario')	
+                ->where($where_arr)
+                ->limit(1)
+                ->get()
+                ->row_array();
+		
+		$in_time = new DateTime($result['in_time']);
+		$pay_time = new DateTime($parms['pay_time']);
+			
+		$data = array
+			(
+				'out_before_time' =>  date('Y-m-d H:i:s', strtotime("{$parms['pay_time']} + 15 minutes")),
+				'pay_time' => $parms['pay_time'],
+				'pay_type' => $parms['pay_type'],
+				'payed' => 1
+			);
+						
+		// 更新
+		$this->db->where($where_arr)->update('cario', $data); 
+			
+		if (!$this->db->affected_rows())
+		{
+			trigger_error("付款失敗:{$parms['lpr']}|{$data['out_before_time']}");
+			return 'fail';
+		}
+			
+		trigger_error("付款後更新時間:{$parms['lpr']}|{$data['out_before_time']}");
+		
+		// 傳送付款更新記錄
+		$sync_agent = new AltobSyncAgent();
+		$sync_agent->init($result['station_no'], $result['in_time']);
+		$sync_agent->cario_no = $result['cario_no'];		// 進出編號
+		$sync_result = $sync_agent->sync_st_pay($parms['lpr'], $parms['pay_time'], $parms['pay_type'], 
+			date('Y-m-d H:i:s', strtotime("{$parms['pay_time']} + 15 minutes")));
+		trigger_error( "..sync_st_pay.." .  $sync_result);
+		
+		return 'ok';
+	}
+	*/
        
-    // 博辰通知付款完成
+    // 通知付款完成
 	public function p2payed($parms, $opay=false) 
 	{           
 		$result = $this->db->select("in_time, cario_no, station_no")

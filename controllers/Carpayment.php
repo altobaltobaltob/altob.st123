@@ -115,6 +115,41 @@ class Carpayment extends CI_Controller
         
         $this->carpayment_model->p2payed($parms);
     }  
+	
+	// MITAC 付款
+	public function mitac2payed()
+	{            
+    	$cario_no = $this->input->post('cario_no', true);	// 通訊序號
+		$lpr = $this->input->post('lpr', true);				// 車牌
+		$amt = $this->input->post('amt', true);						// 金額
+		$amt_discount =	$this->input->post('amt_discount', true);	// 折扣
+		$amt_real = $this->input->post('amt_real', true);			// 實收
+		$in_time = $this->input->post('in_time', true);		// 入場時間
+		$pay_time = $this->input->post('pay_time', true);	// 付款時間
+		$ck = $this->input->post('ck', true);				// 驗証碼
+		
+		// 通訊內容
+		$parms = array(
+			'cario_no' => $cario_no, 
+			'lpr' => $lpr, 
+			'amt' => $amt, 
+			'amt_discount' => $amt_discount, 
+			'amt_real' => $amt_real,
+			'in_time' => $in_time, 
+			'pay_time' => $pay_time);
+			
+		if($ck != md5($parms['cario_no']. 'a' . date('dmh') . 'l' . $parms['lpr'] . 't'. $parms['amt']. 'o'. $parms['amt_discount'] . 'b'. $parms['amt_real'] . __FUNCTION__))
+		{
+			trigger_error(__FUNCTION__ . '..ck_error..' . print_r($parms, true));
+			exit; // 中斷
+		}
+		
+		$parms['pay_type'] = 93; // MITAC 專用
+		
+		trigger_error('MITAC 付款:' . print_r($parms, true));
+		//$this->carpayment_model->mitac2payed($parms);
+		$this->carpayment_model->p2payed($parms);
+    }  
      
     /*
     月租繳款完成          

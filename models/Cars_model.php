@@ -546,6 +546,10 @@ class Cars_model extends CI_Model
 									$sync_agent->in_time = $rows_cario['in_time'];			// 入場時間
 									$sync_result = $sync_agent->sync_st_out($parms);
 									trigger_error( "..sync_st_out.." .  $sync_result);
+									
+									// [mitac] 要求 mitac 扣款 START
+									$this->call_mitac_pay($parms['lpr'], $parms['ivsno'], $rows_cario);
+									// [mitac] 要求 mitac 扣款 END
 								}
                             }
                             break;
@@ -630,6 +634,10 @@ class Cars_model extends CI_Model
 								$sync_agent->in_time = $rows_cario['in_time'];			// 入場時間
 								$sync_result = $sync_agent->sync_st_out($parms);
 								trigger_error( "..sync_st_out.." .  $sync_result);
+								
+								// [mitac] 要求 mitac 扣款 START
+								$this->call_mitac_pay($parms['lpr'], $parms['ivsno'], $rows_cario);
+								// [mitac] 要求 mitac 扣款 END
 							}
                             break;
                     }
@@ -1291,5 +1299,56 @@ class Cars_model extends CI_Model
 		}
 	}
 	
+	// ===============================================
+	// mitac cmd
+	// ===============================================
+	
+	// 要求 mitac 扣款
+	function call_mitac_pay($lpr, $ivsno, $rows_cario)
+	{
+		$function_name = 'parking_fee_altob';
+		$seqno = $rows_cario['cario_no'];
+		$lpr = $lpr;
+		$in_time =	$rows_cario['out_before_time'];
+		$out_time =	$this->now_str;
+		$gate_id = $ivsno;
+		
+		// 通訊內容
+		$parms = array(
+			'seqno' => $seqno, 
+			'lpr' => $lpr, 
+			'in_time' => $in_time, 
+			'out_time' => $out_time, 
+			'gate_id' => $gate_id);
+		
+		// 驗証碼
+		$parms['ck'] = md5($parms['seqno']. 'a' . date('dmh') . 'l' . $parms['lpr'] . 't'. $parms['in_time']. 'o'. $parms['out_time'] . 'b'. $parms['gate_id'] . $function_name);
+		
+		// 呼叫
+		try{
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, "http://localhost/mitac_service.html/{$function_name}");
+            curl_setopt($ch, CURLOPT_HEADER, FALSE);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,3);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 3); //timeout in seconds
+            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parms));
+            $data = curl_exec($ch);
+			
+			if(curl_errno($ch))
+			{
+				trigger_error(__FUNCTION__ . ', curl error: '. curl_error($ch));
+			}
+			
+            curl_close($ch);
+			
+			trigger_error(__FUNCTION__ . '..'. $data);
+
+		}catch (Exception $e){
+			trigger_error(__FUNCTION__ . 'error:'.$e->getMessage());
+		}
+	}
 	
 }
