@@ -96,7 +96,7 @@ class Pks_model extends CI_Model
                 }
 				
 				// upd 2017/11/11避免圖檔拿不到
-				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('YmdH') .".jpg";
+				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('Ymd') .".jpg";
 				$test_check_str = file_exists(PKS_PIC . $new_file_name) ? 'exists' : 'not_exists';
 				trigger_error(__FUNCTION__ . '..' . PKS_PIC . $new_file_name . '..' . $test_check_str);
 				
