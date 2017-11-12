@@ -104,6 +104,13 @@ class Mitac_service extends CI_Controller
         echo '</pre></body></html>';
 	}    
 	
+	// [排程] 詢問是否存活
+	public function echo_mitac_alive()
+	{
+		echo $this->mitac_service_model->echo_mitac_alive();
+		exit;
+	}
+	
 	// 要求扣款 (ALTOB to MITAC)
 	public function parking_fee_altob()
 	{

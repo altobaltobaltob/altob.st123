@@ -24,33 +24,31 @@ class Mitac_service_model extends CI_Model
     }
 	
 	// mitac socket
-	function mitac_socket($in)
+	function mitac_socket($in, $function_name = __FUNCTION__)
 	{
-		trigger_error(__FUNCTION__ . "..socket input|{$in}");
-		return 'ok';
-		
-		
+		trigger_error($function_name . "..socket input|{$in}");
+		return 'none';	// 尚未開放
 		
 		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		if ($socket === false) {
-			trigger_error(__FUNCTION__ . "..socket_create() failed: reason: " . socket_strerror(socket_last_error()));
+			trigger_error($function_name . "..socket_create() failed: reason: " . socket_strerror(socket_last_error()));
 		}
 
 		$result = socket_connect($socket, MITAC_SERVICE_IP, MITAC_SERVICE_PORT);
 		if ($result === false) {
-			trigger_error(__FUNCTION__ . "..socket_connect() failed.\nReason: ({$result}) " . socket_strerror(socket_last_error($socket)));
+			trigger_error($function_name . "..socket_connect() failed.\nReason: ({$result}) " . socket_strerror(socket_last_error($socket)));
 			return false;	// 中斷
 		}
 		
 		if(!socket_write($socket, $in, strlen($in)))
 		{
-			trigger_error(__FUNCTION__ . '..Write failed..');
+			trigger_error($function_name . '..Write failed..');
 		}
 		
 		$out = socket_read($socket, 64);
 		socket_shutdown($socket);
 		socket_close($socket);		
-		trigger_error(__FUNCTION__ . "..socket output|{$out}");
+		trigger_error($function_name . "..socket output|{$out}");
 		
 		return $out;
 	}
@@ -60,11 +58,19 @@ class Mitac_service_model extends CI_Model
     	$this->vars = $vars;
     }
 	
+	// 詢問是否存活
+	public function echo_mitac_alive()
+	{
+		$msg = iconv("UTF-8", "ISO-8859-1", implode(',', ['Mitac', 'Are you alive']));
+		$result = $this->mitac_socket($msg, __FUNCTION__);
+		return $result == 'Mitac,Alive' ? 'ok' : 'gg';
+	}
+	
 	// 要求扣款 (ALTOB to MITAC)
 	public function parking_fee_altob($parms)
 	{
 		// 轉換成對方要的格式
-		$seqno = date('Ymd') . '_' . str_pad($parms['seqno'], 6, '0', STR_PAD_LEFT);
+		$seqno = date('Ymd') . '_' . str_pad($parms['seqno'], 10, '0', STR_PAD_LEFT);
 		$lpr = $parms['lpr'];
 		$in_time = date('Ymd_His', strtotime($parms['in_time']));
 		$out_time =	date('Ymd_His', strtotime($parms['out_time']));
@@ -72,9 +78,7 @@ class Mitac_service_model extends CI_Model
 		
 		// 產生通訊內容
 		$msg = iconv("UTF-8", "ISO-8859-1", implode(',', ['Mitac', 'ParkingFee_Altob', $seqno, $lpr, $in_time, $out_time, $gate_id]));
-		$result = $this->mitac_socket($msg);
-		
-		trigger_error(__FUNCTION__ . "..{$msg}..|{$result}");
+		$result = $this->mitac_socket($msg, __FUNCTION__);
 		return 'ok';
 	}
 	

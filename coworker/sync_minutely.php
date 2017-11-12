@@ -22,10 +22,32 @@ trigger_error('..start..');
 try
 {
 	$ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, "http://localhost/carpark.html/sync_minutely");
+    curl_setopt($ch, CURLOPT_URL, "http://localhost/carpark.html/sync_minutely");			// TASK: sync
     curl_setopt($ch, CURLOPT_HEADER, FALSE);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_POST, FALSE);
+    $output = curl_exec($ch);
+    curl_close($ch);
+}
+catch(Exception $e)
+{
+	trigger_error('ERROR: ' . $e->getMessage());
+}
+
+sleep(1);
+
+try
+{
+	$ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, "http://localhost/mitac_service.html/echo_mitac_alive");	// TASK: MITAC alive check
+    curl_setopt($ch, CURLOPT_HEADER, FALSE);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+	curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+	curl_setopt($ch, CURLOPT_TIMEOUT, 3);
     curl_setopt($ch, CURLOPT_POST, FALSE);
     $output = curl_exec($ch);
     curl_close($ch);
