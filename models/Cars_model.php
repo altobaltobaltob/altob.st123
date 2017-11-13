@@ -845,21 +845,6 @@ class Cars_model extends CI_Model
         return $rows;
     }
 
-	// 開門 (月租)
-    public function member_opendoors($parms)
-	{
-		$this->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
-        return true;
-    }
-
-	// 開門 (臨停)
-	public function temp_opendoors($parms)
-	{
-		$this->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
-		return true;
-	}
-
-
     // 用eTag讀出車號
 	public function etag2lpr_2($etag)
 	{
@@ -1168,6 +1153,27 @@ class Cars_model extends CI_Model
 		$this->vars['mqtt']->publish($topic, $msg, 0);
     	trigger_error("mqtt:{$topic}|{$msg}");
     }
+	
+	// 開門專用
+	public function mq_send_opendoor($topic, $msg)
+	{
+		$this->vars['mqtt_opendoor']->publish($topic, $msg, 0);
+    	trigger_error("mqtt_opendoor:{$topic}|{$msg}");
+    }
+	
+	// 開門 (月租)
+    public function member_opendoors($parms)
+	{
+		$this->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
+        return true;
+    }
+
+	// 開門 (臨停)
+	public function temp_opendoors($parms)
+	{
+		$this->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
+		return true;
+	}
 
 
     // 指派車位

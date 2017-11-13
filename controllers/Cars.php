@@ -109,6 +109,8 @@ class Cars extends CI_Controller
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
 		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
 		$this->vars['mqtt']->connect();
+		$this->vars['mqtt_opendoor'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt_opendoor']->connect();
 		
 		// init again
 		$this->sync_data_model->init($this->vars);	// for mqtt
