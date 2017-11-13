@@ -25,6 +25,15 @@ class Sync_data_model extends CI_Model
 		$this->vars = $vars;
     } 
 	
+	// 結束
+	public function stop()
+	{
+		if(isset($this->vars['mqtt']))
+		{
+			$this->vars['mqtt']->close();	
+		}
+	}
+	
 	// 送出至message queue(目前用mqtt)
 	public function mq_send($topic, $msg)
 	{

@@ -34,8 +34,21 @@ class Cars_model extends CI_Model
 			$this->vars['mqtt_opendoor'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid() . 'mqtt_opendoor');
 			$this->vars['mqtt_opendoor']->connect();
 		}
-		
     }
+	
+	// 結束
+	public function stop()
+	{
+		if(isset($this->vars['mqtt']))
+		{
+			$this->vars['mqtt']->close();	
+		}
+		
+		if(isset($this->vars['mqtt_opendoor']))
+		{
+			$this->vars['mqtt_opendoor']->close();	
+		}
+	}
 
 	// 車輛進出傳入車牌號碼 (2016/07/27)
     public function opendoor_lprio($parms)

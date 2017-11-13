@@ -197,7 +197,7 @@ class Carpark extends CI_Controller
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
 		$this->cars_model->lprio($parms);
-		
+		$this->cars_model->stop();
 		echo 'ok';
 		exit;
 	}
@@ -223,7 +223,7 @@ class Carpark extends CI_Controller
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
 		$this->cars_model->opendoor_lprio($parms);
-		
+		$this->cars_model->stop();
 		echo 'ok';
 		exit;
 	}
@@ -260,7 +260,7 @@ class Carpark extends CI_Controller
 		{
 			$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
 		}
-		
+		$this->cars_model->stop();
 		echo 'ok';
 		exit;
 	}
@@ -298,6 +298,7 @@ class Carpark extends CI_Controller
 			
 			if(sizeof($msg_arr) != 4)
 			{
+				$this->sync_data_model->stop();
 				trigger_error($LOG_FLAG . __FUNCTION__ . "..error_size.." . print_r($msg_arr, true));
 				echo 'error_size';
 				exit;
@@ -305,6 +306,7 @@ class Carpark extends CI_Controller
 			
 			if($msg_arr[0] != 'N888' || $msg_arr[3] != 'altob')
 			{
+				$this->sync_data_model->stop();
 				trigger_error($LOG_FLAG . __FUNCTION__ . "..unknown_msg.." . print_r($msg_arr, true));
 				echo 'unknown_msg';
 				exit;
@@ -317,6 +319,7 @@ class Carpark extends CI_Controller
 			trigger_error($LOG_FLAG . __FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
 		}
 		
+		$this->sync_data_model->stop();
 		echo 'ok';
 		exit;
 	}
@@ -333,6 +336,7 @@ class Carpark extends CI_Controller
 			
 			if(!$station_setting)
 			{
+				$this->sync_data_model->stop();
 				echo json_encode('fail', JSON_UNESCAPED_UNICODE);
 				exit;	// 中斷
 			}
@@ -363,11 +367,15 @@ class Carpark extends CI_Controller
 			
 			if(!$station_setting)
 			{
+				$this->sync_data_model->stop();
 				echo json_encode('fail', JSON_UNESCAPED_UNICODE);
 				exit;	// 中斷
 			}
 		}
+		
+		$this->sync_data_model->stop();
 		echo json_encode($station_setting, JSON_UNESCAPED_UNICODE);
+		exit;
 	}
 	
 	// [排程 or 強制] 同步場站資訊
@@ -414,6 +422,7 @@ class Carpark extends CI_Controller
 			$this->sync_data_model->sync_switch_lpr($switch_lpr_arr);
 		}
 		
+		$this->sync_data_model->stop();
 	}
 	
 	// [API] 取得最新未結清
@@ -434,6 +443,7 @@ class Carpark extends CI_Controller
 		}
 		
         $data = $this->sync_data_model->get_last_unbalanced_cario($lpr, $station_no);
+		$this->sync_data_model->stop();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	}
 	
@@ -497,6 +507,7 @@ class Carpark extends CI_Controller
 	public function sync_minutely()
 	{
 		$this->sync_data_model->sync_pks_groups();	// 同步在席現況
+		$this->sync_data_model->stop();
 	}
 	
 	// 20170816 手動新增入場資料
@@ -964,6 +975,7 @@ class Carpark extends CI_Controller
 		
 		// 重新載入
         $data = $this->sync_data_model->pks_availables_update($group_id, $value, true, $station_no);
+		$this->sync_data_model->stop();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 

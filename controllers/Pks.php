@@ -254,6 +254,7 @@ class Pks extends CI_Controller
         */
 		
         $this->pks_model->pksio($parms);	// 車輛進出車格資料庫處理 
+		$this->pks_model->stop();
         exit;          
 	}   
     
@@ -263,6 +264,7 @@ class Pks extends CI_Controller
     public function reculc()
 	{ 
     	$this->pks_model->reculc();  
+		$this->pks_model->stop();
     }
 	
 	
@@ -273,6 +275,7 @@ class Pks extends CI_Controller
 	{   
 		$station_no = $this->uri->segment(3);      
         $data = $this->pks_model->query_station_status($station_no);
+		$this->pks_model->stop();
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
 	
@@ -282,6 +285,7 @@ class Pks extends CI_Controller
 		$station_no = $this->uri->segment(3);      
 		$pksno = $this->uri->segment(4);      
 		$data = $this->pks_model->query_station_pks($station_no, $pksno);
+		$this->pks_model->stop();
 		echo json_encode($data, JSON_UNESCAPED_UNICODE); 
 	}
 	

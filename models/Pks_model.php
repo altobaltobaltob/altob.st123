@@ -26,6 +26,15 @@ class Pks_model extends CI_Model
 			$this->vars['mqtt']->connect();	
 		}
     }
+	
+	// 結束
+	public function stop()
+	{
+		if(isset($this->vars['mqtt']))
+		{
+			$this->vars['mqtt']->close();	
+		}
+	}
 
 
     // 車輛進出傳入車牌號碼

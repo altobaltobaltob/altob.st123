@@ -159,6 +159,7 @@ class Cars extends CI_Controller
 		$parms = $this->uri->uri_to_assoc(3);
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
 		$this->cars_model->opendoor_lprio($parms);
+		$this->cars_model->stop();
 	}
     
     // IVS -> 車號, 影像 
@@ -224,6 +225,7 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
         $parms['pic_name'] = $config['file_name'];	// 圖片檔名 
         
         $this->cars_model->lprio($parms);	// 測試eTag
+		$this->cars_model->stop();
 	}     
     
     // 用車牌與eTag, 檢查資料庫
@@ -232,7 +234,8 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
     	$lpr = $this->uri->segment(3);
     	$etag = $this->uri->segment(4);  
         
-        $this->cars_model->check_lpr_etag($lpr, $etag);	
+        $this->cars_model->check_lpr_etag($lpr, $etag);
+		$this->cars_model->stop();		
         exit;
     }     
 
