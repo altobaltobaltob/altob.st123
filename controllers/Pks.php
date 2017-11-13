@@ -21,6 +21,8 @@ method: POST
 上傳圖檔欄位名稱為cars
 */
 
+require_once(MQ_CLASS_FILE); 
+
 class Pks extends CI_Controller
 {          
     var $vars = array();	// 共用變數     

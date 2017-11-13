@@ -23,6 +23,22 @@ class Sync_data_model extends CI_Model
 	public function init($vars)
 	{
 		$this->vars = $vars;
+		
+		// 一般
+		if(isset($this->vars['mqtt_ip']) && isset($this->vars['mqtt_port']))
+		{
+			$this->vars['mqtt'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid(). 'mqtt');
+			
+			if(!$this->vars['mqtt']->connect())
+			{
+				trigger_error(__FUNCTION__ . '..mqtt connect fail..' . "{$this->vars['mqtt_ip']}:{$this->vars['mqtt_port']}");
+			}
+		}	
+		else 
+		{
+			trigger_error(__FUNCTION__ . '..mqtt ip, port not found..');
+		}
+		
     } 
 	
 	// 結束
@@ -31,6 +47,7 @@ class Sync_data_model extends CI_Model
 		if(isset($this->vars['mqtt']))
 		{
 			$this->vars['mqtt']->close();	
+			trigger_error(__FUNCTION__ . '..mqtt close..' . "{$this->vars['mqtt_ip']}:{$this->vars['mqtt_port']}");
 		}
 	}
 	

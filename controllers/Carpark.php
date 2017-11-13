@@ -17,6 +17,8 @@ define('WEB_LIB', SERVER_URL.'libs/');													// 網頁lib
 define('BOOTSTRAPS', WEB_LIB.'bootstrap_sb/');											// bootstrap lib  
 define('LOG_PATH', FILE_BASE.APP_NAME.'/logs/');	// log path
 
+require_once(MQ_CLASS_FILE); 
+
 class Carpark extends CI_Controller
 {                 
     var $vars = array();	// 共用變數   
@@ -57,7 +59,9 @@ class Carpark extends CI_Controller
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
 		$this->vars['mqtt_ip'] = $mqtt_ip;
 		$this->vars['mqtt_port'] = $mqtt_port;
-		$this->sync_data_model->init($this->vars);	// for mqtt
+		
+		// init sync model
+		$this->sync_data_model->init($this->vars);
 		
 		// 產生 excel 報表
 		$this->load->model('excel_model'); 
@@ -252,13 +256,18 @@ class Carpark extends CI_Controller
 		// 判斷會員身份
 		$rows = $this->cars_model->get_member($lpr);
 		
+		// 取得 ck
+		$parms['ck'] = $this->cars_model->gen_opendoor_ck($parms);
+		
 		if ($rows['member_no'] == 0)
 		{
-			$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");	// 臨停訊號
+			//$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
+			$this->cars_model->temp_opendoors($parms);		// 臨停訊號
 		}
 		else
 		{
-			$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
+			//$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
+			$this->cars_model->member_opendoors($parms);	// 月租訊號
 		}
 		$this->cars_model->stop();
 		echo 'ok';
