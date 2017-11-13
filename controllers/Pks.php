@@ -21,8 +21,6 @@ method: POST
 上傳圖檔欄位名稱為cars
 */
 
-require_once(MQ_CLASS_FILE); 
-
 class Pks extends CI_Controller
 {          
     var $vars = array();	// 共用變數     
@@ -93,8 +91,10 @@ class Pks extends CI_Controller
 		$station_setting = $this->sync_data_model->station_setting_query();
 		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
-		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
-		$this->vars['mqtt']->connect();
+		//$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		//$this->vars['mqtt']->connect();
+		$this->vars['mqtt_ip'] = $mqtt_ip;
+		$this->vars['mqtt_port'] = $mqtt_port;
 		
 		// init sync model
 		$this->sync_data_model->init($this->vars);

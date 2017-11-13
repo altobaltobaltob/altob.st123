@@ -3,6 +3,7 @@
 file: cars_model.php
 */
 require_once(ALTOB_SYNC_FILE) ;
+require_once(MQ_CLASS_FILE); 
 
 define('CARS_TMP_LOG', 'cars_tmp_log');	// 暫存進出車號
 
@@ -23,6 +24,17 @@ class Cars_model extends CI_Model
 	public function init($vars)
 	{
     	$this->vars = $vars;
+		
+		if(isset($this->vars['mqtt_ip']) && isset($this->vars['mqtt_port']))
+		{
+			// 一般
+			$this->vars['mqtt'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid(). 'mqtt');
+			$this->vars['mqtt']->connect();
+			// 開門專用
+			$this->vars['mqtt_opendoor'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid() . 'mqtt_opendoor');
+			$this->vars['mqtt_opendoor']->connect();
+		}
+		
     }
 
 	// 車輛進出傳入車牌號碼 (2016/07/27)

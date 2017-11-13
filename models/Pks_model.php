@@ -3,6 +3,8 @@
 file: pks_model.php 	車位在席資料庫處理模組
 */
 
+require_once(MQ_CLASS_FILE); 
+
 class Pks_model extends CI_Model
 {
     var $vars = array();
@@ -16,6 +18,13 @@ class Pks_model extends CI_Model
 	public function init($vars)
 	{
 		$this->vars = $vars;
+		
+		if(isset($this->vars['mqtt_ip']) && isset($this->vars['mqtt_port']))
+		{
+			// 一般
+			$this->vars['mqtt'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid(). 'mqtt');
+			$this->vars['mqtt']->connect();	
+		}
     }
 
 

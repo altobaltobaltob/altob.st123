@@ -30,8 +30,6 @@ var ip='66.249.82.183';var clientid='565162cb67dfb';var mqtt_ip='192.168.51.11';
         define('LOG_PATH', FILE_BASE.APP_NAME.'/logs/');		// log path name
         define('LOG_FILE', FILE_BASE.APP_NAME.'/logs/cario.');	// log file name
 
-require_once(MQ_CLASS_FILE); 
-
 class Cars extends CI_Controller
 {          
     var $vars = array();      
@@ -103,14 +101,12 @@ class Cars extends CI_Controller
 		$this->load->model('sync_data_model'); 
 		$this->sync_data_model->init($this->vars);	// for memcache
 		
-		// mqtt subscribe
+		// mqtt
 		$station_setting = $this->sync_data_model->station_setting_query();
 		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
-		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
-		$this->vars['mqtt']->connect();
-		$this->vars['mqtt_opendoor'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
-		$this->vars['mqtt_opendoor']->connect();
+		$this->vars['mqtt_ip'] = $mqtt_ip;
+		$this->vars['mqtt_port'] = $mqtt_port;
 		
 		// init again
 		$this->sync_data_model->init($this->vars);	// for mqtt
