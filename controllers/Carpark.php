@@ -53,16 +53,6 @@ class Carpark extends CI_Controller
 		$this->load->model('sync_data_model'); 
 		$this->sync_data_model->init($this->vars);	// for memcache
 		
-		// mqtt subscribe
-		$station_setting = $this->sync_data_model->station_setting_query();
-		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
-		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
-		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
-		$this->vars['mqtt']->connect();
-		
-		// init again
-		$this->sync_data_model->init($this->vars);	// for mqtt
-		
 		// 產生 excel 報表
 		$this->load->model('excel_model'); 
         $this->excel_model->init($this->vars);
@@ -223,6 +213,19 @@ class Carpark extends CI_Controller
 		
 		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
 		
+		// mqtt subscribe
+		$station_setting = $this->sync_data_model->station_setting_query();
+		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
+		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
+		
+		// 字幕 MQTT
+		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt']->connect();
+		
+		// 開門 MQTT
+		$this->vars['mqtt_opendoor'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt_opendoor']->connect();
+		
 		// 載入模組
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
@@ -249,6 +252,15 @@ class Carpark extends CI_Controller
 		
 		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
 		
+		// mqtt subscribe
+		$station_setting = $this->sync_data_model->station_setting_query();
+		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
+		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
+		
+		// 開門 MQTT
+		$this->vars['mqtt_opendoor'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt_opendoor']->connect();
+		
 		// 載入模組
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
@@ -258,11 +270,11 @@ class Carpark extends CI_Controller
 		
 		if ($rows['member_no'] == 0)
 		{
-			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");	// 臨停訊號
+			$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");	// 臨停訊號
 		}
 		else
 		{
-			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
+			$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
 		}
 		
 		echo 'ok';
@@ -965,6 +977,18 @@ class Carpark extends CI_Controller
 		$group_id = $this->uri->segment(3);		// id
         $value = $this->uri->segment(4, 0);		// value
 		$station_no = $this->uri->segment(5);	// station_no
+		
+		// mqtt subscribe
+		$station_setting = $this->sync_data_model->station_setting_query();
+		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
+		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
+		
+		// 字幕 MQTT
+		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt']->connect();
+		
+		// 重新載入
+		$this->sync_data_model->init($this->vars);
         $data = $this->sync_data_model->pks_availables_update($group_id, $value, true, $station_no);
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
     }
