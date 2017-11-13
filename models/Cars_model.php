@@ -23,66 +23,67 @@ class Cars_model extends CI_Model
 	public function init($vars)
 	{
     	$this->vars = $vars;
-		
-		if(isset($this->vars['mqtt_ip']) && isset($this->vars['mqtt_port']))
-		{
-			$this->vars['mqtt'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid());
-			
-			if(!$this->vars['mqtt']->connect())
-			{
-				trigger_error(__FUNCTION__ . '..mqtt fail..' . "{$this->vars['mqtt_ip']}:{$this->vars['mqtt_port']}");
-			}
-		}
-		else 
-		{
-			trigger_error(__FUNCTION__ . '..mqtt ip, port not found..');
-		}
     }
-	
-	// 結束
-	public function stop()
-	{
-		if(isset($this->vars['mqtt']))
-		{
-			$this->vars['mqtt']->close();	
-		}
-	}
 
-	// 開門, 字幕
+	// 車輛進出傳入車牌號碼 (2016/07/27)
     public function opendoor_lprio($parms)
 	{
 		$parms['lpr'] = urldecode($parms['lpr']);
 
-    	trigger_error(__FUNCTION__ . '|車牌傳入 [開門]:' . print_r($parms, true));
-        $rows = $this->get_member($parms['lpr']);
-
-        $this->save_db_io($parms, $rows, true);			// 開門, 字幕
-        return true;
-    }
-	
-    // 資料
-    public function lprio($parms)
-	{
-		$parms['lpr'] = urldecode($parms['lpr']);
-
-    	trigger_error(__FUNCTION__ . '車牌傳入 [資料]:' . print_r($parms, true));
+    	$rows = array();
+        // $parms['ts'] = date('Y-m-d H:i:s', $parms['ts']);
+    	trigger_error(__FUNCTION__ . '|車牌傳入:' . print_r($parms, true));
 
         if ($parms['etag'] != 'NONE')
         {
           	if ($parms['lpr'] != 'NONE')
             {
-				get_headers("http://localhost/cars.html/check_lpr_etag/{$parms['lpr']}/{$parms['etag']}");
+            	// do nothing
+            }
+            else	// 車辨失敗但有eTag, 查詢是否有車號
+            {
+            	//$parms['lpr'] = $this->etag2lpr_2($parms['etag']); // 2017/01/10 預設都不用 ETAG 找車牌
             }
         }
 
         $rows = $this->get_member($parms['lpr']);
 
-        $this->save_db_io($parms, $rows);				// 資料
+        $this->save_db_io($parms, $rows, true);
         return true;
     }
 
+    // 車輛進出傳入車牌號碼
+    public function lprio($parms)
+	{
+		//$parms['lpr'] = urldecode($parms['lpr']);
+
+    	$rows = array();
+        // $parms['ts'] = date('Y-m-d H:i:s', $parms['ts']);
+    	trigger_error('車牌傳入:' . print_r($parms, true));
+
+        if ($parms['etag'] != 'NONE')
+        {
+          	if ($parms['lpr'] != 'NONE')
+            {
+            	// 有車牌有eTag, 檢查資料庫是否double驗證
+              	//get_headers("http://192.168.10.201/cars.html/check_lpr_etag/{$parms['lpr']}/{$parms['etag']}");
+				get_headers("http://localhost/cars.html/check_lpr_etag/{$parms['lpr']}/{$parms['etag']}"); // update 2016/07/26
+            }
+            else	// 車辨失敗但有eTag, 查詢是否有車號
+            {
+            	// $parms['lpr'] = $this->etag2lpr_2($parms['etag']); // 2017/01/10 預設都不用 ETAG 找車牌
+            }
+        }
+
+        $rows = $this->get_member($parms['lpr']);
+
+        $this->save_db_io($parms, $rows);
+        return true;
+    }
+
+
     // 入出口異動cario
-    function save_db_io($parms, $rows, $opendoor=false)
+    public function save_db_io($parms, $rows, $opendoor=false)
 	{
         if (!empty($rows['lpr_correct'])) $parms['lpr'] = $rows['lpr_correct'];
 		
@@ -844,6 +845,21 @@ class Cars_model extends CI_Model
         return $rows;
     }
 
+	// 開門 (月租)
+    public function member_opendoors($parms)
+	{
+		$this->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
+        return true;
+    }
+
+	// 開門 (臨停)
+	public function temp_opendoors($parms)
+	{
+		$this->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
+		return true;
+	}
+
+
     // 用eTag讀出車號
 	public function etag2lpr_2($etag)
 	{
@@ -1147,59 +1163,11 @@ class Cars_model extends CI_Model
 
 
     // 送出至message queue(目前用mqtt)
-	function mq_send($topic, $msg)
+	public function mq_send($topic, $msg)
 	{
 		$this->vars['mqtt']->publish($topic, $msg, 0);
     	trigger_error("mqtt:{$topic}|{$msg}");
     }
-	
-	// 產生 CK
-	public function gen_opendoor_ck($parms)
-	{
-		return md5($parms['ivsno']. 'alt' . date('dmh') . 'ob' . $parms['lpr']);
-	}
-	
-	// 開門 (月租)
-    public function member_opendoors($parms)
-	{
-		//$this->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
-		$ck = $this->gen_opendoor_ck($parms);
-		get_headers("http://localhost/cars.html/member_opendoors/{$parms['ivsno']}/{$parms['lpr']}/{$ck}");
-        return true;
-    }
-
-	// 開門 (臨停)
-	public function temp_opendoors($parms)
-	{
-		//$this->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
-		$ck = $this->gen_opendoor_ck($parms);
-		get_headers("http://localhost/cars.html/temp_opendoors/{$parms['ivsno']}/{$parms['lpr']}/{$ck}");
-		return true;
-	}
-	
-	// 開門 (月租)
-	public function do_member_opendoor($parms)
-	{
-		if($parms['ck'] != $this->cars_model->gen_opendoor_ck($parms))
-		{
-			return 'ck_error';	// 中斷
-		}
-		
-		$this->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
-		return 'ok';
-	}
-	
-	// 開門 (臨停)
-	public function do_temp_opendoor($parms)
-	{
-		if($parms['ck'] != $this->cars_model->gen_opendoor_ck($parms))
-		{
-			return 'ck_error';	// 中斷
-		}
-		
-		$this->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
-		return 'ok';
-	}
 
 
     // 指派車位

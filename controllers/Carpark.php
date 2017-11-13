@@ -4,6 +4,8 @@ file: carpark.php		停車管理
 */
 if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
+require_once(MQ_CLASS_FILE); 
+
 // ----- 定義常數(路徑, cache秒數) -----       
 define('APP_VERSION', '100');		// 版本號                                        
 define('MAX_AGE', 604800);			// cache秒數, 此定義1個月     
@@ -16,8 +18,6 @@ define('WEB_URL', SERVER_URL.APP_NAME.'/');												// 網頁路徑
 define('WEB_LIB', SERVER_URL.'libs/');													// 網頁lib
 define('BOOTSTRAPS', WEB_LIB.'bootstrap_sb/');											// bootstrap lib  
 define('LOG_PATH', FILE_BASE.APP_NAME.'/logs/');	// log path
-
-require_once(MQ_CLASS_FILE); 
 
 class Carpark extends CI_Controller
 {                 
@@ -53,15 +53,15 @@ class Carpark extends CI_Controller
 		$this->load->model('sync_data_model'); 
 		$this->sync_data_model->init($this->vars);	// for memcache
 		
-		// mqtt
+		// mqtt subscribe
 		$station_setting = $this->sync_data_model->station_setting_query();
 		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
-		$this->vars['mqtt_ip'] = $mqtt_ip;
-		$this->vars['mqtt_port'] = $mqtt_port;
+		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt']->connect();
 		
-		// init sync model
-		$this->sync_data_model->init($this->vars);
+		// init again
+		$this->sync_data_model->init($this->vars);	// for mqtt
 		
 		// 產生 excel 報表
 		$this->load->model('excel_model'); 
@@ -201,7 +201,7 @@ class Carpark extends CI_Controller
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
 		$this->cars_model->lprio($parms);
-		$this->cars_model->stop();
+		
 		echo 'ok';
 		exit;
 	}
@@ -227,7 +227,7 @@ class Carpark extends CI_Controller
 		$this->load->model('cars_model'); 
         $this->cars_model->init($this->vars);
 		$this->cars_model->opendoor_lprio($parms);
-		$this->cars_model->stop();
+		
 		echo 'ok';
 		exit;
 	}
@@ -256,20 +256,15 @@ class Carpark extends CI_Controller
 		// 判斷會員身份
 		$rows = $this->cars_model->get_member($lpr);
 		
-		// 取得 ck
-		$parms['ck'] = $this->cars_model->gen_opendoor_ck($parms);
-		
 		if ($rows['member_no'] == 0)
 		{
-			//$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
-			$this->cars_model->temp_opendoors($parms);		// 臨停訊號
+			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");	// 臨停訊號
 		}
 		else
 		{
-			//$this->cars_model->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
-			$this->cars_model->member_opendoors($parms);	// 月租訊號
+			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
 		}
-		$this->cars_model->stop();
+		
 		echo 'ok';
 		exit;
 	}
@@ -307,7 +302,6 @@ class Carpark extends CI_Controller
 			
 			if(sizeof($msg_arr) != 4)
 			{
-				$this->sync_data_model->stop();
 				trigger_error($LOG_FLAG . __FUNCTION__ . "..error_size.." . print_r($msg_arr, true));
 				echo 'error_size';
 				exit;
@@ -315,7 +309,6 @@ class Carpark extends CI_Controller
 			
 			if($msg_arr[0] != 'N888' || $msg_arr[3] != 'altob')
 			{
-				$this->sync_data_model->stop();
 				trigger_error($LOG_FLAG . __FUNCTION__ . "..unknown_msg.." . print_r($msg_arr, true));
 				echo 'unknown_msg';
 				exit;
@@ -328,7 +321,6 @@ class Carpark extends CI_Controller
 			trigger_error($LOG_FLAG . __FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
 		}
 		
-		$this->sync_data_model->stop();
 		echo 'ok';
 		exit;
 	}
@@ -345,7 +337,6 @@ class Carpark extends CI_Controller
 			
 			if(!$station_setting)
 			{
-				$this->sync_data_model->stop();
 				echo json_encode('fail', JSON_UNESCAPED_UNICODE);
 				exit;	// 中斷
 			}
@@ -376,15 +367,11 @@ class Carpark extends CI_Controller
 			
 			if(!$station_setting)
 			{
-				$this->sync_data_model->stop();
 				echo json_encode('fail', JSON_UNESCAPED_UNICODE);
 				exit;	// 中斷
 			}
 		}
-		
-		$this->sync_data_model->stop();
 		echo json_encode($station_setting, JSON_UNESCAPED_UNICODE);
-		exit;
 	}
 	
 	// [排程 or 強制] 同步場站資訊
@@ -431,7 +418,6 @@ class Carpark extends CI_Controller
 			$this->sync_data_model->sync_switch_lpr($switch_lpr_arr);
 		}
 		
-		$this->sync_data_model->stop();
 	}
 	
 	// [API] 取得最新未結清
@@ -452,7 +438,6 @@ class Carpark extends CI_Controller
 		}
 		
         $data = $this->sync_data_model->get_last_unbalanced_cario($lpr, $station_no);
-		$this->sync_data_model->stop();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	}
 	
@@ -516,7 +501,6 @@ class Carpark extends CI_Controller
 	public function sync_minutely()
 	{
 		$this->sync_data_model->sync_pks_groups();	// 同步在席現況
-		$this->sync_data_model->stop();
 	}
 	
 	// 20170816 手動新增入場資料
@@ -981,10 +965,7 @@ class Carpark extends CI_Controller
 		$group_id = $this->uri->segment(3);		// id
         $value = $this->uri->segment(4, 0);		// value
 		$station_no = $this->uri->segment(5);	// station_no
-		
-		// 重新載入
         $data = $this->sync_data_model->pks_availables_update($group_id, $value, true, $station_no);
-		$this->sync_data_model->stop();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 

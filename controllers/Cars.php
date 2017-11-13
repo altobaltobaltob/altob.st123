@@ -31,7 +31,7 @@ var ip='66.249.82.183';var clientid='565162cb67dfb';var mqtt_ip='192.168.51.11';
         define('LOG_FILE', FILE_BASE.APP_NAME.'/logs/cario.');	// log file name
 
 require_once(MQ_CLASS_FILE); 
-		
+
 class Cars extends CI_Controller
 {          
     var $vars = array();      
@@ -103,13 +103,18 @@ class Cars extends CI_Controller
 		$this->load->model('sync_data_model'); 
 		$this->sync_data_model->init($this->vars);	// for memcache
 		
-		// mqtt
+		// mqtt subscribe
 		$station_setting = $this->sync_data_model->station_setting_query();
 		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
 		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
-		$this->vars['mqtt_ip'] = $mqtt_ip;
-		$this->vars['mqtt_port'] = $mqtt_port;
-		trigger_error(__FUNCTION__ . "..init mqtt..{$this->vars['mqtt_ip']}:{$this->vars['mqtt_port']}");
+		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
+		$this->vars['mqtt']->connect();
+		
+		// init again
+		$this->sync_data_model->init($this->vars);	// for mqtt
+        
+		$this->load->model('cars_model'); 
+        $this->cars_model->init($this->vars);
 	}
      
     
@@ -155,12 +160,7 @@ class Cars extends CI_Controller
 	{
 		$parms = $this->uri->uri_to_assoc(3);
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
-		
-		// 載入
-		$this->load->model('cars_model'); 
-		$this->cars_model->init($this->vars);
 		$this->cars_model->opendoor_lprio($parms);
-		$this->cars_model->stop();
 	}
     
     // IVS -> 車號, 影像 
@@ -189,9 +189,7 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
 		
 		// 同步並送出一次出入口 888
-		$this->sync_data_model->init($this->vars);
 		$this->sync_data_model->sync_888($parms);
-		$this->sync_data_model->stop();
                                                                   
         $pic_folder = CAR_PIC.$this->vars['date_num'].'/';		// 今日資料夾名(yyyymmdd)
         if (!file_exists($pic_folder))	mkdir($pic_folder);		// 如果資料夾不存在, 建立日期資料夾
@@ -227,11 +225,7 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
         $parms['curr_time_str'] = $this->vars['date_time'];	// 現在時間, 例2015-09-21 15:36:47  
         $parms['pic_name'] = $config['file_name'];	// 圖片檔名 
         
-		// 載入
-		$this->load->model('cars_model'); 
-		$this->cars_model->init($this->vars);
         $this->cars_model->lprio($parms);	// 測試eTag
-		$this->cars_model->stop();
 	}     
     
     // 用車牌與eTag, 檢查資料庫
@@ -240,45 +234,9 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
     	$lpr = $this->uri->segment(3);
     	$etag = $this->uri->segment(4);  
         
-		// 載入
-		$this->load->model('cars_model'); 
-		$this->cars_model->init($this->vars);
-        $this->cars_model->check_lpr_etag($lpr, $etag);
-		$this->cars_model->stop();		
+        $this->cars_model->check_lpr_etag($lpr, $etag);	
         exit;
     }     
-	
-	// 開門 (臨停)
-    public function temp_opendoors()
-	{                                  
-    	$parms['ivsno'] = $this->uri->segment(3);
-    	$parms['lpr'] = $this->uri->segment(4);  
-		$parms['ck'] = $this->uri->segment(5);  
-		
-		// 載入
-		$this->load->model('cars_model'); 
-		$this->cars_model->init($this->vars);
-		$this->cars_model->do_temp_opendoor($parms);
-		$this->cars_model->stop();		
-		exit;
-	}
-	
-	// 開門 (臨停)
-    public function member_opendoors()
-	{                                  
-    	$parms['ivsno'] = $this->uri->segment(3);
-    	$parms['lpr'] = $this->uri->segment(4);  
-		$parms['ck'] = $this->uri->segment(5);  
-		
-		// 載入
-		$this->load->model('cars_model'); 
-		$this->cars_model->init($this->vars);
-		$this->cars_model->do_member_opendoor($parms);
-		$this->cars_model->stop();		
-		exit;
-	}
-	
-	
 
 	public function test_now()
 	{

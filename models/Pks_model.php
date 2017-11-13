@@ -16,31 +16,7 @@ class Pks_model extends CI_Model
 	public function init($vars)
 	{
 		$this->vars = $vars;
-		
-		if(isset($this->vars['mqtt_ip']) && isset($this->vars['mqtt_port']))
-		{
-			// 一般
-			$this->vars['mqtt'] = new phpMQTT($this->vars['mqtt_ip'], $this->vars['mqtt_port'], uniqid(). 'mqtt');
-			
-			if(!$this->vars['mqtt']->connect())
-			{
-				trigger_error(__FUNCTION__ . '..mqtt connect fail..' . "{$this->vars['mqtt_ip']}:{$this->vars['mqtt_port']}");
-			}
-		}
-		else 
-		{
-			trigger_error(__FUNCTION__ . '..mqtt ip, port not found..');
-		}
     }
-	
-	// 結束
-	public function stop()
-	{
-		if(isset($this->vars['mqtt']))
-		{
-			$this->vars['mqtt']->close();	
-		}
-	}
 
 
     // 車輛進出傳入車牌號碼
