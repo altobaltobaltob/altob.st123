@@ -57,7 +57,7 @@ class Cars extends CI_Controller
 			ob_end_flush();
 			flush();
         }
-        else if($method_name == 'opendoor')
+        else if($method_name == 'opendoor' || $method_name == 'temp_opendoors' || $method_name == 'member_opendoors')
 		{
 			ob_end_clean();
 			ignore_user_abort();
@@ -237,6 +237,38 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
         $this->cars_model->check_lpr_etag($lpr, $etag);	
         exit;
     }     
+	
+	// 開門 (臨停)
+    public function temp_opendoors()
+	{                                  
+    	$parms['ivsno'] = $this->uri->segment(3);
+    	$parms['lpr'] = $this->uri->segment(4);  
+		$parms['ck'] = $this->uri->segment(5);  
+		
+		// 載入
+		$this->load->model('cars_model'); 
+		$this->cars_model->init($this->vars);
+		$result = $this->cars_model->do_temp_opendoor($parms);
+		trigger_error(__FUNCTION__ . "..{$result}.." . print_r($parms, true));
+		$this->cars_model->stop();		
+		exit;
+	}
+	
+	// 開門 (臨停)
+    public function member_opendoors()
+	{                                  
+    	$parms['ivsno'] = $this->uri->segment(3);
+    	$parms['lpr'] = $this->uri->segment(4);  
+		$parms['ck'] = $this->uri->segment(5);  
+		
+		// 載入
+		$this->load->model('cars_model'); 
+		$this->cars_model->init($this->vars);
+		$result = $this->cars_model->do_member_opendoor($parms);
+		trigger_error(__FUNCTION__ . "..{$result}.." . print_r($parms, true));
+		$this->cars_model->stop();		
+		exit;
+	}
 
 	public function test_now()
 	{
