@@ -1171,17 +1171,17 @@ class Cars_model extends CI_Model
     }
 	
 	// 產生 CK
-	public function gen_opendoor_ck($parms)
+	public function gen_opendoor_ck($parms, $function_name)
 	{
-		return md5($parms['ivsno']. 'alt' . date('dmh') . 'ob' . $parms['lpr']);
+		return md5($parms['ivsno']. 'alt' . date('dmh') . 'o' . $parms['lpr'] . 'b' . $function_name);
 	}
 	
 	// 開門 (月租)
     public function member_opendoors($parms)
 	{
 		//$this->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");
-		$ck = $this->gen_opendoor_ck($parms);
-		get_headers("http://localhost/cars.html/member_opendoors/{$parms['ivsno']}/{$parms['lpr']}/{$ck}");
+		$ck = $this->gen_opendoor_ck($parms, __FUNCTION__);
+		get_headers("http://localhost/cars.html/" . __FUNCTION__ . "/{$parms['ivsno']}/{$parms['lpr']}/{$ck}");
         return true;
     }
 
@@ -1189,15 +1189,15 @@ class Cars_model extends CI_Model
 	public function temp_opendoors($parms)
 	{
 		//$this->mq_send_opendoor(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");
-		$ck = $this->gen_opendoor_ck($parms);
-		get_headers("http://localhost/cars.html/temp_opendoors/{$parms['ivsno']}/{$parms['lpr']}/{$ck}");
+		$ck = $this->gen_opendoor_ck($parms, __FUNCTION__);
+		get_headers("http://localhost/cars.html/" . __FUNCTION__ ."/{$parms['ivsno']}/{$parms['lpr']}/{$ck}");
 		return true;
 	}
 	
 	// 開門 (月租)
 	public function do_member_opendoor($parms)
 	{
-		if($parms['ck'] != $this->cars_model->gen_opendoor_ck($parms))
+		if($parms['ck'] != $this->gen_opendoor_ck($parms, 'member_opendoors'))
 		{
 			return 'ck_error';	// 中斷
 		}
@@ -1209,7 +1209,7 @@ class Cars_model extends CI_Model
 	// 開門 (臨停)
 	public function do_temp_opendoor($parms)
 	{
-		if($parms['ck'] != $this->cars_model->gen_opendoor_ck($parms))
+		if($parms['ck'] != $this->gen_opendoor_ck($parms, 'temp_opendoors'))
 		{
 			return 'ck_error';	// 中斷
 		}

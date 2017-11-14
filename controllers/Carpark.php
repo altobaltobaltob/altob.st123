@@ -138,6 +138,12 @@ class Carpark extends CI_Controller
 	//
 	// ------------------------------------------------
 	
+	// [test] ACTI crm alert
+	public function gen_test_alert()
+	{
+		echo 'test_alert';
+	}
+	
 	// [test] zzz
 	public function gen_test_case()
 	{
@@ -258,11 +264,13 @@ class Carpark extends CI_Controller
 		
 		if ($rows['member_no'] == 0)
 		{
-			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},TICKET,{$parms['lpr']}");	// 臨停訊號
+			$parms['ck'] = $this->cars_model->gen_opendoor_ck($parms, 'temp_opendoors');	// 臨停訊號
+			$this->cars_model->do_temp_opendoor($parms);
 		}
 		else
 		{
-			$this->cars_model->mq_send(MQ_TOPIC_OPEN_DOOR, "DO{$parms['ivsno']},OPEN,{$parms['lpr']}");		// 月租訊號
+			$parms['ck'] = $this->cars_model->gen_opendoor_ck($parms, 'member_opendoors');	// 月租訊號
+			$this->cars_model->do_member_opendoor($parms);
 		}
 		
 		echo 'ok';

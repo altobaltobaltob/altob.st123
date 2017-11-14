@@ -250,7 +250,6 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		$this->cars_model->init($this->vars);
 		$result = $this->cars_model->do_temp_opendoor($parms);
 		trigger_error(__FUNCTION__ . "..{$result}.." . print_r($parms, true));
-		$this->cars_model->stop();		
 		exit;
 	}
 	
@@ -266,7 +265,6 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		$this->cars_model->init($this->vars);
 		$result = $this->cars_model->do_member_opendoor($parms);
 		trigger_error(__FUNCTION__ . "..{$result}.." . print_r($parms, true));
-		$this->cars_model->stop();		
 		exit;
 	}
 
