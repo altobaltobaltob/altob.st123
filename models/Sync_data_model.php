@@ -286,6 +286,37 @@ class Sync_data_model extends CI_Model
 	//
 	// ------------------------------------------------
 	
+	// 同步歐pa卡 （功能: 歐pa卡同步）
+	public function sync_allpa_user($info_arr=array('station_no_arr' => STATION_NO))
+	{
+		require_once(ALTOB_SYNC_FILE);
+		$sync_agent = new AltobSyncAgent();
+		$data = $sync_agent->query_allpa_users();
+		$data_allpa_user_arr = json_decode($data, true);
+		
+		if (sizeof($data_allpa_user_arr) <= 0)
+		{
+			trigger_error(SYNC_DATA_LOG_TITLE . '.. allpa_user empty ..');	// 忽略完全沒會員的情況
+			return 'empty';
+		}
+		
+		$this->db->trans_start();
+		// 清空
+		$this->db->empty_table('allpa_user');
+		// 建立 members
+		$this->db->insert_batch('allpa_user', $data_allpa_user_arr);
+		
+		$this->db->trans_complete();
+		if ($this->db->trans_status() === FALSE)
+		{
+			trigger_error(SYNC_DATA_LOG_TITLE . '.. sync allpa_user fail ..'. '| last_query: ' . $this->db->last_query());
+			return 'fail';
+		}
+		
+		trigger_error(SYNC_DATA_LOG_TITLE . '.. sync allpa_user completed ..');
+		return 'ok';
+	}
+	
 	// 同步場站會員 （功能: 會員同步）
 	public function sync_members($info_arr=array('station_no_arr' => STATION_NO))
 	{
@@ -580,6 +611,7 @@ class Sync_data_model extends CI_Model
 		$sync_agent->init(STATION_NO);	// 已帶上的資料場站編號為主
 		$sync_result = $sync_agent->upd_pks_groups(json_encode($pks_group_query_data, JSON_UNESCAPED_UNICODE));
 		trigger_error( SYNC_DATA_LOG_TITLE . '..'. __FUNCTION__ . "..upd_pks_groups.." .  $sync_result);
+		return $sync_result;
     }
 	
 	// 重新載入場站設定

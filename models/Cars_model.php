@@ -560,50 +560,62 @@ class Cars_model extends CI_Model
 							{
 								$in_time = strtotime($rows_cario['out_before_time']);
 								$ck = md5($in_time. $parms['lpr'] . $parms['sno']);
-								$jdata = file_get_contents("http://localhost/allpa_service.html/allpa_go/{$in_time}/{$parms['lpr']}/{$parms['sno']}/{$ck}");
+								//$jdata = file_get_contents("http://localhost/allpa_service.html/allpa_go/{$in_time}/{$parms['lpr']}/{$parms['sno']}/{$ck}");
+								$jdata = file_get_contents("http://localhost/allpa_service.html/allpa_go_remote/{$in_time}/{$parms['lpr']}/{$parms['sno']}/{$ck}");
 								trigger_error("allpa回傳:{$jdata}|{$in_time}/{$parms['lpr']}/{$parms['sno']}/{$ck}");
 								$results = json_decode($jdata, true);
-								trigger_error("+++".print_r($results, true));
-								if ($results['result_code'] == 0)	// 歐pa卡, 點數足夠扣
+								if (isset($results['result_code']))	// 歐pa卡, 點數足夠扣
 								{
-									// 臨停開門
-									$this->temp_opendoors($parms);
-									// 歐pa卡, 字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",7,{$parms['ivsno']},{$parms['lpr']},{$results['amt']}".MQ_ALTOB_MSG_END_TAG);
-									// // $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}扣{$results['amt']}點請離場");
-									// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}請離場歐pa卡扣:{$results['amt']}點謝謝光臨");
-									// updated 2016/09/01
-									$data = array(
-											'out_before_time' =>  date('Y-m-d H:i:s', strtotime(" + 15 minutes")),
-											'pay_time' => $this->now_str,
-											'pay_type' => 9, // 歐pa卡
-											'payed' => 1
-										);
-									$this->db->update('cario', $data, array('cario_no' => $rows_cario['cario_no']));	// 記錄出場
-									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 7));
-									// [acer] cmd:102 離場車辨成功流程 END
-								}
-								else if ($results['result_code'] == 12)	// 歐pa卡, 餘額不足
-								{
-									// 臨停字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",12,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 12));
-									// [acer] cmd:102 離場車辨成功流程 END
-								}
-								else if ($results['result_code'] == 11)	// 歐pa卡, 查無會員
-								{
-									// 臨停字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",9,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-									//// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}其它付款方式");
-									// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}臨時車請投票卡或刷卡出場");
-									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 9));
-									// [acer] cmd:102 離場車辨成功流程 END
+									if($results['result_code'] == 0)
+									{
+										// 臨停開門
+										$this->temp_opendoors($parms);
+										// 歐pa卡, 字幕
+										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",7,{$parms['ivsno']},{$parms['lpr']},{$results['amt']}".MQ_ALTOB_MSG_END_TAG);
+										// // $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}扣{$results['amt']}點請離場");
+										// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}請離場歐pa卡扣:{$results['amt']}點謝謝光臨");
+										// updated 2016/09/01
+										$data = array(
+												'out_before_time' =>  date('Y-m-d H:i:s', strtotime(" + 15 minutes")),
+												'pay_time' => $this->now_str,
+												'pay_type' => 9, // 歐pa卡
+												'payed' => 1
+											);
+										$this->db->update('cario', $data, array('cario_no' => $rows_cario['cario_no']));	// 記錄出場
+										
+										// [acer] cmd:102 離場車辨成功流程 START
+										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 7));
+										// [acer] cmd:102 離場車辨成功流程 END
+									}
+									else if ($results['result_code'] == 12)	// 歐pa卡, 餘額不足
+									{
+										// 臨停字幕
+										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",12,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+										
+										// [acer] cmd:102 離場車辨成功流程 START
+										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 12));
+										// [acer] cmd:102 離場車辨成功流程 END
+									}
+									else if ($results['result_code'] == 11)	// 歐pa卡, 查無會員
+									{
+										// 臨停字幕
+										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",9,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+										//// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}其它付款方式");
+										// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}臨時車請投票卡或刷卡出場");
+										
+										// [acer] cmd:102 離場車辨成功流程 START
+										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 9));
+										// [acer] cmd:102 離場車辨成功流程 END
+									}
+									else
+									{
+										// 臨停字幕
+										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",9,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+										
+										// [acer] cmd:102 離場車辨成功流程 START
+										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 9));
+										// [acer] cmd:102 離場車辨成功流程 END
+									}
 								}
 								else
 								{

@@ -522,6 +522,44 @@ class Allpa_service extends CI_Controller
 			file_get_contents(APP_URL."allpa_consume_handler/{$data["order_no"]}");
 		}
 	}
+	
+	// 遠端歐PA卡流程
+	public function allpa_go_remote()
+	{
+		$in_time = $this->uri->segment(3); 		// 進場時間
+        $lpr = $this->uri->segment(4); 			// 車牌號碼
+        $station_no = $this->uri->segment(5);	// 場站編號
+		$check_mac = $this->uri->segment(6);	// 驗証欄位
+		
+		// 驗証欄位
+		if($check_mac != md5($in_time. $lpr . $station_no))
+		{
+			echo 'ck_error';
+			exit;
+		}
+		
+		// 先檢查本地端是否為歐PA會員
+		$valid_user_ck = md5($lpr);
+		$valid_user_result = $this->allpa_service_model->get_allpa_valid_user($lpr, $valid_user_ck); // check user
+		if(!isset($valid_user_result['result_code']) || $valid_user_result['result_code'] != 0)
+		{
+			echo json_encode($valid_user_result, JSON_UNESCAPED_UNICODE);
+		}
+		else
+		{
+			$out_time = strtotime(date('Y-m-d H:i:s'));	// 結帳時間
+			require_once(ALTOB_SYNC_FILE);
+			$sync_agent = new AltobSyncAgent();
+			$sync_agent->init($station_no, $out_time);
+			$sync_agent->in_time = $in_time;			// 入場時間
+			$allpa_go_result = $sync_agent->allpa_go($lpr);
+			trigger_error(__FUNCTION__ . "..$lpr|$in_time|$out_time.." . print_r($allpa_go_result, true));
+			echo $allpa_go_result;
+		}
+	}
+	
+	
+	
 
 	// L.2 歐Pa卡 - 非同步扣款 (限制存取)
 	public function allpa_consume_handler()
@@ -555,13 +593,15 @@ class Allpa_service extends CI_Controller
   // only test
   public function gen_test_link()
   {
-	  $in_time = strtotime("2016-03-29 16:50:00");
-	  $lpr = "SAYLXXX";
-	  $station_no = "12112";
+	  $in_time = strtotime("2017-11-14 16:50:00");
+	  $lpr = "TEST123";
+	  $station_no = "12302";
 	  
 	  echo "TEST: ".APP_URL."allpa_go/{$in_time}/{$lpr}/{$station_no}/".md5($in_time.$lpr.$station_no);
-	  echo "<br/>";
+	  echo "\n";
 	  echo "TEST: ".APP_URL."get_allpa_valid_user/{$lpr}/".md5($lpr);
+	  echo "\n";
+	  echo "TEST: ".APP_URL."allpa_go_remote/{$in_time}/{$lpr}/{$station_no}/".md5($in_time.$lpr.$station_no);
 	  
 		header('Connection: close');
 		header('Content-Length: ' . ob_get_length());

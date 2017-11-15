@@ -365,6 +365,12 @@ class Carpark extends CI_Controller
 			
 			usleep(300000); // 0.3 sec delay
 			
+			// 歐pa卡同步
+			$result = $this->sync_data_model->sync_allpa_user($info);
+			trigger_error(__FUNCTION__ . '..sync_allpa_user: '. $result);
+			
+			usleep(300000); // 0.3 sec delay
+			
 			// 在席資料同步
 			$result = $this->sync_data_model->sync_pks_groups_reload($station_setting);
 			trigger_error(__FUNCTION__ . '..sync_pks_groups_reload: '. $result);
@@ -425,7 +431,6 @@ class Carpark extends CI_Controller
 		{
 			$this->sync_data_model->sync_switch_lpr($switch_lpr_arr);
 		}
-		
 	}
 	
 	// [API] 取得最新未結清
