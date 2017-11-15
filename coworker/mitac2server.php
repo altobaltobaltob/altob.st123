@@ -64,7 +64,7 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 	}
 	else if($explode_tcp_in[0] == 'Mitac')
 	{
-		trigger_error("..Mitac..". $tcp_in .'|');	// Mitac 回傳
+		trigger_error("..". $tcp_in .'..');	// Mitac 回傳
 	}
 	else if($explode_tcp_in[0] == 'Altob')
 	{
@@ -102,7 +102,7 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 		}
 		else
 		{
-			trigger_error("..unknown cmd..". $tcp_in .'|');
+			trigger_error('..unknown cmd..' . print_r($explode_tcp_in, true));
 		}
 	}
 	
