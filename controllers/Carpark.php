@@ -431,6 +431,10 @@ class Carpark extends CI_Controller
 		{
 			$this->sync_data_model->sync_switch_lpr($switch_lpr_arr);
 		}
+		
+		// 3. 歐pa卡同步 (TODO: 暫時放在這)
+		$result = $this->sync_data_model->sync_allpa_user($station_no_arr);
+		trigger_error(__FUNCTION__ . '..sync_allpa_user: '. $result);
 	}
 	
 	// [API] 取得最新未結清
