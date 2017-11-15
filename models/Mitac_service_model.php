@@ -19,15 +19,15 @@ class Mitac_service_model extends CI_Model
 		//define('MITAC_SERVICE_PORT', 49990);
 		
 		// MITAC 連線設定 (正式環境 - 現場呼叫)
-		define('MITAC_SERVICE_IP', '192.168.10.221');
+		define('MITAC_SERVICE_IP', '192.168.10.50');
 		define('MITAC_SERVICE_PORT', 49990);
     }
 	
 	// mitac socket
 	function mitac_socket($in, $function_name = __FUNCTION__)
 	{
-		trigger_error($function_name . "..socket input|{$in}");
-		return 'none';	// 尚未開放
+		$in_encode = mb_convert_encoding($in, 'UTF-16LE', 'UTF-8');
+		trigger_error($function_name . "..|{$in}|". json_encode($in_encode, true));
 		
 		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
 		if ($socket === false) {
@@ -40,7 +40,7 @@ class Mitac_service_model extends CI_Model
 			return false;	// 中斷
 		}
 		
-		if(!socket_write($socket, $in, strlen($in)))
+		if(!socket_write($socket, $in_encode, strlen($in_encode)))
 		{
 			trigger_error($function_name . '..Write failed..');
 		}
@@ -61,9 +61,9 @@ class Mitac_service_model extends CI_Model
 	// 詢問是否存活
 	public function echo_mitac_alive()
 	{
-		$msg = iconv("UTF-8", "ISO-8859-1", implode(',', ['Mitac', 'Are you alive']));
+		$msg = implode(',', ['Mitac', 'Are you alive']);
 		$result = $this->mitac_socket($msg, __FUNCTION__);
-		return $result == 'Mitac,Alive' ? 'ok' : 'gg';
+		return 'ok';
 	}
 	
 	// 要求扣款 (ALTOB to MITAC)
@@ -77,7 +77,7 @@ class Mitac_service_model extends CI_Model
 		$gate_id = $parms['gate_id'];
 		
 		// 產生通訊內容
-		$msg = iconv("UTF-8", "ISO-8859-1", implode(',', ['Mitac', 'ParkingFee_Altob', $seqno, $lpr, $in_time, $out_time, $gate_id]));
+		$msg = implode(',', ['Mitac', 'ParkingFee_Altob', $seqno, $lpr, $in_time, $out_time, $gate_id]); //iconv("UTF-8", "ISO-8859-1", implode(',', ['Mitac', 'ParkingFee_Altob', $seqno, $lpr, $in_time, $out_time, $gate_id]));
 		$result = $this->mitac_socket($msg, __FUNCTION__);
 		return 'ok';
 	}

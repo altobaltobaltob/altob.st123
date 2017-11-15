@@ -49,56 +49,61 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 {                 
 	global $ch;      
 	
+	trigger_error("..tcp_in..". json_encode($tcp_in, true) .'|');
+	
+	$tcp_in = mb_convert_encoding($tcp_in, 'UTF-8', 'UTF-16LE');	// unicode to utf-8
+	
 	$explode_tcp_in = explode(',', $tcp_in);
 	$send_data = null;
 	
-	if(empty($explode_tcp_in) || count($explode_tcp_in) != 10)
+	// 未知
+	if(empty($explode_tcp_in) || empty($explode_tcp_in[0]))
 	{
-		trigger_error(".. unknown tcp_in|". print_r($explode_tcp_in, true) .'|');
+		trigger_error("..empty..". print_r($explode_tcp_in, true) .'|');
 		$connection->close($send_data);
 	}
-	else if($explode_tcp_in[0] != 'Altob')
+	else if($explode_tcp_in[0] == 'Mitac')
 	{
-		// 判斷 receiver_name
-		trigger_error(".. unknown receiver_name|". print_r($explode_tcp_in, true) .'|');
+		trigger_error("..Mitac..". $tcp_in .'|');	// Mitac 回傳
 	}
-	else if($explode_tcp_in[1] != 'DeductResult')
+	else if($explode_tcp_in[0] == 'Altob')
 	{
-		// 判斷 cmd
-		trigger_error(".. unknown cmd|". print_r($explode_tcp_in, true) .'|');
-		$connection->close($send_data);
-	}
-	else
-	{
-		// 回應扣款成功 (MITAC to ALTOB) 目前只有這支
-		$function_name = 'deduct_result';
-		$seqno = $explode_tcp_in[2];
-		$lpr = $explode_tcp_in[3];
-		$in_time =	$explode_tcp_in[4];
-		$out_time =	$explode_tcp_in[5];
-		$gate_id = $explode_tcp_in[6];
-		$amt = $explode_tcp_in[7];
-		$amt_discount = $explode_tcp_in[8];
-		$amt_real = $explode_tcp_in[9];
-		
-		// 建立通訊內容
-		$parms = array(
-			'seqno' => $seqno, 
-			'lpr' => $lpr, 
-			'in_time' => $in_time, 
-			'out_time' => $out_time, 
-			'gate_id' => $gate_id, 
-			'amt' => $amt, 
-			'amt_discount' => $amt_discount,
-			'amt_real' => $amt_real);
-		
-		// 加驗証
-		$parms['ck'] = md5($parms['seqno']. 'a' . date('dmh') . 'l' . $parms['lpr'] . 't'. $parms['amt']. 'o'. $parms['amt_discount'] . 'b'. $parms['amt_real'] . $function_name);
-		
-		curl_setopt($ch, CURLOPT_URL, "http://localhost/mitac_service.html/{$function_name}/"); 
-		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parms));   
-		$send_data = curl_exec($ch);
-		trigger_error(".. curl {$function_name}|{$send_data} ..".print_r($parms, true));
+		if($explode_tcp_in[1] == 'DeductResult' && count($explode_tcp_in) == 10)
+		{
+			// 回應扣款成功 (MITAC to ALTOB) 目前只有這支
+			$function_name = 'deduct_result';
+			$seqno = $explode_tcp_in[2];
+			$lpr = $explode_tcp_in[3];
+			$in_time =	$explode_tcp_in[4];
+			$out_time =	$explode_tcp_in[5];
+			$gate_id = $explode_tcp_in[6];
+			$amt = $explode_tcp_in[7];
+			$amt_discount = $explode_tcp_in[8];
+			$amt_real = $explode_tcp_in[9];
+			
+			// 建立通訊內容
+			$parms = array(
+				'seqno' => $seqno, 
+				'lpr' => $lpr, 
+				'in_time' => $in_time, 
+				'out_time' => $out_time, 
+				'gate_id' => $gate_id, 
+				'amt' => $amt, 
+				'amt_discount' => $amt_discount,
+				'amt_real' => $amt_real);
+			
+			// 加驗証
+			$parms['ck'] = md5($parms['seqno']. 'a' . date('dmh') . 'l' . $parms['lpr'] . 't'. $parms['amt']. 'o'. $parms['amt_discount'] . 'b'. $parms['amt_real'] . $function_name);
+			
+			curl_setopt($ch, CURLOPT_URL, "http://localhost/mitac_service.html/{$function_name}/"); 
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parms));   
+			$send_data = curl_exec($ch);
+			trigger_error(".. curl {$function_name}|{$send_data} ..".print_r($parms, true));
+		}
+		else
+		{
+			trigger_error("..unknown cmd..". $tcp_in .'|');
+		}
 	}
 	
 	$connection->close($send_data);
