@@ -349,24 +349,22 @@ class Carpark extends CI_Controller
 				exit;	// 中斷
 			}
 			
-			$info = array('station_no_arr' => $station_setting['station_no']);
-			
 			usleep(300000); // 0.3 sec delay
 			
 			// 費率資料同步
-			$result = $this->sync_data_model->sync_price_plan($info);
+			$result = $this->sync_data_model->sync_price_plan(array('station_no_arr' => $station_setting['station_no']));
 			trigger_error(__FUNCTION__ . '..sync_price_plan: '. $result);
 			
 			usleep(300000); // 0.3 sec delay
 			
 			// 會員資料同步
-			$result = $this->sync_data_model->sync_members($info);
+			$result = $this->sync_data_model->sync_members(array('station_no_arr' => $station_setting['station_no_list']));	// 20171116 upd
 			trigger_error(__FUNCTION__ . '..sync_members: '. $result);
 			
 			usleep(300000); // 0.3 sec delay
 			
 			// 歐pa卡同步
-			$result = $this->sync_data_model->sync_allpa_user($info);
+			$result = $this->sync_data_model->sync_allpa_user(array('station_no_arr' => $station_setting['station_no']));
 			trigger_error(__FUNCTION__ . '..sync_allpa_user: '. $result);
 			
 			usleep(300000); // 0.3 sec delay

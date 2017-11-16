@@ -656,6 +656,7 @@ class Sync_data_model extends CI_Model
 		
 		$station_setting_arr = $station_setting_result['results'];
 		$station_no_arr = array();
+		$station_no_list_arr = array();
 		$station_name_arr = array();
 		$station_888_arr = array();
 		
@@ -668,6 +669,28 @@ class Sync_data_model extends CI_Model
 			array_push($station_name_arr, $data['short_name']);
 			array_push($station_888_arr, $data['station_888']);
 			
+			// 若有設定多個場站, 已多場站設定為主
+			$tmp_station_no_list_arr = explode(SYNC_DELIMITER_ST_NO, $data['station_no_list']);
+			
+			if(empty($tmp_station_no_list_arr))
+			{
+				array_push($station_no_list_arr, $station_no);	// 若無設定直接放目前場站
+			}
+			else
+			{
+				foreach($tmp_station_no_list_arr as $key => $station_no_list_value)
+				{
+					if(intval($station_no_list_value) > 0)
+					{	
+						if(empty($station_no_list_arr))
+							array_push($station_no_list_arr, $station_no_list_value);
+						
+						else if(!array_search($station_no_list_value, $station_no_list_arr))
+							array_push($station_no_list_arr, $station_no_list_value);
+					}
+				}
+			}
+			
 			if(!isset($settings[$station_no]))
 			{
 				$settings[$station_no] = array();
@@ -677,12 +700,15 @@ class Sync_data_model extends CI_Model
 			$settings[$station_no]['mqtt_port'] = empty($data['mqtt_port']) ? MQ_PORT : $data['mqtt_port'];
 			$settings[$station_no]['local_ip'] = empty($data['local_ip']) ? STATION_IP : $data['local_ip'];
 		}
-		$station_no_str = implode(SYNC_DELIMITER_ST_NO, $station_no_arr);		// 取值時會用到
-		$station_name_str = implode(SYNC_DELIMITER_ST_NAME, $station_name_arr);	// 純顯示
-		$station_888_str = implode(SYNC_DELIMITER_ST_INFO, $station_888_arr);	// 場站	888 設定
+		
+		$station_no_str = implode(SYNC_DELIMITER_ST_NO, $station_no_arr);			// 取值時會用到
+		$station_no_list_str = implode(SYNC_DELIMITER_ST_NO, $station_no_list_arr);	// 會員資料同步相關
+		$station_name_str = implode(SYNC_DELIMITER_ST_NAME, $station_name_arr);		// 純顯示
+		$station_888_str = implode(SYNC_DELIMITER_ST_INFO, $station_888_arr);		// 場站	888 設定
 		
 		// 設定到 mcache
 		$this->vars['mcache']->set(MCACHE_STATION_NO_STR, $station_no_str);
+		$this->vars['mcache']->set(MCACHE_STATION_NO_LIST_STR, $station_no_list_str);
 		$this->vars['mcache']->set(MCACHE_STATION_NAME_STR, $station_name_str);
 		$this->vars['mcache']->set(MCACHE_STATION_IP_STR, $station_ip_str);
 		$this->vars['mcache']->set(MCACHE_STATION_PORT_STR, $station_port_str);
@@ -695,6 +721,7 @@ class Sync_data_model extends CI_Model
 	public function station_setting_query($reload=false)
 	{
 		$station_no_str = $this->vars['mcache']->get(MCACHE_STATION_NO_STR);
+		$station_no_list_str = $this->vars['mcache']->get(MCACHE_STATION_NO_LIST_STR);
 		$station_name_str = $this->vars['mcache']->get(MCACHE_STATION_NAME_STR);
 		$station_ip_str = $this->vars['mcache']->get(MCACHE_STATION_IP_STR);
 		$station_port_str = $this->vars['mcache']->get(MCACHE_STATION_PORT_STR);
@@ -702,6 +729,7 @@ class Sync_data_model extends CI_Model
 		$settings = $this->vars['mcache']->get(MCACHE_STATION_SETTINGS);
 	
 		if(	$reload	|| 
+			empty($station_no_list_str)	|| 	
 			empty($station_no_str) 		|| 	empty($station_name_str)	|| 
 			empty($station_ip_str) 		|| 	empty($station_port_str)			||	
 			empty($station_888_str)		||
@@ -713,6 +741,7 @@ class Sync_data_model extends CI_Model
 			if($result == 'ok')
 			{
 				$station_no_str = $this->vars['mcache']->get(MCACHE_STATION_NO_STR);
+				$station_no_list_str = $this->vars['mcache']->get(MCACHE_STATION_NO_LIST_STR);
 				$station_name_str = $this->vars['mcache']->get(MCACHE_STATION_NAME_STR);
 				$station_ip_str = $this->vars['mcache']->get(MCACHE_STATION_IP_STR);
 				$station_port_str = $this->vars['mcache']->get(MCACHE_STATION_PORT_STR);
@@ -738,6 +767,7 @@ class Sync_data_model extends CI_Model
 		
 		$station_setting = array();
 		$station_setting['station_no'] = $station_no_str;
+		$station_setting['station_no_list'] = $station_no_list_str;
 		$station_setting['station_name'] = $station_name_str;
 		$station_setting['station_ip'] = $station_ip_str;
 		$station_setting['station_port'] = $station_port_str;

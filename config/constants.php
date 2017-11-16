@@ -97,6 +97,7 @@ define('SYNC_DELIMITER_ST_INFO',	'|');	// (拆分) 其它
 */
 
 define('MCACHE_STATION_NO_STR', 'station_no_str');
+define('MCACHE_STATION_NO_LIST_STR', 'station_no_list_str');	// 會員資料同步
 define('MCACHE_STATION_NAME_STR', 'station_name_str');
 define('MCACHE_STATION_IP_STR', 'station_ip_str');
 define('MCACHE_STATION_PORT_STR', 'station_port_str');
