@@ -51,6 +51,8 @@ define('STATION_NO', 54321);							// 本場站編號
 define('STATION_IP', $_SERVER['SERVER_NAME']);			// 本場站IP
 define('STATION_URL', 'http://'.STATION_IP.'/');		// 本場站URL
 
+define('STATION_LOCAL_IP', '192.168.10.201');			// 內網IP
+
 define('PHPLIBS_BASE', '/home/bigbang/libs/phplibs/');	// phplibs 根路徑
 define('ALTOB_SYNC_FILE', PHPLIBS_BASE.'Altob.Sync.Integration.php');			// ALTOB (同步)
 define('ALTOB_CRYPT_FILE', PHPLIBS_BASE.'Altob.Crypt.Integration.php');			// ALTOB (資料加解密)

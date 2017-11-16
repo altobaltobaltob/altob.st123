@@ -397,11 +397,11 @@ class Carpayment_model extends CI_Model
 		{
 			$pic_name_arr = explode('-', $in_pic_name);
 			$date_num = substr($pic_name_arr[7], 0, 8);
-			return "\\\\192.168.10.201\\pics\\{$date_num}\\{$in_pic_name}";
+			return "\\\\" . STATION_LOCAL_IP . "\\pics\\{$date_num}\\{$in_pic_name}";
 		}
 		else if(file_exists(CAR_PIC . 'lpr-404.jpg'))
 		{
-			return "\\\\192.168.10.201\\pics\\lpr-404.jpg";	 // 預設圖片	
+			return "\\\\" . STATION_LOCAL_IP . "\\pics\\lpr-404.jpg";	 // 預設圖片	
 		}
 		
 		return '';
