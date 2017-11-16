@@ -16,8 +16,12 @@
                                             <input id="ss_station_name" name="station_name" class="form-control"  style="font-size:28px" readonly>
                                         </div>
                                         <div class="form-group">
-                                            <label style="font-size:22px">場站編號（若為多場站共用，以 ',' 隔開。）</label>
+                                            <label style="font-size:22px">場站編號（以 ',' 隔開）</label>
                                             <input id="ss_station_no" name='station_no' class="form-control"  style="font-size:28px" readonly>
+                                        </div> 
+										<div class="form-group">
+                                            <label style="font-size:22px">會員場站編號（以 ',' 隔開）</label>
+                                            <input id="ss_station_no_list" name='station_no_list' class="form-control"  style="font-size:28px" readonly>
                                         </div> 
 										<div class="form-group">
                                             <label style="font-size:22px">場站 NAT</label>
@@ -84,6 +88,7 @@ function do_reload_station_setting(reload=0)
 				{
 					$("#ss_station_name").val('未設定');
 					$("#ss_station_no").val('');
+					$("#ss_station_no_list").val('');
 					$("#ss_station_service_url").val(station_service_url);
 					$("#ss_station_info").val(station_info);
 					alertify_error('載入失敗。。');		
@@ -92,6 +97,7 @@ function do_reload_station_setting(reload=0)
 				
 				$("#ss_station_name").val(jdata['station_name']);
 				$("#ss_station_no").val(jdata['station_no']);
+				$("#ss_station_no_list").val(jdata['station_no_list']);
 				$("#ss_station_service_url").val(station_service_url);
 				$("#ss_station_info").val(station_info);
 				alertify_success('完成。。');	
