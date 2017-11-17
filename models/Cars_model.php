@@ -229,6 +229,7 @@ class Cars_model extends CI_Model
 					*/
 					
 					// 取得出入口 888 資訊
+					/*
 					$pks_888_arr = $this->get_888_info($parms);
 					if ($pks_888_arr['availables'] == 0)
 					{
@@ -246,6 +247,7 @@ class Cars_model extends CI_Model
 							$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",15,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
 						}
 					}
+					*/
 
 					// 空車位導引
 					$pks_arr = $this->get_valid_seat();
