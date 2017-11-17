@@ -426,9 +426,9 @@ $(document).ready(function()
 				floorName: 'B1',
 				canvasId: 'b1canvas',
 				src: '<?=SERVER_URL?>i3/pics/b1_map.png',
-				initialImageRatio: AltobObject.settings.qcar2.result_page.B1.initialImageRatio,
-				shiftLeft: AltobObject.settings.qcar2.result_page.B1.shiftLeft,
-				shiftUp: AltobObject.settings.qcar2.result_page.B1.shiftUp
+				initialImageRatio: AltobObject.settings.qcar3.result_page.B1.initialImageRatio,
+				shiftLeft: AltobObject.settings.qcar3.result_page.B1.shiftLeft,
+				shiftUp: AltobObject.settings.qcar3.result_page.B1.shiftUp
 			}
 		}
 	});
