@@ -30,10 +30,48 @@ class Pks_model extends CI_Model
                   	trigger_error('在席車辨失敗' . print_r($parms, true));
                     return false;
                 }
+				
+				// upd 2017/11/11 避免圖檔拿不到
+				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('Ymd') .".jpg";
+				$test_check_str = file_exists(PKS_PIC . $new_file_name) ? 'exists' : 'not_exists';
+				trigger_error(__FUNCTION__ . '..' . PKS_PIC . $new_file_name . '..' . $test_check_str);
+				
+				// 清除舊照片
+				foreach(glob(PKS_PIC."pks-{$parms['pksno']}-*.jpg") as $old_file_path)
+				{
+					if($old_file_path != PKS_PIC . $new_file_name)
+					{
+						unlink($old_file_path);
+						trigger_error('remove old image:'. $old_file_path. ', replace by: ' . $new_file_name);
+					}
+				}
+				
+				$parms['pic_name'] = $new_file_name;
+				
+				if(!file_exists(PKS_PIC . $new_file_name))
+				{				
+					$config['upload_path'] = PKS_PIC;
+					$config['allowed_types'] = 'gif|jpg|png';
+					// ex. pks-2016-1625AB-1-2015080526.jpg -> pks-車位編號-車號-設備編號-時間.jpg
+					//$config['file_name'] = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-{$this->vars['time_num']}.jpg";
+					$config['file_name'] = $new_file_name;
+					
+					$this->load->library('upload', $config);
 
+					if($this->upload->do_upload('cars'))
+					{
+						// 若無錯誤，則上傳檔案
+						$file = $this->upload->data('cars');
+					}
+					else
+					{
+						trigger_error('入席傳檔錯誤:'. print_r($parms, true));
+					}	
+				}
+				
             	// 讀取在席資料(pks)
                 $rows_pks = $this->db
-        					->select('cario_no, lpr, status, confirms')
+        					->select('cario_no, lpr, status, confirms, pic_name')
         					->from('pks')
                 			->where(array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']))
                   			->limit(1)
@@ -43,11 +81,12 @@ class Pks_model extends CI_Model
                 trigger_error('KL read pks:'.print_r($rows_pks, true));
 
                 // 如果已經人工確認或之前已比對有入場資料者, 則重覆再送來的車辨不予理會
-				if ($rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr'])
+				if (($rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr']) && $rows_pks['pic_name'] == $parms['pic_name'])
                 {
                 	trigger_error('KL ignored:'.$rows_pks['lpr']);
                 	return false;
                 }
+				
 				/*
                 if ($rows_pks['cario_no']  != 0 || $rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr'])
                 {
@@ -94,47 +133,6 @@ class Pks_model extends CI_Model
                     // $this->vars['mqtt']-lish('PKS_WITHOUT_IN', "{$jdata}", 0);	// 待web完成 ???
                     trigger_error('在席無進場資料:'. print_r($parms, true));
                 }
-				
-				// upd 2017/11/11避免圖檔拿不到
-				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('Ymd') .".jpg";
-				$test_check_str = file_exists(PKS_PIC . $new_file_name) ? 'exists' : 'not_exists';
-				trigger_error(__FUNCTION__ . '..' . PKS_PIC . $new_file_name . '..' . $test_check_str);
-				
-				// 車入格後的車牌辨識(lpr), 傅送圖檔
-				//array_map('unlink', glob(PKS_PIC."pks-{$parms['pksno']}-*.jpg"));	// 刪除舊照片
-				
-				// 清除舊照片
-				foreach(glob(PKS_PIC."pks-{$parms['pksno']}-*.jpg") as $old_file_path)
-				{
-					if($old_file_path != PKS_PIC . $new_file_name)
-					{
-						unlink($old_file_path);
-						trigger_error('remove old image:'. $old_file_path. ', replace by: ' . $new_file_name);
-					}
-				}
-				
-				$parms['pic_name'] = $new_file_name;
-				
-				if(!file_exists(PKS_PIC . $new_file_name))
-				{				
-					$config['upload_path'] = PKS_PIC;
-					$config['allowed_types'] = 'gif|jpg|png';
-					// ex. pks-2016-1625AB-1-2015080526.jpg -> pks-車位編號-車號-設備編號-時間.jpg
-					//$config['file_name'] = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-{$this->vars['time_num']}.jpg";
-					$config['file_name'] = $new_file_name;
-					
-					$this->load->library('upload', $config);
-
-					if($this->upload->do_upload('cars'))
-					{
-						// 若無錯誤，則上傳檔案
-						$file = $this->upload->data('cars');
-					}
-					else
-					{
-						trigger_error('入席傳檔錯誤:'. print_r($parms, true));
-					}	
-				}
 				
         		$data = array
             	(
