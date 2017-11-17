@@ -182,7 +182,7 @@ class Parkingquery extends CI_Controller
 	// [警急求救] 警急求救地圖, 讀取緊急求救檔
 	public function floor_map_read_sos()
 	{
-		if($this->my_ip() != '192.168.10.1')
+		if($this->my_ip() != '192.168.10.202')	// 限制車辨主機
 		{
 			trigger_error(__FUNCTION__ . '..unknown host..' . $this->my_ip());
 			exit;
