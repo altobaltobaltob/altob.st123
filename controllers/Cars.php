@@ -189,7 +189,7 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
 		
 		// 同步並送出一次出入口 888
-		$this->sync_data_model->sync_888($parms);
+		//$this->sync_data_model->sync_888($parms);
                                                                   
         $pic_folder = CAR_PIC.$this->vars['date_num'].'/';		// 今日資料夾名(yyyymmdd)
         if (!file_exists($pic_folder))	mkdir($pic_folder);		// 如果資料夾不存在, 建立日期資料夾
