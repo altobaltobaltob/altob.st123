@@ -45,6 +45,9 @@ define('CAR_PIC', FILE_BASE.'cars/pics/');				// 車輛照片存檔路徑
 define('PKS_PIC', FILE_BASE.'pks/pics/');				// 車輛入車格照片存檔路徑
 
 define('EXPORT_BASE', '/home/data/export/');			// 檔案匯出根路徑  
+
+define('SOS_BASE',	FILE_BASE. 'sos/');					// 警急求救路徑
+define('SOS_MSG',	SOS_BASE. 'sos.txt');				// 警急求救檔案路徑
    
 define('STATION_NAME', '未設定');						// 本場站名稱
 define('STATION_NO', 54321);							// 本場站編號

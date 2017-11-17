@@ -148,19 +148,6 @@ class Parkingquery extends CI_Controller
     }
     
     
-    // 緊急求救
-    // http://203.75.167.89/parkingquery.html/send_sos/B2/111/123
-	public function send_sos() 
-	{                 
-    	$floor = $this->uri->segment(3);
-    	$x = $this->uri->segment(4);
-    	$y = $this->uri->segment(5);
-        get_headers("http://localhost/sos/set_sos.php?floor={$floor}&x={$x}&y={$y}");
-        $data = $this->parkingquery_model->send_sos($floor, $x, $y);
-        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
-    }       
-    
-    
     // 防盜鎖車
     // http://203.75.167.89/parkingquery.html/security_action/ABC1234/pswd/2
 	public function security_action() 
@@ -186,10 +173,62 @@ class Parkingquery extends CI_Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }    
 	
-	// 警急求救地圖
+	// [警急求救] 警急求救地圖
 	public function floor_map()
 	{
 		$this->show_page("floor_map");
 	}
 	
+	// [警急求救] 警急求救地圖, 讀取緊急求救檔
+	public function floor_map_read_sos()
+	{
+		if($this->my_ip() != '192.168.10.1')
+		{
+			trigger_error(__FUNCTION__ . '..unknown host..' . $this->my_ip());
+			exit;
+		}
+		
+		if (file_exists(SOS_MSG))
+		{
+			$str = file_get_contents(SOS_MSG);
+			unlink(SOS_MSG);
+			echo $str;
+		}
+		else
+		{
+			echo 'NONE';
+		}
+	}
+    
+    // [警急求救] 緊急求救 API
+    // http://XXXXXXXXXXXXXXXX/parkingquery.html/send_sos/B2/111/123
+	public function send_sos() 
+	{                 
+    	$floor = $this->uri->segment(3);
+    	$x = $this->uri->segment(4);
+    	$y = $this->uri->segment(5);
+		
+        file_put_contents(SOS_MSG, "{$floor},{$x},{$y}");  
+		
+        $data = $this->parkingquery_model->send_sos($floor, $x, $y);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }
+    
+	// 取得 IP
+	function my_ip()
+	{
+		if (getenv('HTTP_X_FORWARDED_FOR')) 
+		{
+			$ip = getenv('HTTP_X_FORWARDED_FOR');
+		}
+		elseif (getenv('HTTP_X_REAL_IP')) 
+		{
+			$ip = getenv('HTTP_X_REAL_IP');
+		}
+		else {
+			$ip = $_SERVER['REMOTE_ADDR'];
+		}
+
+		return $ip;
+	}
 }
