@@ -31,7 +31,6 @@ class Pks_model extends CI_Model
                     return false;
                 }
 				
-				// upd 2017/11/11 避免圖檔拿不到
 				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('Ymd') .".jpg";
 				$test_check_str = file_exists(PKS_PIC . $new_file_name) ? 'exists' : 'not_exists';
 				trigger_error(__FUNCTION__ . '..' . PKS_PIC . $new_file_name . '..' . $test_check_str);
@@ -52,8 +51,6 @@ class Pks_model extends CI_Model
 				{				
 					$config['upload_path'] = PKS_PIC;
 					$config['allowed_types'] = 'gif|jpg|png';
-					// ex. pks-2016-1625AB-1-2015080526.jpg -> pks-車位編號-車號-設備編號-時間.jpg
-					//$config['file_name'] = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-{$this->vars['time_num']}.jpg";
 					$config['file_name'] = $new_file_name;
 					
 					$this->load->library('upload', $config);
@@ -79,73 +76,55 @@ class Pks_model extends CI_Model
                 			->row_array();
 
                 trigger_error('KL read pks:'.print_r($rows_pks, true));
-
+				
                 // 如果已經人工確認或之前已比對有入場資料者, 則重覆再送來的車辨不予理會
 				if (($rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr']) && $rows_pks['pic_name'] == $parms['pic_name'])
                 {
                 	trigger_error('KL ignored:'.$rows_pks['lpr']);
-                	return false;
                 }
-				
-				/*
-                if ($rows_pks['cario_no']  != 0 || $rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr'])
-                {
-                	trigger_error('人工已確認或車號相同不更新pks:'.$rows_pks['lpr']);
-                	return false;
-                }
-				*/
-
-            	// 讀取進場時間, 如讀不到資料, 以目前時間取代(add by TZUSS 2016-02-23)
-            	$rows_cario = $this->db
-        					->select('cario_no, in_time')
-        					->from('cario')
-                			->where(array('in_out' => 'CI', 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0, 'station_no' => $parms['sno']))
-                  			->order_by('cario_no', 'desc')
-                  			->limit(1)
-                			->get()
-                			->row_array();
-                if (!empty($rows_cario['cario_no']))		// 有入場資料
-                {
-                 	$cario_no = $rows_cario['cario_no'];	// 入場序號
-                 	$in_time = $rows_cario['in_time'];
-                    // 在席與入場資料相符, 分別在cario與pks記錄之
-                    $data_cario = array
-                    (
-                    	'pksno' => $parms['pksno'],
-                        'pks_time' => date('Y-m-d H:i:s')
-                    );
-                    $this->db->update('cario', $data_cario, array('cario_no' => $cario_no, 'station_no' => $parms['sno']));
-                }
-                else	// 查無入場資料, 即時通知
-                {
-                	$cario_no = 0;
-                 	$in_time = date('Y-m-d H:i:s');
+				else
+				{
+					// 讀取進場時間, 如讀不到資料, 以目前時間取代(add by TZUSS 2016-02-23)
+					$rows_cario = $this->db
+								->select('cario_no, in_time')
+								->from('cario')
+								->where(array('in_out' => 'CI', 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0, 'station_no' => $parms['sno']))
+								->order_by('cario_no', 'desc')
+								->limit(1)
+								->get()
+								->row_array();
+					if (!empty($rows_cario['cario_no']))		// 有入場資料
+					{
+						$cario_no = $rows_cario['cario_no'];	// 入場序號
+						$in_time = $rows_cario['in_time'];
+						// 在席與入場資料相符, 分別在cario與pks記錄之
+						$data_cario = array
+						(
+							'pksno' => $parms['pksno'],
+							'pks_time' => date('Y-m-d H:i:s')
+						);
+						$this->db->update('cario', $data_cario, array('cario_no' => $cario_no, 'station_no' => $parms['sno']));
+					}
+					else	// 查無入場資料, 即時通知
+					{
+						$cario_no = 0;
+						$in_time = date('Y-m-d H:i:s');
+						trigger_error('在席無進場資料:'. print_r($parms, true));
+					}
 					
-					/*
-                    $jdata = json_encode(array
-                    (
-                    	'pksno' => $parms['pksno'],
-                        'lpr' => $parms['lpr'],
-                        'in_time' => $in_time
-						,'pic_name' => $parms['pic_name']
-                    ), JSON_UNESCAPED_UNICODE);
-					*/
-                    // $this->vars['mqtt']-lish('PKS_WITHOUT_IN', "{$jdata}", 0);	// 待web完成 ???
-                    trigger_error('在席無進場資料:'. print_r($parms, true));
-                }
-				
-        		$data = array
-            	(
-                    'cario_no' => $cario_no,
-              		'lpr' => $parms['lpr'],
-                	'status' => 'LR',	// 車格佔用並有車號
-                    'confirms' => 0,    // 預設人工未確認
-                	'pic_name' => $parms['pic_name'],
-                    'in_time' => $in_time
-            	);
-            	// 車號及照片檔名填入資料庫內
-            	$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
-            	break;
+					$data = array
+					(
+						'cario_no' => $cario_no,
+						'lpr' => $parms['lpr'],
+						'status' => 'LR',	// 車格佔用並有車號
+						'confirms' => 0,    // 預設人工未確認
+						'pic_name' => $parms['pic_name'],
+						'in_time' => $in_time
+					);
+					// 車號及照片檔名填入資料庫內
+					$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
+					break;	
+				}
 
           	case 'KI':	// 車輛入席, 各區空車位與佔位各加減1
     			$rows = $this->db->select('status')
@@ -182,28 +161,6 @@ class Pks_model extends CI_Model
             	break;
         }
 
-		/*
-        // 找出與與此車位相關的群組
-    	$sql = "select group_id, tot, renum
-        		from pks_groups
-				where group_id in
-        		(select group_id from pks_group_member where station_no = {$this->vars['station_no']} and pksno = {$parms['pksno']})";
-
-        $retults = $this->db->query($sql)->result_array();
-
-        foreach ($retults as $rows)
-        {
-        	// 計算群組異動後的空車位數, 先讀出已停車位數
-        	$sql = "select count(*) as parked from pks where status != 'VA' and pksno in (select pksno from pks_group_member where group_id = '{$rows['group_id']}')";
-            $row_group = $this->db->query($sql)->row_array();
-            $group_va = $rows['tot'] + $rows['renum'] -  $row_group['parked'];	// 群組空車位數
-            $this->db->update('pks_groups', array('parked' => $row_group['parked'], 'availables' => $group_va), array('group_id' => $rows['group_id']));
-
-            get_headers("http://192.168.51.15/set_num.php?group_id={$rows['group_id']}&num={$group_va}");
-            // $this->vars['mqtt']->publish("VA-{$rows['group_id']}", "{$group_va}", 0);			// 送出剩餘車位數給字幕機
-            // 總車位數暫無需處理
-        }
-		*/
 		// 找出與與此車位相關的群組
     	$sql = "select group_id, tot, renum, availables
         		from pks_groups
@@ -230,40 +187,18 @@ class Pks_model extends CI_Model
 				$group_va_pad = str_pad($group_va, 3, '0', STR_PAD_LEFT); // 補零
 				$this->db->update('pks_groups', array('parked' => $row_group['parked'], 'availables' => $group_va), array('group_id' => $rows['group_id']));
 
-				$this->vars['mqtt']->publish(MQ_TOPIC_SUBLEVEL, "{$rows['group_id']},{$group_va_pad}", 0);			// 送出剩餘車位數給字幕機
-				// 總車位數暫無需處理
-
-				// 七樓無在席, 手動或用猜的
-				/*
-				$f7_total = 74;
-				$sql = "select renum from pks_groups where group_id = 'F7'";
-				$row_group = $this->db->query($sql)->row_array();
-				$f7_renum = $row_group['renum'];
-				$total_parked_sql = "select count(cario_no) as parked 
-					from cario where 
-					cario.in_time > DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 5 DAY) 
-					and cario.finished = 0 
-					and cario.err = 0 
-					and cario.in_out = 'CI' 
-					and cario.out_time is null";
-				$total_parked_row_group = $this->db->query($total_parked_sql)->row_array();
-				$sql = "select count(pksno) as parked from pks where status != 'VA'";
-				$row_group = $this->db->query($sql)->row_array();
-				$f7_mqtt = $total_parked_row_group['parked'] - $row_group['parked'];
-				if($f7_mqtt > $f7_total){
-				  $f7_mqtt = $f7_total;
-				}else if($f7_mqtt <= 0){
-				  $f7_mqtt = 0;
-				}
-				$this->db->update('pks_groups', array('parked' => $f7_mqtt, 'availables' => $f7_total - $f7_mqtt + $f7_renum), array('group_id' => 'F7'));
-				$f7_mqtt_pad = str_pad($f7_total - $f7_mqtt + $f7_renum, 3, '0', STR_PAD_LEFT);
-				
-				$this->vars['mqtt']->publish(MQ_TOPIC_SUBLEVEL, "F7,{$f7_mqtt_pad}", 0);			// F7 MQTT
-				*/
+				//$this->vars['mqtt']->publish(MQ_TOPIC_SUBLEVEL, "{$rows['group_id']},{$group_va_pad}", 0);			// 送出剩餘車位數給字幕機
+				$this->mq_send(MQ_TOPIC_SUBLEVEL, "{$rows['group_id']},{$group_va_pad}");
 			}
         }
     }
 
+	 // 送出至message queue(目前用mqtt)
+	function mq_send($topic, $msg)
+	{
+		$this->vars['mqtt']->publish($topic, $msg, 0);
+    	trigger_error("mqtt:{$topic}|{$msg}");
+    }
 
     // 重新計算
     public function reculc()
