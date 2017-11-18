@@ -363,7 +363,7 @@ class Carpayment_model extends CI_Model
         $data['start_time'] = '00:00';
         $data['end_time'] = '00:00';
                 
-        $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no")
+        $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no, in_lane, in_out, station_no")
         		->from('cario')	
                 ->where(array('obj_type' => 1, 'ticket_no' => $ticket_no, 'finished' => 0, 'err' => 0))
                 ->order_by('cario_no', 'desc') 
@@ -379,12 +379,15 @@ class Carpayment_model extends CI_Model
 			$data['in_pic_name'] = $this->gen_in_pic_path($result['in_pic_name']);
 			// s7. 繳費時間: 無繳費時間時為"2000/01/01 00:00:00"，格式為"yyyy/MM/dd HH:mm:ss"，時間為24小時制，若無紀錄秒數秒數部分可填”00”
             $data['pay_time'] = !empty($result['pay_time']) ? $result['pay_time'] : '2000/01/01 00:00:00';
+			// s12. 停車位置區域代碼: 從 1 開始
+			$data['area_code'] = $this->gen_area_code($result);
         }   
         else
         {
             $data['in_time'] = '';
             $data['in_pic_name'] = '';
 			$data['pay_time'] = '2000/01/01 00:00:00';
+			$data['area_code'] = 1;
         }
         
         return $data;
@@ -405,6 +408,43 @@ class Carpayment_model extends CI_Model
 		}
 		
 		return '';
+	}
+	
+	// 產生區域代碼 (判斷 in_out, in_lane, station_no)
+	function gen_area_code($cario)
+	{
+		// 1: 北車西上 (一般車)
+		// 2: 北車西上 (機車)
+		// 3: 北車西下 (一般車)
+		// 4: 北車西下 (計程車)
+		
+		// 北車西下
+		if($cario['station_no'] == 12303)
+		{
+			if($cario['in_lane'] == 0)
+			{
+				return 4;	// 4: 北車西下 (計程車)
+			}
+			else
+			{
+				return 3;	// 3: 北車西下 (一般車)
+			}
+		}
+		
+		// 北車西上
+		else if($cario['station_no'] == 12304)
+		{
+			if(substr($cario['in_out'], 0, 1) === 'C')
+			{
+				return 1;	// 1: 北車西上 (一般車)
+			}
+			else
+			{
+				return 2;	// 2: 北車西上 (機車)
+			}
+		}
+		
+		return 1;			// 預設值
 	}
 	
 	// 建立博辰查詢入場時間資料
@@ -464,7 +504,7 @@ class Carpayment_model extends CI_Model
           	$data['end_time'] = '00:00';
         }
                 
-        $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no")
+        $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no, in_lane, in_out, station_no")
         		->from('cario')	
                 ->where(array('obj_type' => 1, 'obj_id' => $lpr, 'finished' => 0, 'err' => 0))
                 ->order_by('cario_no', 'desc') 
@@ -480,12 +520,15 @@ class Carpayment_model extends CI_Model
 			$data['in_pic_name'] = $this->gen_in_pic_path($result['in_pic_name']);
 			// s7. 繳費時間: 無繳費時間時為"2000/01/01 00:00:00"，格式為"yyyy/MM/dd HH:mm:ss"，時間為24小時制，若無紀錄秒數秒數部分可填”00”
             $data['pay_time'] = !empty($result['pay_time']) ? $result['pay_time'] : '2000/01/01 00:00:00';
+			// s12. 停車位置區域代碼: 從 1 開始
+			$data['area_code'] = $this->gen_area_code($result);
         }   
         else
         {
             $data['in_time'] = '';
             $data['in_pic_name'] = '';
 			$data['pay_time'] = '2000/01/01 00:00:00';
+			$data['area_code'] = 1;
         }
         
         return $data;
@@ -540,6 +583,7 @@ class Carpayment_model extends CI_Model
 			$data_0['in_time'] = '';
             $data_0['pay_time'] = '2000/01/01 00:00:00';
             $data_0['in_pic_name'] = '';
+			$data_0['area_code'] = 1;
 			
 			$data = array();
 			$data['results'][0] = $data_0;

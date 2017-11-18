@@ -70,8 +70,7 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
     		// echo "{$ticket_no}|{$lpr}|{$in_time}|{$pay_time}|{$pay_type}|/n"; 
             $connection->send('OK'); 
             
-            //if ($lpr == '*******') {$lpr = $last_lpr; $err_lpr = '***';}
-			if ($lpr == '*******') {$err_lpr = '***';}
+            if ($lpr == '*******') {$err_lpr = '***';}
             else
             { $err_lpr = '+++';}
             
@@ -99,224 +98,81 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 
 function tcp_data_fuzzy($records_count, $records, $seq, $cmdid)
 {                                   
+	$STX	= 0x02;		// STX：封包起始碼(0x02)
+	$ETX	= 0x03;		// ETX：封包結束碼(0x03)
+	$CRC	= 0x80;		// CRC：封包檢查碼
+	$S1		= 0x1c;		// 分隔碼
+	$D1		= 0x1f;		// 資料每個欄位分隔碼為0x1F
     $seq = '00001';
     $cmdid = '002';     
-	$packformat = 'aC';
 	
 	// 0 筆
 	if($records_count == 0)
 	{
 		$count = 0;
-		$data = pack($packformat, 
-			"{$count}", 0x1f
-			); 
+		$data = pack('aC', "{$count}", $D1); // 20170928 為了和舊版一致尾巴都補上 0x1f
 			
 		$data_len = strlen($data);    
 		$socket_len = $data_len + 16;
     
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f,
-			0x80, 0x03);
+		$send_data = 
+			pack("CCCCa5Ca3C",
+				$STX,
+				$socket_len / 0x0100, 
+				$socket_len % 0x0100, $S1, 
+				$seq, $S1, 
+				$cmdid, $S1).
+			
+			$data.
+			
+			pack("CC", $CRC, $ETX);
+			
 		return $send_data;
 	}
 	
 	// 1. create data
+	$packcontent_arr = array();
 	foreach ($records as $idx => $rows) 
 	{
 		$pathlen = strlen($rows['in_pic_name']);
-		$packformat = $packformat."A7Ca7CaCa19Ca{$pathlen}Ca19Ca10Ca10Ca5Ca5C";
+		array_push($packcontent_arr, pack('A7', $records[$idx]['lpr']));
+		array_push($packcontent_arr, pack('a7', $records[$idx]['seat_no']));
+		array_push($packcontent_arr, pack('a', $records[$idx]['ticket']));
+		array_push($packcontent_arr, pack('a19', $records[$idx]['in_time']));
+		array_push($packcontent_arr, pack("a{$pathlen}" , $records[$idx]['in_pic_name']));
+		array_push($packcontent_arr, pack('a19', $records[$idx]['pay_time']));
+		array_push($packcontent_arr, pack('a10', $records[$idx]['start_date']));
+		array_push($packcontent_arr, pack('a10', $records[$idx]['end_date']));
+		array_push($packcontent_arr, pack('a5', $records[$idx]['start_time']));
+		array_push($packcontent_arr, pack('a5', $records[$idx]['end_time']));
+		array_push($packcontent_arr, pack('a1', $records[$idx]['area_code']));
 	}
 	
-	if(count($records) == 1)
-	{
-		$count = 1;
-		$data = pack($packformat, 
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f
-			); 
-			
-		$data_len = strlen($data);    
-		$socket_len = $data_len + 16;
-    
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f, 
-			0x80, 0x03);
-	}
-	else if(count($records) == 2)
-	{
-		$count = 2;
-		$data = pack($packformat, 
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f,
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f
-			); 
-			
-		$data_len = strlen($data);    
-		$socket_len = $data_len + 16;
-    
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f, 
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			0x80, 0x03);
-	}
-	else if(count($records) == 3)
-	{
-		$count = 3;
-		$data = pack($packformat, 
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f,
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f
-			); 
-			
-		$data_len = strlen($data);    
-		$socket_len = $data_len + 16;
-    
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f, 
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			0x80, 0x03);
-	}
-	else if(count($records) == 4)
-	{
-		$count = 4;
-		$data = pack($packformat, 
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f,
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			$records[3]['lpr'], 0x1f, $records[3]['seat_no'], 0x1f, $records[3]['ticket'], 0x1f, $records[3]['in_time'], 0x1f, $records[3]['in_pic_name'], 0x1f, $records[3]['pay_time'], 0x1f, $records[3]['start_date'], 0x1f, $records[3]['end_date'], 0x1f, $records[3]['start_time'], 0x1f, $records[3]['end_time'], 0x1f
-			); 
-			
-		$data_len = strlen($data);    
-		$socket_len = $data_len + 16;
-    
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f, 
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			$records[3]['lpr'], 0x1f, $records[3]['seat_no'], 0x1f, $records[3]['ticket'], 0x1f, $records[3]['in_time'], 0x1f, $records[3]['in_pic_name'], 0x1f, $records[3]['pay_time'], 0x1f, $records[3]['start_date'], 0x1f, $records[3]['end_date'], 0x1f, $records[3]['start_time'], 0x1f, $records[3]['end_time'], 0x1f,
-			0x80, 0x03);
-	}
-	else if(count($records) == 5)
-	{
-		$count = 5;
-		$data = pack($packformat, 
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f,
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			$records[3]['lpr'], 0x1f, $records[3]['seat_no'], 0x1f, $records[3]['ticket'], 0x1f, $records[3]['in_time'], 0x1f, $records[3]['in_pic_name'], 0x1f, $records[3]['pay_time'], 0x1f, $records[3]['start_date'], 0x1f, $records[3]['end_date'], 0x1f, $records[3]['start_time'], 0x1f, $records[3]['end_time'], 0x1f,
-			$records[4]['lpr'], 0x1f, $records[4]['seat_no'], 0x1f, $records[4]['ticket'], 0x1f, $records[4]['in_time'], 0x1f, $records[4]['in_pic_name'], 0x1f, $records[4]['pay_time'], 0x1f, $records[4]['start_date'], 0x1f, $records[4]['end_date'], 0x1f, $records[4]['start_time'], 0x1f, $records[4]['end_time'], 0x1f
-			); 
-			
-		$data_len = strlen($data);    
-		$socket_len = $data_len + 16;
-    
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f, 
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			$records[3]['lpr'], 0x1f, $records[3]['seat_no'], 0x1f, $records[3]['ticket'], 0x1f, $records[3]['in_time'], 0x1f, $records[3]['in_pic_name'], 0x1f, $records[3]['pay_time'], 0x1f, $records[3]['start_date'], 0x1f, $records[3]['end_date'], 0x1f, $records[3]['start_time'], 0x1f, $records[3]['end_time'], 0x1f,
-			$records[4]['lpr'], 0x1f, $records[4]['seat_no'], 0x1f, $records[4]['ticket'], 0x1f, $records[4]['in_time'], 0x1f, $records[4]['in_pic_name'], 0x1f, $records[4]['pay_time'], 0x1f, $records[4]['start_date'], 0x1f, $records[4]['end_date'], 0x1f, $records[4]['start_time'], 0x1f, $records[4]['end_time'], 0x1f,
-			0x80, 0x03);
-	}
-	else if(count($records) == 6)
-	{
-		$count = 6;
-		$data = pack($packformat, 
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f,
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			$records[3]['lpr'], 0x1f, $records[3]['seat_no'], 0x1f, $records[3]['ticket'], 0x1f, $records[3]['in_time'], 0x1f, $records[3]['in_pic_name'], 0x1f, $records[3]['pay_time'], 0x1f, $records[3]['start_date'], 0x1f, $records[3]['end_date'], 0x1f, $records[3]['start_time'], 0x1f, $records[3]['end_time'], 0x1f,
-			$records[4]['lpr'], 0x1f, $records[4]['seat_no'], 0x1f, $records[4]['ticket'], 0x1f, $records[4]['in_time'], 0x1f, $records[4]['in_pic_name'], 0x1f, $records[4]['pay_time'], 0x1f, $records[4]['start_date'], 0x1f, $records[4]['end_date'], 0x1f, $records[4]['start_time'], 0x1f, $records[4]['end_time'], 0x1f,
-			$records[5]['lpr'], 0x1f, $records[5]['seat_no'], 0x1f, $records[5]['ticket'], 0x1f, $records[5]['in_time'], 0x1f, $records[5]['in_pic_name'], 0x1f, $records[5]['pay_time'], 0x1f, $records[5]['start_date'], 0x1f, $records[5]['end_date'], 0x1f, $records[5]['start_time'], 0x1f, $records[5]['end_time'], 0x1f
-			); 
-			
-		$data_len = strlen($data);    
-		$socket_len = $data_len + 16;
-    
-		$send_data = pack("CCCCa5Ca3C{$packformat}CC",
-			0x02,
-			$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-			"{$count}", 0x1f, 
-			$records[0]['lpr'], 0x1f, $records[0]['seat_no'], 0x1f, $records[0]['ticket'], 0x1f, $records[0]['in_time'], 0x1f, $records[0]['in_pic_name'], 0x1f, $records[0]['pay_time'], 0x1f, $records[0]['start_date'], 0x1f, $records[0]['end_date'], 0x1f, $records[0]['start_time'], 0x1f, $records[0]['end_time'], 0x1f, 
-			$records[1]['lpr'], 0x1f, $records[1]['seat_no'], 0x1f, $records[1]['ticket'], 0x1f, $records[1]['in_time'], 0x1f, $records[1]['in_pic_name'], 0x1f, $records[1]['pay_time'], 0x1f, $records[1]['start_date'], 0x1f, $records[1]['end_date'], 0x1f, $records[1]['start_time'], 0x1f, $records[1]['end_time'], 0x1f,
-			$records[2]['lpr'], 0x1f, $records[2]['seat_no'], 0x1f, $records[2]['ticket'], 0x1f, $records[2]['in_time'], 0x1f, $records[2]['in_pic_name'], 0x1f, $records[2]['pay_time'], 0x1f, $records[2]['start_date'], 0x1f, $records[2]['end_date'], 0x1f, $records[2]['start_time'], 0x1f, $records[2]['end_time'], 0x1f,
-			$records[3]['lpr'], 0x1f, $records[3]['seat_no'], 0x1f, $records[3]['ticket'], 0x1f, $records[3]['in_time'], 0x1f, $records[3]['in_pic_name'], 0x1f, $records[3]['pay_time'], 0x1f, $records[3]['start_date'], 0x1f, $records[3]['end_date'], 0x1f, $records[3]['start_time'], 0x1f, $records[3]['end_time'], 0x1f,
-			$records[4]['lpr'], 0x1f, $records[4]['seat_no'], 0x1f, $records[4]['ticket'], 0x1f, $records[4]['in_time'], 0x1f, $records[4]['in_pic_name'], 0x1f, $records[4]['pay_time'], 0x1f, $records[4]['start_date'], 0x1f, $records[4]['end_date'], 0x1f, $records[4]['start_time'], 0x1f, $records[4]['end_time'], 0x1f,
-			$records[5]['lpr'], 0x1f, $records[5]['seat_no'], 0x1f, $records[5]['ticket'], 0x1f, $records[5]['in_time'], 0x1f, $records[5]['in_pic_name'], 0x1f, $records[5]['pay_time'], 0x1f, $records[5]['start_date'], 0x1f, $records[5]['end_date'], 0x1f, $records[5]['start_time'], 0x1f, $records[5]['end_time'], 0x1f,
-			0x80, 0x03);
-	}
+	// gen packcontent
+	$packcontent = implode(pack('C', $D1), $packcontent_arr);
+	
+	// gen data
+	$data = pack("aC", count($records), $D1) . $packcontent . pack("C", $D1); // 20170928 為了和舊版一致尾巴都補上 0x1f
+	
+	// get data length
+	$data_len = strlen($data);    
+	$socket_len = $data_len + 16;
+	
+	// gen send_data
+	$send_data = 
+			pack("CCCCa5Ca3C",
+				$STX,
+				$socket_len / 0x0100, 
+				$socket_len % 0x0100, $S1, 
+				$seq, $S1, 
+				$cmdid, $S1). 
 
-    return $send_data;
+			$data. 
+			
+			pack("CC", $CRC, $ETX);
+	
+	return $send_data;
 }
-
-function tcp_data($arr, $seq, $cmdid)
-{                                   
-    $crc = pack('C', 'X');		// 起始值
-    $seq = '00001';
-    $cmdid = '002';                                    
-    $pathlen = strlen($arr['pic_name']);   
-    $packformat = "aCA7Ca7CaCa19Ca{$pathlen}Ca19Ca10Ca10Ca5Ca5C";
-    // $packformat = "aCA7Ca7CaCa19Ca71Ca19Ca10Ca10Ca5Ca5C";
-    $data = pack($packformat, 
-    	$arr['nth'], 0x1f, 
-        $arr['lpr'], 0x1f, 
-        $arr['seat_no'], 0x1f, 
-        $arr['ticket'], 0x1f, 
-        $arr['start_time'], 0x1f, 
-        $arr['pic_name'], 0x1f, 
-        $arr['pay_time'], 0x1f, 
-        $arr['ticket_start_date'], 0x1f, 
-        $arr['ticket_end_date'], 0x1f, 
-        $arr['ticket_start_time'], 0x1f, 
-        $arr['ticket_end_time'], 0x1f); 
-        
-    $data_len = strlen($data);    
-    $socket_len = $data_len + 16;
-    // echo "len data[{$data_len}] socket[{$socket_len}] data[{$data}]";  
-    
-    $send_data = pack("CCCCa5Ca3C{$packformat}CC",
-    	0x02,
-    	$socket_len / 0x0100, $socket_len % 0x0100, 0x1c, $seq, 0x1c, $cmdid, 0x1c,  
-    	$arr['nth'], 0x1f, 
-        $arr['lpr'], 0x1f, 
-        $arr['seat_no'], 0x1f, 
-        $arr['ticket'], 0x1f, 
-        $arr['start_time'], 0x1f, 
-        $arr['pic_name'], 0x1f, 
-        $arr['pay_time'], 0x1f, 
-        $arr['ticket_start_date'], 0x1f, 
-        $arr['ticket_end_date'], 0x1f, 
-        $arr['ticket_start_time'], 0x1f, 
-        $arr['ticket_end_time'], 0x1f, 
-        0x80, 0x03);
-         
-   	// echo 'len:[' . $socket_len. '] send_data:['. $send_data .']';
-    // file_put_contents('/tmp/aps.log.txt', date('Y-m-d H:i:s')."\n".$send_data ."\n\n", FILE_APPEND);
-    return $send_data;
-}  
-
 
 // 執行worker
 Worker::runAll();
