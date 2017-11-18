@@ -1183,6 +1183,7 @@ class Cars_model extends CI_Model
 	{
 		$this->vars['mqtt']->publish($topic, $msg, 0);
     	trigger_error("mqtt:{$topic}|{$msg}");
+		usleep(100000); // delay 0.1 sec (避免漏訊號)
     }
 	
 	// 產生 CK

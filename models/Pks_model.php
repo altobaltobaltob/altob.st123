@@ -199,6 +199,7 @@ class Pks_model extends CI_Model
 	{
 		$this->vars['mqtt']->publish($topic, $msg, 0);
     	trigger_error("mqtt:{$topic}|{$msg}");
+		usleep(300000); // delay 0.3 sec (避免漏訊號)
     }
 
     // 重新計算
