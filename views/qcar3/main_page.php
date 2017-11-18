@@ -14,7 +14,7 @@
     <!-- Timeline CSS -->
     <link href="<?=BOOTSTRAPS?>dist/css/timeline.css" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="<?=BOOTSTRAPS?>dist/css/sb-admin-3.css" rel="stylesheet">
+    <link href="<?=BOOTSTRAPS?>dist/css/sb-admin-qcar3.css" rel="stylesheet">
     <!-- Morris Charts CSS -->
     <link href="<?=BOOTSTRAPS?>bower_components/morrisjs/morris.css" rel="stylesheet">
     <!-- Custom Fonts -->
@@ -27,7 +27,7 @@
         <div id="page-wrapper"><?php /* 主要資料顯示區 */ ?>
             <div class="row">
                 <div class="col-lg-12">
-                    <!--h1 class="page-header">歐特儀自動化服務機</h1--><?php /* 右側小表頭 */ ?>
+                    <h1 class="page-header">歐特儀自動化服務機</h1><?php /* 右側小表頭 */ ?>
 					&nbsp;
                 </div>
                 <!-- /.col-lg-12 -->
@@ -201,7 +201,7 @@
 
 	<!-- virtual keyboard -->
   	<link href="<?=WEB_LIB?>virtual-keyboard/css/jquery-ui.min.css" rel="stylesheet">
-	<link href="<?=WEB_LIB?>virtual-keyboard/css/keyboard.css" rel="stylesheet">
+	<link href="<?=WEB_LIB?>virtual-keyboard/css/keyboard_qcar3.css" rel="stylesheet">
   	<script src="<?=WEB_LIB?>virtual-keyboard/js/jquery-ui.min.js"></script>
   	<script src="<?=WEB_LIB?>virtual-keyboard/js/jquery.keyboard.js"></script>
   	<script src="<?=WEB_LIB?>virtual-keyboard/js/jquery.keyboard.extension-caret.js"></script>
