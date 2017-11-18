@@ -28,7 +28,7 @@ class Pks_model extends CI_Model
             	if ($parms['lpr'] == 'NONE')	// 在席車辨失敗, 不處理
                 {
                   	trigger_error('在席車辨失敗' . print_r($parms, true));
-                    return false;
+                    return false;	// 中斷
                 }
 				
 				$new_file_name = "pks-{$parms['pksno']}-{$parms['lpr']}-{$parms['ivsno']}-" . date('Ymd') .".jpg";
@@ -81,11 +81,11 @@ class Pks_model extends CI_Model
 				if (($rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr']) && $rows_pks['pic_name'] == $parms['pic_name'])
                 {
                 	trigger_error('KL ignored:'.$rows_pks['lpr']);
+					return true;	// 中斷
                 }
-				else
-				{
-					// 讀取進場時間, 如讀不到資料, 以目前時間取代(add by TZUSS 2016-02-23)
-					$rows_cario = $this->db
+				
+				// 讀取進場時間, 如讀不到資料, 以目前時間取代(add by TZUSS 2016-02-23)
+				$rows_cario = $this->db
 								->select('cario_no, in_time')
 								->from('cario')
 								->where(array('in_out' => 'CI', 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0, 'station_no' => $parms['sno']))
@@ -93,38 +93,37 @@ class Pks_model extends CI_Model
 								->limit(1)
 								->get()
 								->row_array();
-					if (!empty($rows_cario['cario_no']))		// 有入場資料
-					{
-						$cario_no = $rows_cario['cario_no'];	// 入場序號
-						$in_time = $rows_cario['in_time'];
-						// 在席與入場資料相符, 分別在cario與pks記錄之
-						$data_cario = array
-						(
-							'pksno' => $parms['pksno'],
-							'pks_time' => date('Y-m-d H:i:s')
-						);
-						$this->db->update('cario', $data_cario, array('cario_no' => $cario_no, 'station_no' => $parms['sno']));
-					}
-					else	// 查無入場資料, 即時通知
-					{
-						$cario_no = 0;
-						$in_time = date('Y-m-d H:i:s');
-						trigger_error('在席無進場資料:'. print_r($parms, true));
-					}
-					
-					$data = array
+				if (!empty($rows_cario['cario_no']))		// 有入場資料
+				{
+					$cario_no = $rows_cario['cario_no'];	// 入場序號
+					$in_time = $rows_cario['in_time'];
+					// 在席與入場資料相符, 分別在cario與pks記錄之
+					$data_cario = array
 					(
-						'cario_no' => $cario_no,
-						'lpr' => $parms['lpr'],
-						'status' => 'LR',	// 車格佔用並有車號
-						'confirms' => 0,    // 預設人工未確認
-						'pic_name' => $parms['pic_name'],
-						'in_time' => $in_time
+						'pksno' => $parms['pksno'],
+						'pks_time' => date('Y-m-d H:i:s')
 					);
-					// 車號及照片檔名填入資料庫內
-					$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
-					break;	
+					$this->db->update('cario', $data_cario, array('cario_no' => $cario_no, 'station_no' => $parms['sno']));
 				}
+				else	// 查無入場資料, 即時通知
+				{
+					$cario_no = 0;
+					$in_time = date('Y-m-d H:i:s');
+					trigger_error('在席無進場資料:'. print_r($parms, true));
+				}
+					
+				$data = array
+				(
+					'cario_no' => $cario_no,
+					'lpr' => $parms['lpr'],
+					'status' => 'LR',	// 車格佔用並有車號
+					'confirms' => 0,    // 預設人工未確認
+					'pic_name' => $parms['pic_name'],
+					'in_time' => $in_time
+				);
+				// 車號及照片檔名填入資料庫內
+				$this->db->update('pks', $data, array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']));
+				break;
 
           	case 'KI':	// 車輛入席, 各區空車位與佔位各加減1
     			$rows = $this->db->select('status')
@@ -191,6 +190,8 @@ class Pks_model extends CI_Model
 				$this->mq_send(MQ_TOPIC_SUBLEVEL, "{$rows['group_id']},{$group_va_pad}");
 			}
         }
+		
+		return true;
     }
 
 	 // 送出至message queue(目前用mqtt)
