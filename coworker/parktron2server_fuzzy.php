@@ -134,12 +134,11 @@ function tcp_data_fuzzy($records_count, $records, $seq, $cmdid)
 	$packcontent_arr = array();
 	foreach ($records as $idx => $rows) 
 	{
-		$pathlen = strlen($rows['in_pic_name']);
 		array_push($packcontent_arr, pack('A7', $records[$idx]['lpr']));
 		array_push($packcontent_arr, pack('a7', $records[$idx]['seat_no']));
 		array_push($packcontent_arr, pack('a', $records[$idx]['ticket']));
 		array_push($packcontent_arr, pack('a19', $records[$idx]['in_time']));
-		array_push($packcontent_arr, pack("a{$pathlen}" , $records[$idx]['in_pic_name']));
+		array_push($packcontent_arr, pack('a'. strlen($records[$idx]['in_pic_name']) , $records[$idx]['in_pic_name']));
 		array_push($packcontent_arr, pack('a19', $records[$idx]['pay_time']));
 		array_push($packcontent_arr, pack('a10', $records[$idx]['start_date']));
 		array_push($packcontent_arr, pack('a10', $records[$idx]['end_date']));
