@@ -1022,7 +1022,7 @@ class Carpark extends CI_Controller
 		
 		$error_str = '';
 		$service_port = 8068;
-		$address = "192.168.10.201";
+		$address = empty($this->uri->segment(4)) ? "192.168.10.201" : "192.168.10." . $this->uri->segment(4);
 
 		/* Create a TCP/IP socket. */
 		$socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
