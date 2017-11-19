@@ -545,22 +545,22 @@ class Carpayment_model extends CI_Model
 			// s2 ~ s11 的資料會因模糊比對筆數增加或減少而增減
 			foreach ($fuzzy_result as $idx => $rows) 
 			{
-				$lpr = $rows['lpr'];
+				$result_lpr = $rows['lpr'];
 				$ticket_no = $rows['ticket_no'];
 				
-				if($lpr == 'NONE')
+				if($result_lpr == 'NONE')
 				{
 					$tmp_data = $this->gen_query_data_type4($ticket_no);	// 備緩搜尋
 				}
 				else
 				{
-					$tmp_data = $this->gen_query_data($lpr);				// 模糊搜尋
+					$tmp_data = $this->gen_query_data($result_lpr);			// 模糊搜尋
 				}
 				
 				if($tmp_data['in_time'] == '')
 				{
 					// 若查無入場時間, 直接乎略這筆
-					trigger_error("查無入場時間, 直接乎略這筆[{$lpr}]:".print_r($rows, true));
+					trigger_error("查無入場時間, 直接乎略這筆[{$result_lpr}]:".print_r($rows, true));
 				}
 				else
 				{
