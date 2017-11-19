@@ -342,8 +342,8 @@ class Cars_model extends CI_Model
 						'in_time' => $this->now_str,
 						'in_lane' => $parms['ivsno'],
 						'in_pic_name' => empty($parms['pic_name']) ? '' : $parms['pic_name'],
-						//'out_before_time' => date("Y-m-d H:i:s"),
-						'out_before_time' => date('Y-m-d H:i:s', strtotime(" + 15 minutes")), // 15分鐘內, 可直接離場 
+						'out_before_time' => date("Y-m-d H:i:s"),
+						//'out_before_time' => date('Y-m-d H:i:s', strtotime(" + 15 minutes")), // 15分鐘內, 可直接離場 
 						'ticket_no' => $ticket_no
 					);
 					$this->db->insert('cario', $data);
