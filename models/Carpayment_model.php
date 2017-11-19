@@ -376,7 +376,7 @@ class Carpayment_model extends CI_Model
 			// s5. 入場時間: 格式為"yyyy/MM/dd HH:mm:ss"，時間為24小時制，若無紀錄秒數秒數部分可填”00”
             $data['in_time'] = $result['in_time'];
 			// s6. 入場車牌圖片路徑: 貴公司的絕對路徑，我方使用網路芳鄰或FTP下載
-			$data['in_pic_name'] = $this->gen_in_pic_path($result['in_pic_name']);
+			$data['in_pic_name'] = $this->gen_in_pic_path($result);
 			// s7. 繳費時間: 無繳費時間時為"2000/01/01 00:00:00"，格式為"yyyy/MM/dd HH:mm:ss"，時間為24小時制，若無紀錄秒數秒數部分可填”00”
             $data['pay_time'] = !empty($result['pay_time']) ? $result['pay_time'] : '2000/01/01 00:00:00';
 			// s12. 停車位置區域代碼: 從 1 開始
@@ -394,17 +394,20 @@ class Carpayment_model extends CI_Model
 	}
 	
 	// 取得圖檔路徑
-	function gen_in_pic_path($in_pic_name)
+	function gen_in_pic_path($cario)
 	{	
-		if(!empty($in_pic_name))
+		// 北車西上特例
+		$station_local_ip = ($cario['station_no'] == 12304)? '192.168.10.203' : STATION_LOCAL_IP;
+	
+		if(!empty($cario['in_pic_name']))
 		{
-			$pic_name_arr = explode('-', $in_pic_name);
+			$pic_name_arr = explode('-', $cario['in_pic_name']);
 			$date_num = substr($pic_name_arr[7], 0, 8);
-			return "\\\\" . STATION_LOCAL_IP . "\\pics\\{$date_num}\\{$in_pic_name}";
+			return "\\\\" . $station_local_ip . "\\pics\\{$date_num}\\{$cario['in_pic_name']}";
 		}
 		else if(file_exists(CAR_PIC . 'lpr-404.jpg'))
 		{
-			return "\\\\" . STATION_LOCAL_IP . "\\pics\\lpr-404.jpg";	 // 預設圖片	
+			return "\\\\" . $station_local_ip . "\\pics\\lpr-404.jpg";	 // 預設圖片	
 		}
 		
 		return '';
@@ -517,7 +520,7 @@ class Carpayment_model extends CI_Model
 			// s5. 入場時間: 格式為"yyyy/MM/dd HH:mm:ss"，時間為24小時制，若無紀錄秒數秒數部分可填”00”
             $data['in_time'] = $result['in_time'];
 			// s6. 入場車牌圖片路徑: 貴公司的絕對路徑，我方使用網路芳鄰或FTP下載
-			$data['in_pic_name'] = $this->gen_in_pic_path($result['in_pic_name']);
+			$data['in_pic_name'] = $this->gen_in_pic_path($result);
 			// s7. 繳費時間: 無繳費時間時為"2000/01/01 00:00:00"，格式為"yyyy/MM/dd HH:mm:ss"，時間為24小時制，若無紀錄秒數秒數部分可填”00”
             $data['pay_time'] = !empty($result['pay_time']) ? $result['pay_time'] : '2000/01/01 00:00:00';
 			// s12. 停車位置區域代碼: 從 1 開始
@@ -642,7 +645,7 @@ class Carpayment_model extends CI_Model
           	$data['end_time'] = '00:00';
         }
                 
-        $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no")
+        $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no, station_no")
         		->from('cario')	
                 ->where(array('obj_type' => 1, 'obj_id' => $lpr, 'finished' => 0, 'err' => 0))
                 ->order_by('cario_no', 'desc') 
@@ -655,7 +658,7 @@ class Carpayment_model extends CI_Model
         	trigger_error("aps查詢入場時間|{$lpr}|{$result['in_time']}|{$result['in_pic_name']}"); 
             $data['in_time'] = $result['in_time'];
             $data['pay_time'] = !empty($result['pay_time']) ? $result['pay_time'] : '2000/01/01 00:00:00';
-			$data['in_pic_name'] = $this->gen_in_pic_path($result['in_pic_name']);
+			$data['in_pic_name'] = $this->gen_in_pic_path($result);
             $data['records'] = 1; 
         }   
         else
