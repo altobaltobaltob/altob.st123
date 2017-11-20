@@ -268,6 +268,19 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		exit;
 	}
 
+	/*
+		出入口
+		
+		說明: 特殊方式進出註記 (ex. 悠遊卡)
+    */
+	public function ipcam_meta()
+	{                             
+		$parms = $this->uri->uri_to_assoc(3);
+		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
+		$this->cars_model->ipcam_meta($parms);
+	}
+	
+	/*
 	public function test_now()
 	{
 		echo date('Y-m-d H:i:s');
@@ -277,5 +290,6 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 	{
 		phpinfo();
 	}
+	*/
 	
 }

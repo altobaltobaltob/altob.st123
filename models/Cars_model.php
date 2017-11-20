@@ -24,6 +24,12 @@ class Cars_model extends CI_Model
 	{
     	$this->vars = $vars;
     }
+	
+	// 特殊方式進出註記
+	public function ipcam_meta($parms)
+	{
+		trigger_error(__FUNCTION__ . '|特殊註記:' . print_r($parms, true));
+	}
 
 	// 車輛進出傳入車牌號碼 (2016/07/27)
     public function opendoor_lprio($parms)
