@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <title>警急求救地圖</title>
+    <title>緊急求救地圖</title>
     <!-- Bootstrap Core CSS -->
     <link href="<?=BOOTSTRAPS?>bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- MetisMenu CSS -->
@@ -33,7 +33,7 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a class="navbar-brand" href="#">警急求救地圖</a>
+                <a class="navbar-brand" href="#">緊急求救地圖</a>
             </div>
 
             <!-- /.navbar-top-links(左側選單) -->
@@ -70,7 +70,7 @@
         <div id="page-wrapper"><?php /* 主要資料顯示區 */ ?>
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">警急求救地圖</h1><?php /* 右側小表頭 */ ?>
+                    <h1 class="page-header">緊急求救地圖</h1><?php /* 右側小表頭 */ ?>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
@@ -164,7 +164,7 @@ function show_item(tags)
 
 $(document).ready(function()
 {
-	<?php /* 警急求救平面圖 */ ?>
+	<?php /* 緊急求救平面圖 */ ?>
 	AltobObject.SosMap({
 		getSosUrl: "<?=SERVER_URL?>/parkingquery.html/floor_map_read_sos",
 		dataReloadIntervalTimeMillis: 5000,				// 資料, 自動更新週期 ( 5 sec )
