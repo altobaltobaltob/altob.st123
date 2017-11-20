@@ -176,7 +176,7 @@ $(document).ready(function()
 			map1: {
 				floorName: 'B1',
 				canvasId: 'b1canvas',
-				src: '<?=SERVER_URL?>i3/pics/b1_map.png'
+				src: '<?=SERVER_URL?>i3/pics/b1_map_iii.png'
 			}
 		}
 	});
