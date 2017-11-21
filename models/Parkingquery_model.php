@@ -151,18 +151,14 @@ class Parkingquery_model extends CI_Model
 	{           
     	$data = array();   
         $this->db->trans_start(); 
+		
+		$sql = '';
         if ($pksno > 0)	// 限制從某一個車位開始指派車位
         {   
-        	//$sql = "select pksno from pks where status = 'VA' and pksno >= {$pksno} and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
-			
-			// 2017/04/12 調整為支援找最近
-			//$sql_xy = "select posx, posy from pks where pksno = {$pksno}";
-			$sql_xy = "
-						select pks.posx, pks.posy, RIGHT(pks_group_member.group_id, 1 ) as group_idx
-							from pks
-							left join pks_group_member on (pks_group_member.pksno = pks.pksno)
-							left join pks_groups on (pks_groups.group_id = pks_group_member.group_id)
-						where pks.pksno = {$pksno} AND pks_groups.group_type = {$group_type}
+			// 取得指定車格座標
+			$sql_xy = "	SELECT pks.posx, pks.posy, LEFT(pks.pksno, 2) as pksno_idx
+						FROM pks
+						WHERE pks.pksno = {$pksno}
 						";
 			
 			$rows_xy = $this->db->query($sql_xy)->row_array(); 
@@ -175,7 +171,7 @@ class Parkingquery_model extends CI_Model
 								ABS(cast(pks.pksno as signed) - {$pksno}) +
 								ABS(cast(pks.posx as signed) - {$rows_xy['posx']}) + 
 								ABS(cast(pks.posy as signed) - {$rows_xy['posy']}) +
-								ABS(RIGHT(pks_group_member.group_id, 1 ) - {$rows_xy['group_idx']}) * 1000
+								ABS(LEFT(pks.pksno, 2) - {$rows_xy['pksno_idx']}) * 1000
 							) AS v
 							from pks 
 							left join pks_group_member on (pks_group_member.pksno = pks.pksno)
@@ -183,26 +179,24 @@ class Parkingquery_model extends CI_Model
 						where 
 							pks.status = 'VA' and prioritys != 0 and (pks.book_time is null or pks.book_time <= now()) 
 							and pks_groups.group_type = {$group_type}
-						order by v asc limit 10 for update;
+						order by v asc limit 1 for update;
 						";
-				
-				/*
-				$sql = "select pksno, 
-						( ABS(cast(pksno as signed) - {$pksno}) + ABS(cast(posx as signed) - {$rows_xy['posx']}) + ABS(cast(posy as signed) - {$rows_xy['posy']}) ) AS v
-						from pks where status = 'VA' and prioritys != 0 and (book_time is null or book_time <= now()) 
-						order by v asc limit 1 for update;"; 
-				*/
 			}
-			else
-			{
-				// 依順序
-				$sql = "select pksno from pks where status = 'VA' and pksno >= {$pksno} and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
-			}
-        }   
-        else
-        {
-        	$sql = "select pksno from pks where status = 'VA' and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
         }
+        
+		// 依順序
+		if(empty($sql))
+			$sql = "SELECT pks.pksno 
+						FROM pks 
+						LEFT JOIN pks_group_member ON (pks_group_member.pksno = pks.pksno)
+						LEFT JOIN pks_groups ON (pks_groups.group_id = pks_group_member.group_id)
+						WHERE pks.status = 'VA' 
+							AND pks.prioritys != 0 
+							AND (pks.book_time IS NULL OR pks.book_time <= now()) 
+							AND pks_groups.group_type = {$group_type}
+						ORDER BY pks.prioritys ASC LIMIT 1 FOR UPDATE;"; 
+						
+		trigger_error(__FUNCTION__ . "..sql: {$sql}..");
         
         $rows = $this->db->query($sql)->row_array(); 
         if (!empty($rows['pksno']))
@@ -212,12 +206,13 @@ class Parkingquery_model extends CI_Model
             $sql = "update pks set book_time = addtime(now(), '00:10:00') where pksno = {$rows['pksno']};";
             $this->db->query($sql);
 			
-			trigger_error(__FUNCTION__ . "[{$pksno}]:" .  print_r($rows, true));
+			trigger_error(__FUNCTION__ . "[{$pksno}]:" .  print_r($data, true).  print_r($rows, true));
         }      
         else   
         {
         	$data['result']['location_no'] = '0';
         	$data['result_code'] = 'FAIL';
+			trigger_error(__FUNCTION__ . "[{$pksno}]:" .  print_r($data, true));
         }      
         $this->db->trans_complete(); 
         return $data; 
