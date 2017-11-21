@@ -20,7 +20,24 @@ class Parkingquery extends CI_Controller
 			//error_reporting(E_ALL ^ E_NOTICE); 
 			error_reporting(E_ALL); 
         }  
-        set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log   
+		set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log   
+		
+		ignore_user_abort();	// 接受client斷線, 繼續run 
+				
+		$method_name = $this->router->fetch_method();
+		if ($method_name == 'security_action')
+		{
+			ob_end_clean();
+			ignore_user_abort();
+			ob_start();
+			
+			echo 'ok';
+			
+			header('Connection: close');
+			header('Content-Length: ' . ob_get_length());
+			ob_end_flush();
+			flush();
+		}
            
         /*
         // 共用記憶體 
