@@ -112,7 +112,7 @@ class Parkingquery extends CI_Controller
 	public function check_space2() 
 	{       
     	$seqno = $this->uri->segment(3);
-        $data = $this->parkingquery_model->check_space($seqno, 2);
+        $data = $this->parkingquery_model->check_space($seqno, 3);
         $data['result']['num'] = $seqno; 
         $data['result_code'] = 'OK'; 
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
@@ -143,7 +143,7 @@ class Parkingquery extends CI_Controller
 	public function get_valid_seat2() 
 	{                                          
     	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
-        $data = $this->parkingquery_model->get_valid_seat($pksno, 2);
+        $data = $this->parkingquery_model->get_valid_seat($pksno, 3);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
     

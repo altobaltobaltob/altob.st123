@@ -182,7 +182,7 @@ class Parkingquery_model extends CI_Model
 							left join pks_groups on (pks_groups.group_id = pks_group_member.group_id)
 						where 
 							pks.status = 'VA' and prioritys != 0 and (pks.book_time is null or pks.book_time <= now()) 
-							and pks_groups.group_type = 1
+							and pks_groups.group_type = {$group_type}
 						order by v asc limit 10 for update;
 						";
 				
