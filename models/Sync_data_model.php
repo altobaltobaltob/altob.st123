@@ -260,11 +260,11 @@ class Sync_data_model extends CI_Model
 		// 送出即時訊號
 		if($group_id == SYNC_PKS_GROUP_ID_CI)
 		{
-			$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_888 . ",1,{$availables}" . MQ_ALTOB_888_END_TAG); // 送出 888 (汽車)
+			//$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_888 . ",1,{$availables}" . MQ_ALTOB_888_END_TAG); // 送出 888 (汽車)
 		}
 		else if($group_id == SYNC_PKS_GROUP_ID_MI)
 		{
-			$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_888 . ",2,{$availables}" . MQ_ALTOB_888_END_TAG); // 送出 888 (機車)
+			//$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_888 . ",2,{$availables}" . MQ_ALTOB_888_END_TAG); // 送出 888 (機車)
 		}
 		else
 		{
