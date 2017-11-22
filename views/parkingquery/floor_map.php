@@ -166,7 +166,7 @@ $(document).ready(function()
 {
 	<?php /* 緊急求救平面圖 */ ?>
 	AltobObject.SosMap({
-		getSosUrl: "<?=SERVER_URL?>/parkingquery.html/floor_map_read_sos",
+		getSosUrl: "<?=SERVER_URL?>parkingquery.html/floor_map_read_sos",
 		dataReloadIntervalTimeMillis: 5000,				// 資料, 自動更新週期 ( 5 sec )
 		dataReloadErrorLimit: 5,						// 資料, 連線容錯次數
 		soundInfo: {
