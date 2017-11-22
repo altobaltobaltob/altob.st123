@@ -157,6 +157,30 @@ class AltobSyncAgent
 		// 傳遞參數至遠端。
 		return $oService->ServerPost($this->post_parms);
 	}
+	
+	// ===============================================
+	// SOS
+	// ===============================================
+	
+	// 傳送 SOS
+	public function sync_st_sos($machine_no)
+	{
+		$error_parms_msg = $this->check_init_parms();
+		if(!empty($error_parms_msg)) { return $error_parms_msg; }
+
+		if(empty($machine_no))
+			return 'machine_no not found';
+
+		$this->post_parms['machine_no'] = $machine_no;
+
+		// 初始化網路服務物件。
+		$oService = new AltobSyncService();
+		$oService->ServiceURL = AltobSyncAgent::SYNC_CARS_URL;
+		$oService->ServiceCMD = 'st_sos';
+
+		// 傳遞參數至遠端。
+		return $oService->ServerPost($this->post_parms);
+	}
 
 	// ===============================================
 	// members
