@@ -673,24 +673,21 @@ class Sync_data_model extends CI_Model
 			// 若有設定多個場站, 已多場站設定為主
 			$tmp_station_no_list_arr = explode(SYNC_DELIMITER_ST_NO, $data['station_no_list']);
 			
-			if(empty($tmp_station_no_list_arr))
+			foreach($tmp_station_no_list_arr as $key => $station_no_list_value)
 			{
-				array_push($station_no_list_arr, $station_no);	// 若無設定直接放目前場站
-			}
-			else
-			{
-				foreach($tmp_station_no_list_arr as $key => $station_no_list_value)
-				{
-					if(intval($station_no_list_value) > 0)
-					{	
-						if(empty($station_no_list_arr))
-							array_push($station_no_list_arr, $station_no_list_value);
+				if(intval($station_no_list_value) > 0)
+				{	
+					if(empty($station_no_list_arr))
+						array_push($station_no_list_arr, $station_no_list_value);
 						
-						else if(!array_search($station_no_list_value, $station_no_list_arr))
-							array_push($station_no_list_arr, $station_no_list_value);
-					}
+					else if(!array_search($station_no_list_value, $station_no_list_arr))
+						array_push($station_no_list_arr, $station_no_list_value);
 				}
 			}
+			
+			// 若無設定直接放目前場站
+			if(empty($station_no_list_arr))
+				array_push($station_no_list_arr, $station_no);
 			
 			if(!isset($settings[$station_no]))
 			{
