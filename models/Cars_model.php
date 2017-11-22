@@ -29,6 +29,47 @@ class Cars_model extends CI_Model
 	public function ipcam_meta($parms)
 	{
 		trigger_error(__FUNCTION__ . '|特殊註記:' . print_r($parms, true));
+		
+		if($parms['token'] != 1)
+		{
+			trigger_error(__FUNCTION__ . '|未定義|' . print_r($parms, true));
+			return false;
+		}
+		
+		// 讀取最近一筆入場資料
+		$rows_cario = $this->db->select('cario_no, obj_id, in_time, out_before_time')
+							->from('cario')
+							->where(array(
+								'station_no' => $parms['sno'],
+								'obj_id' => $parms['lpr'], 
+								'err' => 0
+								))
+                  			->order_by('cario_no', 'desc')
+                  			->limit(1)
+                			->get()
+                			->row_array();
+
+		if (!isset($rows_cario['cario_no']))
+		{
+			trigger_error(__FUNCTION__ . '|查無入場記錄|' . print_r($parms, true));
+			return false;
+		}
+		
+		// 更新入場記錄
+		$data = array('ticket_type' => 3);
+		$this->db->update('cario', $data, array('cario_no' => $rows_cario['cario_no']));
+		trigger_error(__FUNCTION__ . '|悠遊卡離場，更新入場記錄|');
+		$affect_rows = $this->db->affected_rows();
+
+		if ($affect_rows > 0)
+		{
+			// 傳送更新記錄
+			$sync_agent = new AltobSyncAgent();
+			$sync_agent->init($parms['sno'], $this->now_str);
+			$sync_agent->cario_no = $rows_cario['cario_no'];		// 進出編號
+			$sync_result = $sync_agent->sync_st_io_meta($data);
+			trigger_error( __FUNCTION__ . "..sync_st_io_meta.." .  $sync_result);
+		}
 	}
 
 	// 車輛進出傳入車牌號碼 (2016/07/27)

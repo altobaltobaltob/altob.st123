@@ -158,6 +158,30 @@ class AltobSyncAgent
 		return $oService->ServerPost($this->post_parms);
 	}
 	
+	// 傳送進出更新記錄
+	public function sync_st_io_meta($meta)
+	{
+		$error_parms_msg = $this->check_init_parms();
+		if(!empty($error_parms_msg)) { return $error_parms_msg; }
+		
+		if(empty($meta))
+			return 'meta not found';
+
+		if(empty($this->cario_no))
+			return 'cario_no not found';
+		
+		$this->post_parms['meta'] = $meta;	// 需設定
+		$this->post_parms['cario_no'] = $this->cario_no;	// 需設定
+		
+		// 初始化網路服務物件。
+		$oService = new AltobSyncService();
+		$oService->ServiceURL = AltobSyncAgent::SYNC_CARS_URL;
+		$oService->ServiceCMD = 'st_io_meta';
+
+		// 傳遞參數至遠端。
+		return $oService->ServerPost($this->post_parms);
+	}
+	
 	// ===============================================
 	// SOS
 	// ===============================================

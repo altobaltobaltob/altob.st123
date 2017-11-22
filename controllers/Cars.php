@@ -44,20 +44,13 @@ class Cars extends CI_Controller
 		ignore_user_abort();	// 接受client斷線, 繼續run 
                
         $method_name = $this->router->fetch_method();
-        if ($method_name == 'ipcam' || $method_name == 'check_lpr_etag')
-        {
-        	ob_end_clean();
-			ignore_user_abort();
-			ob_start();
-			
-			echo 'ok';
-			
-			header('Connection: close');
-			header('Content-Length: ' . ob_get_length());
-			ob_end_flush();
-			flush();
-        }
-        else if($method_name == 'opendoor' || $method_name == 'temp_opendoors' || $method_name == 'member_opendoors')
+		
+		if(in_array($method_name, array(
+			'ipcam', 'ipcam_meta', 
+			'check_lpr_etag', 
+			'opendoor',
+			'temp_opendoors', 'member_opendoors'
+		)))
 		{
 			ob_end_clean();
 			ignore_user_abort();
