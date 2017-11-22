@@ -58,7 +58,7 @@ class Cars_model extends CI_Model
 		// 更新入場記錄
 		$data = array('ticket_type' => 3);
 		$this->db->update('cario', $data, array('cario_no' => $rows_cario['cario_no']));
-		trigger_error(__FUNCTION__ . '|悠遊卡離場，更新入場記錄|');
+		trigger_error(__FUNCTION__ . '|悠遊卡，更新入場記錄|');
 		$affect_rows = $this->db->affected_rows();
 
 		if ($affect_rows > 0)
