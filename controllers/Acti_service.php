@@ -35,7 +35,19 @@ class Acti_service extends CI_Controller
 		
 		// 阻檔未知的 IP
 		$from_ip = $this->my_ip();
-		if(!in_array($from_ip, array('127.0.0.1')))
+		if(!in_array($from_ip, array(
+			'127.0.0.1', 
+			'192.168.10.130',
+			'192.168.10.131',
+			'192.168.10.132',
+			'192.168.10.133',
+			'192.168.10.134',
+			'192.168.10.135',
+			'192.168.10.136',
+			'192.168.10.137',
+			'192.168.10.138',
+			'192.168.10.139'
+		)))
 		{
 			trigger_error('refused://from:'.$from_ip.'..refused..'.print_r($_REQUEST, true));
 			exit;
@@ -111,10 +123,20 @@ class Acti_service extends CI_Controller
 	// [區網] 由設備端呼叫
 	public function sos()
 	{
-		$station_no = $this->uri->segment(3);	// 場站編號
-		$machine_no = $this->uri->segment(4);	// 設備編號
+		$msg = isset($_REQUEST['Message']) ? $_REQUEST['Message'] : '';
+		trigger_error(__FUNCTION__ . "..Message..{$msg}..". print_r($_REQUEST, true));
 		
-		trigger_error(__FUNCTION__ . "..{$station_no},{$machine_no}..");
+		$msg_arr = explode('-', $msg);
+		$station_no = isset($msg_arr['0']) ? $msg_arr['0'] : 0;
+		$machine_no = isset($msg_arr['1']) ? $msg_arr['1'] : 0;
+		//$station_no = $this->uri->segment(3);
+		//$machine_no = $this->uri->segment(4);
+		
+		if(!isset($station_no) || !isset($machine_no))
+		{
+			trigger_error(__FUNCTION__ . '..unknown msg..');
+			exit;
+		}
 		
 		require_once(ALTOB_SYNC_FILE) ;
 		
