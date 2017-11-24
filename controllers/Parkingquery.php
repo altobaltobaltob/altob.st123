@@ -137,7 +137,7 @@ class Parkingquery extends CI_Controller
     
      
     // 停車位置查詢(板橋好停車)
-    // http://203.75.167.89/parkingquery.html/check_location/ABC1234
+    // http://xxxxxxxx/parkingquery.html/check_location/ABC1234
 	public function check_location() 
 	{       
     	$lpr = $this->uri->segment(3);
@@ -147,7 +147,7 @@ class Parkingquery extends CI_Controller
     
      
     // 空車位導引
-    // http://203.75.167.89/parkingquery.html/get_valid_seat
+    // http://xxxxxxxx/parkingquery.html/get_valid_seat
 	public function get_valid_seat() 
 	{                                          
     	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
@@ -156,7 +156,7 @@ class Parkingquery extends CI_Controller
     }    
 	
 	// 空車位導引 (身障)
-    // http://203.75.167.89/parkingquery.html/get_valid_seat2
+    // http://xxxxxxxx/parkingquery.html/get_valid_seat2
 	public function get_valid_seat2() 
 	{                                          
     	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
@@ -164,9 +164,17 @@ class Parkingquery extends CI_Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
     
+	// 空車位導引 (婦友)
+    // http://xxxxxxxx/parkingquery.html/get_valid_seat3
+	public function get_valid_seat3() 
+	{                                          
+    	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
+        $data = $this->parkingquery_model->get_valid_seat($pksno, 4);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }
     
     // 防盜鎖車
-    // http://203.75.167.89/parkingquery.html/security_action/ABC1234/pswd/2
+    // http://xxxxxxxx/parkingquery.html/security_action/ABC1234/pswd/2
 	public function security_action() 
 	{                 
     	$lpr = $this->uri->segment(3);
