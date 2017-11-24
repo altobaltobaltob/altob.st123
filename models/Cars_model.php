@@ -1423,7 +1423,7 @@ class Cars_model extends CI_Model
 		$lpr = $lpr;
 		$in_time =	$rows_cario['out_before_time'];
 		$out_time =	$this->now_str;
-		$gate_id = $ivsno;
+		$gate_id = 1; // 20171124 改為強制 1//$ivsno;
 		
 		// 通訊內容
 		$parms = array(
