@@ -118,7 +118,7 @@ class Mitac_service extends CI_Controller
 		$lpr = $this->input->post('lpr', true);				// 車牌
 		$in_time = $this->input->post('in_time', true);		// 進場時間
 		$out_time =	$this->input->post('out_time', true);	// 出場時間
-		$this->input->post('gate_id', true);				// 驗票機編號
+		$gate_id = $this->input->post('gate_id', true);		// 驗票機編號
 		$ck = $this->input->post('ck', true);				// 驗証碼
 		
 		// 通訊內容
