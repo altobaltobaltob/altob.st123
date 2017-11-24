@@ -22,9 +22,24 @@ class Mitac_service extends CI_Controller
     
 	function __construct() 
 	{                            
-		parent::__construct();      
+		parent::__construct();
+            
+        // ----- 程式開發階段log設定 -----
+        if (@ENVIRONMENT == 'development')
+        {                        
+          	ini_set('display_errors', '1');
+			//error_reporting(E_ALL ^ E_NOTICE); 
+			error_reporting(E_ALL); 
+        }  
+        set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log 	
+
+		ignore_user_abort();	// 接受client斷線, 繼續run
 		
 		$method_name = $this->router->fetch_method();
+		
+		$request_assoc = $this->uri->uri_to_assoc(3);
+		trigger_error(__FUNCTION__ . '..' . $method_name. '..request start..' . print_r($request_assoc, true));
+		
         if (in_array($method_name, array('parking_fee_altob', 'deduct_result')))
         {
         	ob_end_clean();
@@ -39,24 +54,13 @@ class Mitac_service extends CI_Controller
 			flush();
         }
         
-		ignore_user_abort();	// 接受client斷線, 繼續run
-        
 		$this->vars['date_time'] = date('Y-m-d H:i:s');	// 格式化時間(2015-10-12 14:36:21) 
 		$this->vars['time_num'] = str_replace(array('-', ':', ' '), '', $this->vars['date_time']); //數字化時間(20151012143621) 
         $this->vars['date_num'] = substr($this->vars['time_num'], 0, 8);	// 數字化日期(20151012) 
 		$this->vars['station_no'] = STATION_NO;	// 本站編號 
         
         // session_id(ip2long($_SERVER['REMOTE_ADDR']));	// 設定同一device為同一個session 
-        session_start();   
-            
-        // ----- 程式開發階段log設定 -----
-        if (@ENVIRONMENT == 'development')
-        {                        
-          	ini_set('display_errors', '1');
-			//error_reporting(E_ALL ^ E_NOTICE); 
-			error_reporting(E_ALL); 
-        }  
-        set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log 
+        //session_start();   
 		
 		// 阻檔未知的 IP
 		if(!in_array($_SERVER['HTTP_X_REAL_IP'], array('127.0.0.1')))
