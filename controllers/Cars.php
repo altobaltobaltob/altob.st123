@@ -49,13 +49,12 @@ class Cars extends CI_Controller
 			error_reporting(E_ALL); 
         }  
         set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log 
-        
-		ignore_user_abort();	// 接受client斷線, 繼續run 
-        
-		$method_name = $this->router->fetch_method();
 		
+        $method_name = $this->router->fetch_method();
 		$request_assoc = $this->uri->uri_to_assoc(3);
 		trigger_error(__FUNCTION__ . '..' . $method_name. '..request start..' . print_r($request_assoc, true));
+		
+		ignore_user_abort();	// 接受client斷線, 繼續run 
 		
 		if(in_array($method_name, array(
 			'ipcam', 'ipcam_meta', 
