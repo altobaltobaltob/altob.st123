@@ -40,10 +40,22 @@ class Cars extends CI_Controller
 	{                            
     	// $this->time_start = microtime(true);  
 		parent::__construct();      
+		
+        // ----- 程式開發階段log設定 -----
+        if (@ENVIRONMENT == 'development')
+        {                        
+          	ini_set('display_errors', '1');
+			//error_reporting(E_ALL ^ E_NOTICE); 
+			error_reporting(E_ALL); 
+        }  
+        set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log 
         
 		ignore_user_abort();	// 接受client斷線, 繼續run 
-               
-        $method_name = $this->router->fetch_method();
+        
+		$method_name = $this->router->fetch_method();
+		
+		$request_assoc = $this->uri->uri_to_assoc(3);
+		trigger_error(__FUNCTION__ . '..' . $method_name. '..request start..' . print_r($request_assoc, true));
 		
 		if(in_array($method_name, array(
 			'ipcam', 'ipcam_meta', 
@@ -69,17 +81,8 @@ class Cars extends CI_Controller
         $this->vars['date_num'] = substr($this->vars['time_num'], 0, 8);	// 數字化日期(20151012) 
 		//$this->vars['station_no'] = STATION_NO;	// 本站編號    
         
-        session_id(ip2long($_SERVER['REMOTE_ADDR']));	// 設定同一device為同一個session 
-        session_start();   
-            
-        // ----- 程式開發階段log設定 -----
-        if (@ENVIRONMENT == 'development')
-        {                        
-          	ini_set('display_errors', '1');
-			//error_reporting(E_ALL ^ E_NOTICE); 
-			error_reporting(E_ALL); 
-        }  
-        set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log 
+        //session_id(ip2long($_SERVER['REMOTE_ADDR']));	// 設定同一device為同一個session 
+        //session_start();   
 
 		// 共用記憶體 
         $this->vars['mcache'] = new Memcache;
