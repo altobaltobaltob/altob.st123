@@ -524,10 +524,17 @@ class Sync_data_model extends CI_Model
 			else if($station_888_arr[$key] == 4)	// 關閉
 			{
 				// 清除	888
-				$this->db->delete('pks_groups', array(
+				/*
+				$clean_888_arr = array(
 						'station_no' => $station_no_arr[$key], 
 						'group_id in ' => "('". SYNC_PKS_GROUP_ID_CI . "', '". SYNC_PKS_GROUP_ID_MI . "')"
-					));
+					);
+					*/
+				$this->db
+					->where('station_no', $station_no_arr[$key])
+					->where_in('group_id', array(SYNC_PKS_GROUP_ID_CI, SYNC_PKS_GROUP_ID_MI))
+					->delete('pks_groups');
+				trigger_error(__FUNCTION__ . '..clean pks_groups 888..');
 			}
 			else
 			{
