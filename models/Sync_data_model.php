@@ -524,7 +524,10 @@ class Sync_data_model extends CI_Model
 			else if($station_888_arr[$key] == 4)	// 關閉
 			{
 				// 清除	888
-				$this->db->delete('pks_groups', array('station_no' => $station_no_arr[$key]));
+				$this->db->delete('pks_groups', array(
+						'station_no' => $station_no_arr[$key], 
+						'group_id in ' => "('". SYNC_PKS_GROUP_ID_CI . "', '". SYNC_PKS_GROUP_ID_MI . "')"
+					));
 			}
 			else
 			{
