@@ -2,73 +2,12 @@
 /*
 file: carpark.php		停車管理
 */
-if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-
-require_once(MQ_CLASS_FILE); 
-
-// ----- 定義常數(路徑, cache秒數) -----       
-define('APP_VERSION', '100');		// 版本號                                        
-define('MAX_AGE', 604800);			// cache秒數, 此定義1個月     
-define('APP_NAME', 'carpark');		// 應用系統名稱
-define('PAGE_PATH', APP_BASE.'ci_application/views/'.APP_NAME.'/');						// path of views        
-//define('SERVER_URL', 'http://'.(isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost').'/');	// URL
-define('SERVER_URL', 'http://'.(isset($_SERVER['SERVER_NAME']) ? $_SERVER['SERVER_NAME'] : 'localhost') . ($_SERVER['SERVER_PORT'] != 60123 ? ':' . $_SERVER['SERVER_PORT'] : '') .'/');	// URL
-define('APP_URL', SERVER_URL.APP_NAME.'.html/');										// controller路徑 
-define('WEB_URL', SERVER_URL.APP_NAME.'/');												// 網頁路徑
-define('WEB_LIB', SERVER_URL.'libs/');													// 網頁lib
-define('BOOTSTRAPS', WEB_LIB.'bootstrap_sb/');											// bootstrap lib  
-define('LOG_PATH', FILE_BASE.APP_NAME.'/logs/');	// log path
-
-class Carpark extends CI_Controller
+class Carpark extends CC_Controller
 {                 
-    var $vars = array();	// 共用變數   
-    
 	function __construct() 
 	{        
-		parent::__construct();     
-        // ----- 程式開發階段log設定 -----
-        if (@ENVIRONMENT == 'development')
-        {                        
-          	ini_set('display_errors', '1');
-			//error_reporting(E_ALL ^ E_NOTICE); 
-			error_reporting(E_ALL); 
-        }  
-        set_error_handler(array($this, 'error_handler'), E_ALL);	// 資料庫異動需做log   
+		parent::__construct('carpark');
 		
-		// 共用記憶體 
-        $this->vars['mcache'] = new Memcache;
-		$this->vars['mcache']->connect(MEMCACHE_HOST, MEMCACHE_PORT) or die ('Could not connect memcache'); 
-		
-		/*
-		// mqtt subscribe 
-		$this->vars['mqtt'] = new phpMQTT(MQ_HOST, MQ_PORT, uniqid());  
-		//if(!$this->vars['mqtt']->connect()){ die ('Could not connect mqtt');  }				
-		$this->vars['mqtt']->connect();
-		*/
-		
-		$this->load->model('carpark_model'); 
-        $this->carpark_model->init($this->vars);
-		
-		// 資料介接模組
-		$this->load->model('sync_data_model'); 
-		$this->sync_data_model->init($this->vars);	// for memcache
-		
-		// mqtt subscribe
-		$station_setting = $this->sync_data_model->station_setting_query();
-		$mqtt_ip = isset($station_setting['mqtt_ip']) ? $station_setting['mqtt_ip'] : MQ_HOST;
-		$mqtt_port = isset($station_setting['mqtt_port']) ? $station_setting['mqtt_port'] : MQ_PORT;
-		$this->vars['mqtt'] = new phpMQTT($mqtt_ip, $mqtt_port, uniqid());
-		$this->vars['mqtt']->connect();
-		
-		// init again
-		$this->sync_data_model->init($this->vars);	// for mqtt
-		
-		// 產生 excel 報表
-		$this->load->model('excel_model'); 
-        $this->excel_model->init($this->vars);
-		
-		// [START] 2016/06/03 登入
-		$this->load->model('user_model'); 
 		// load library
 		$this->load->library(array('form_validation','session'));
 		// load helpers
@@ -77,72 +16,13 @@ class Carpark extends CI_Controller
 		define('RESULT_SUCCESS', 'ok');
 		define('RESULT_FORM_VALIDATION_FAIL', '-1');
 		define('RESULE_FAIL', 'gg');
-		// [START] 2016/06/03 登入
 	}
-	
-	
-	// 發生錯誤時集中在此處理
-	public function error_handler($errno, $errstr, $errfile, $errline, $errcontext)
-	{                                      
-    	// ex: car_err://message....
-    	$log_msg = explode('://', $errstr);
-        if (count($log_msg) > 1)
-        {
-            $log_file = LOG_PATH.$log_msg[0];    
-        	$str = date('H:i:s')."|{$log_msg[1]}|{$errfile}|{$errline}|{$errno}\n"; 
-        } 
-        else
-        {   
-        	$log_file = LOG_PATH.APP_NAME;
-    		$str = date('H:i:s')."|{$errstr}|{$errfile}|{$errline}|{$errno}\n";
-        }
-        
-    	//$str = date('H:i:s')."|{$errstr}|{$errfile}|{$errline}|{$errno}\n";               
-    	error_log($str, 3, $log_file . '.' . date('Ymd').'.log.txt');	// 3代表參考後面的檔名
-    }
-    
-    
-	// 顯示靜態網頁(html檔)
-	protected function show_page($page_name, &$data = null)
-	{           
-    	$page_file = PAGE_PATH.$page_name.'.php';
-        $last_modified_time = filemtime($page_file);         
-            
-    	// 若檔案修改時間沒有異動, 或版本無異動, 通知瀏覽器使用cache, 不再下傳網頁
-		// header('Cache-Control:max-age='.MAX_AGE);	// cache 1個月
-    	header('Last-Modified: '.gmdate('D, d M Y H:i:s', $last_modified_time).' GMT');
-        header('Etag: '. APP_VERSION);
-		header('Cache-Control: public'); 
-		
-		// 20170921
-		header("cache-Control: no-store, no-cache, must-revalidate");
-		header("cache-Control: post-check=0, pre-check=0", false);
-		header("Pragma: no-cache");
-		header("Expires: Sat, 26 Jul 1997 05:00:00 GMT");		
-        
-        if (!empty($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH'] == APP_VERSION && @strtotime($_SERVER['HTTP_IF_MODIFIED_SINCE']) == $last_modified_time)
-    	{                  
-        	header('HTTP/1.1 304 Not Modified');
-    	}
-        else
-        {                                           
-        	$this->load->view(APP_NAME.'/'.$page_name, $data);
-        }    
-	} 
-	
-	
 	
 	// ------------------------------------------------
 	//
 	// CRM (START)
 	//
 	// ------------------------------------------------
-	
-	// [test] ACTI crm alert
-	public function gen_test_alert()
-	{
-		echo 'test_alert';
-	}
 	
 	// [test] zzz
 	public function gen_test_case()
@@ -203,11 +83,8 @@ class Carpark extends CI_Controller
 		
 		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
 		
-		// 載入模組
-		$this->load->model('cars_model'); 
-        $this->cars_model->init($this->vars);
-		$this->cars_model->lprio($parms);
-		
+		// 執行
+		$this->app_model('cars')->lprio($parms);
 		echo 'ok';
 		exit;
 	}
@@ -229,11 +106,11 @@ class Carpark extends CI_Controller
 		
 		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
 		
-		// 載入模組
-		$this->load->model('cars_model'); 
-        $this->cars_model->init($this->vars);
-		$this->cars_model->opendoor_lprio($parms);
+		// 初始 mqtt
+		$this->init_mqtt();
 		
+		// 執行
+		$this->app_model('cars')->opendoor_lprio($parms);
 		echo 'ok';
 		exit;
 	}
@@ -255,22 +132,22 @@ class Carpark extends CI_Controller
 		
 		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
 		
-		// 載入模組
-		$this->load->model('cars_model'); 
-        $this->cars_model->init($this->vars);
+		// 初始 mqtt
+		$this->init_mqtt();
 		
 		// 判斷會員身份
-		$rows = $this->cars_model->get_member($lpr);
+		$cars_model = $this->app_model('cars');
+		$rows = $cars_model->get_member($lpr);
 		
 		if ($rows['member_no'] == 0)
 		{
-			$parms['ck'] = $this->cars_model->gen_opendoor_ck($parms, 'temp_opendoors');	// 臨停訊號
-			$this->cars_model->do_temp_opendoor($parms);
+			$parms['ck'] = $cars_model->gen_opendoor_ck($parms, 'temp_opendoors');	// 臨停訊號
+			$cars_model->do_temp_opendoor($parms);
 		}
 		else
 		{
-			$parms['ck'] = $this->cars_model->gen_opendoor_ck($parms, 'member_opendoors');	// 月租訊號
-			$this->cars_model->do_member_opendoor($parms);
+			$parms['ck'] = $cars_model->gen_opendoor_ck($parms, 'member_opendoors');	// 月租訊號
+			$cars_model->do_member_opendoor($parms);
 		}
 		
 		echo 'ok';
@@ -301,8 +178,10 @@ class Carpark extends CI_Controller
 		
 		if($topic == 'altob.888.mqtt')
 		{
+			$data_model = $this->data_model();
+			
 			// 第一個場站編號	先不管場站
-			$station_setting = $this->sync_data_model->station_setting_query();
+			$station_setting = $data_model->station_setting_query();
 			$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
 			$first_station_no = $station_no_arr[0];
 			
@@ -325,7 +204,7 @@ class Carpark extends CI_Controller
 			$msg_arr = explode(',', $msg);
 			$group_id = isset($msg_arr[1]) && $msg_arr[1] == 2 ? 'M888' : 'C888';
 			$value = isset($msg_arr[2]) ? $msg_arr[2] : 0;
-			$result = $this->sync_data_model->force_sync_888($first_station_no, $group_id, $value);
+			$result = $data_model->force_sync_888($first_station_no, $group_id, $value);
 			trigger_error($LOG_FLAG . __FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
 		}
 		
@@ -338,9 +217,11 @@ class Carpark extends CI_Controller
 	{
 		$reload = $this->input->post('reload', true);
 		
+		$data_model = $this->data_model();
+		
 		if(isset($reload) && $reload > 0)
 		{
-			$station_setting = $this->sync_data_model->station_setting_query(true);	// 強制重新載入	
+			$station_setting = $data_model->station_setting_query(true);	// 強制重新載入	
 			trigger_error(__FUNCTION__ . '..station_setting: '. print_r($station_setting, true));
 			
 			if(!$station_setting)
@@ -352,30 +233,30 @@ class Carpark extends CI_Controller
 			usleep(300000); // 0.3 sec delay
 			
 			// 費率資料同步
-			$result = $this->sync_data_model->sync_price_plan(array('station_no_arr' => $station_setting['station_no']));
+			$result = $data_model->sync_price_plan(array('station_no_arr' => $station_setting['station_no']));
 			trigger_error(__FUNCTION__ . '..sync_price_plan: '. $result);
 			
 			usleep(300000); // 0.3 sec delay
 			
 			// 會員資料同步
-			$result = $this->sync_data_model->sync_members(array('station_no_arr' => $station_setting['station_no_list']));	// 20171116 upd
+			$result = $data_model->sync_members(array('station_no_arr' => $station_setting['station_no_list']));	// 20171116 upd
 			trigger_error(__FUNCTION__ . '..sync_members: '. $result);
 			
 			usleep(300000); // 0.3 sec delay
 			
 			// 歐pa卡同步
-			$result = $this->sync_data_model->sync_allpa_user(array('station_no_arr' => $station_setting['station_no']));
+			$result = $data_model->sync_allpa_user(array('station_no_arr' => $station_setting['station_no']));
 			trigger_error(__FUNCTION__ . '..sync_allpa_user: '. $result);
 			
 			usleep(300000); // 0.3 sec delay
 			
 			// 在席資料同步
-			$result = $this->sync_data_model->sync_pks_groups_reload($station_setting);
+			$result = $data_model->sync_pks_groups_reload($station_setting);
 			trigger_error(__FUNCTION__ . '..sync_pks_groups_reload: '. $result);
 		}
 		else
 		{
-			$station_setting = $this->sync_data_model->station_setting_query(false);
+			$station_setting = $data_model->station_setting_query(false);
 			
 			if(!$station_setting)
 			{
@@ -414,24 +295,26 @@ class Carpark extends CI_Controller
 			}
 		}
 		
+		$data_model = $this->data_model();
+		
 		// 0. 取得場站設定
-		$station_setting = $this->sync_data_model->station_setting_query(false);
+		$station_setting = $data_model->station_setting_query(false);
 		trigger_error(__FUNCTION__ . '..station_setting: '. print_r($station_setting, true));
 		
 		$station_no_arr = array('station_no_arr' => $station_setting['station_no']);
 		
 		// 1. 月租系統
-		$result = $this->sync_data_model->sync_members($station_no_arr);
+		$result = $data_model->sync_members($station_no_arr);
 		trigger_error(__FUNCTION__ . '..sync_members: '. $result);
 		
 		// 2. 同步車牌更換
 		if(!empty($switch_lpr_arr))
 		{
-			$this->sync_data_model->sync_switch_lpr($switch_lpr_arr);
+			$data_model->sync_switch_lpr($switch_lpr_arr);
 		}
 		
 		// 3. 歐pa卡同步 (TODO: 暫時放在這)
-		$result = $this->sync_data_model->sync_allpa_user($station_no_arr);
+		$result = $data_model->sync_allpa_user($station_no_arr);
 		trigger_error(__FUNCTION__ . '..sync_allpa_user: '. $result);
 	}
 	
@@ -452,7 +335,7 @@ class Carpark extends CI_Controller
 			exit;
 		}
 		
-        $data = $this->sync_data_model->get_last_unbalanced_cario($lpr, $station_no);
+        $data = $this->data_model()->get_last_unbalanced_cario($lpr, $station_no);
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	}
 	
@@ -476,48 +359,17 @@ class Carpark extends CI_Controller
 		}
 		
 		// 臨停繳費
-		$this->load->model('carpayment_model'); 
-        echo $this->carpayment_model->p2payed(array('seqno' => $cario_no, 'lpr' => $lpr, 'amt' => $amt), true);
+        echo $this->app_model('carpayment')->p2payed(array('seqno' => $cario_no, 'lpr' => $lpr, 'amt' => $amt), true);
 		exit;
-		//echo 'ok';
-	}
-	
-	// 驗証 IP
-	function is_ip_valid()
-	{
-		$client_ip = $this->my_ip();
-		if(!in_array($client_ip, array('61.219.172.11', '61.219.172.82')))
-		{
-			trigger_error('..block..from:'.$client_ip.'..unknown network..');
-			return false;
-		}
-		return true;
-	}
-	
-	// 取得 IP
-	function my_ip()
-	{
-		if (getenv('HTTP_X_FORWARDED_FOR')) 
-		{
-			$ip = getenv('HTTP_X_FORWARDED_FOR');
-		}
-		elseif (getenv('HTTP_X_REAL_IP')) 
-		{
-			$ip = getenv('HTTP_X_REAL_IP');
-		}
-		else {
-			$ip = $_SERVER['REMOTE_ADDR'];
-		}
-
-		return $ip;
 	}
 	
 	// 同步 （由排程呼叫）
 	public function sync_minutely()
 	{
-		$this->sync_data_model->sync_pks_groups();	// 同步在席現況
+		$this->data_model()->sync_pks_groups();	// 同步在席現況
 	}
 	
+	/*
 	// 20170816 手動新增入場資料
 	public function gen_carin()
 	{
@@ -546,6 +398,7 @@ class Carpark extends CI_Controller
 		$this->carpark_model->gen_carin($parms);
         echo 'ok';
 	}
+	*/
 	
 	// ------------------------------------------------
 	//
@@ -602,7 +455,7 @@ class Carpark extends CI_Controller
 					'pswd' => $this->input->post('pswd', true)
 				);                           
 		
-		$result = $this->user_model->user_login($data);
+		$result = $this->app_model('user')->user_login($data);
 		
 		if($result)
 		{
@@ -636,29 +489,14 @@ class Carpark extends CI_Controller
 	
 	
 
-    
+    /*
     
     // response http               
 	protected function http_return($return_code, $type)
 	{                                      
     	if ($type == 'text')	echo $return_code;
         else					echo json_encode($return_code, JSON_UNESCAPED_UNICODE);  
-        
-    }    
-    
-    // 送出html code     	
-	public function get_html()
-	{                             
-		/*
-    	$data = array
-        (
-			'company_no' => $this->input->post('company_no', true),	// 場站統編
-            'hq_company_no' => '80682490'         
-        );
-		$this->load->view(APP_NAME.'/'.$this->input->post('tag_name', true), $data);
-		*/
-    	$this->load->view(APP_NAME.'/'.$this->input->post('tag_name', true), array());
-	}         
+    }             
     
     // 讀取cookie內容
 	protected function get_cookie($cookie_name)
@@ -666,7 +504,6 @@ class Carpark extends CI_Controller
     	if (empty($_COOKIE[$cookie_name]))	return array();
     	return(json_decode($_COOKIE[$cookie_name], true));  
     }  
-    
     
     // 儲存cookie內容
 	protected function save_cookie($cookie_name, $cookie_info)
@@ -692,7 +529,6 @@ class Carpark extends CI_Controller
         $data = $this->carpark_model->available_set();
         $this->http_return($data, 'json');
 	}
-    
           
     // 剩餘車位數更新    	
 	public function available_update()
@@ -704,7 +540,6 @@ class Carpark extends CI_Controller
                                            
         $this->http_return($this->carpark_model->available_update($station_no, $data), 'json');
 	} 
-    
           
     // 剩餘車位數查核    	
 	public function available_check()
@@ -712,21 +547,6 @@ class Carpark extends CI_Controller
     	$time_point = $this->input->get_post('time_point', true);    
                                            
         $this->http_return($this->carpark_model->available_check($time_point), 'json');
-	}
-    
-	// 顯示logs
-	public function show_logs()
-	{             
-        $lines = $this->uri->segment(3);	// 顯示行數
-        if (empty($lines)) $lines = 140;		// 無行數參數, 預設為40行
-    	if($lines > 1000)  $lines = 1000;		// 最多 1000行
-		
-        // echo '<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"></head><body><pre style="white-space: pre-wrap;">';
-        echo '<html lang="zh-TW"><body><pre style="white-space: pre-wrap;">';      
-       
-		passthru('/usr/bin/tail -n ' . $lines . '  ' . LOG_PATH.APP_NAME . '.' . date('Ymd').'.log.txt');	// 利用linux指令顯示倒數幾行的logs內容 
-        echo "\n----- " . LOG_PATH.APP_NAME . '.' . date('Ymd').'.log.txt' . ' -----';   
-        echo '</pre></body></html>';
 	}
 	
 	// 顯示logs (cars grep 888)
@@ -745,8 +565,9 @@ class Carpark extends CI_Controller
 		passthru('/usr/bin/tail -n ' . $lines . '  ' . $target_str);	// 利用linux指令顯示倒數幾行的logs內容 
         echo "\n----- " . $target_str . ' -----';   
         echo '</pre></body></html>';
-	}    
+	}
     
+	
     // 新增月租資料
     public function member_add()
 	{          
@@ -783,15 +604,8 @@ class Carpark extends CI_Controller
         $this->carpark_model->member_add($data);
         echo 'ok';
 	}  
-    
-    
-    // 查詢月租資料
-    public function member_query()
-	{                                
-        $data = $this->carpark_model->member_query();
-        echo json_encode($data, JSON_UNESCAPED_UNICODE);
-	}    
-    
+	
+	
     
     // 刪除月租資料
     public function member_delete()
@@ -800,16 +614,7 @@ class Carpark extends CI_Controller
         $this->carpark_model->member_delete($member_no);
         echo 'ok';
 	}       
-    
-       
-    // 進出場現況表
-    public function cario_list()
-	{                                
-        $data = $this->carpark_model->cario_list(); 
-        echo json_encode($data, JSON_UNESCAPED_UNICODE);
-	}
-    
-       
+     
     // 進出場事件即時顯示
     public function cario_event()
 	{                    
@@ -819,16 +624,7 @@ class Carpark extends CI_Controller
           
         }
 	}
-    
-    
-    // 顯示圖檔(http://url/carpark.html/pics/lpr_ABY8873_O_0_0_C_20150919210022)
-    public function pics()
-	{                                                         
-    	// ???
-        readfile(CAR_PIC.$this->uri->segment(3).'/'.str_replace('/', '', $this->uri->segment(4)).'.jpg');
-	}    
-    
-    
+	
     // 汽車開門
     public function opendoors()
 	{   
@@ -868,27 +664,7 @@ class Carpark extends CI_Controller
         echo json_encode($data);                       
 	}  
        
-    
-    // 車號入場查詢
-    public function carin_lpr_query()
-	{              
-    	$lpr = $this->uri->segment(3);
-        $data = $this->carpark_model->carin_lpr_query($lpr); 
-        echo json_encode($data);                       
-	}  
-               
-    
-    // 以時間查詢入場資訊
-    public function carin_time_query()
-	{              
-    	$time_query = $this->input->post('time_query', true);
-    	$minutes_range = $this->input->post('minutes_range', true);
-        
-        $data = $this->carpark_model->carin_time_query($time_query, $minutes_range); 
-        echo json_encode($data);                       
-	}   
-    
-    // 調撥車道設定
+	   // 調撥車道設定
     public function reversible_lane_set()
 	{     
         $lane_no = $this->input->post('lane_no', true);            
@@ -953,24 +729,64 @@ class Carpark extends CI_Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE);       
     } 
 	
+    */
+    
+    // 查詢月租資料
+    public function member_query()
+	{                                
+        $data = $this->app_model()->member_query();
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+	}    
+    
+    // 進出場現況表
+    public function cario_list()
+	{                                
+        $data = $this->app_model()->cario_list(); 
+        echo json_encode($data, JSON_UNESCAPED_UNICODE);
+	}
+      
+    // 顯示圖檔(http://url/carpark.html/pics/lpr_ABY8873_O_0_0_C_20150919210022)
+    public function pics()
+	{                                                         
+        readfile(CAR_PIC.$this->uri->segment(3).'/'.str_replace('/', '', $this->uri->segment(4)).'.jpg');
+	}    
+        
+    // 車號入場查詢
+    public function carin_lpr_query()
+	{              
+    	$lpr = $this->uri->segment(3);
+        $data = $this->app_model()->carin_lpr_query($lpr); 
+        echo json_encode($data);                       
+	}  
+               
+    // 以時間查詢入場資訊
+    public function carin_time_query()
+	{              
+    	$time_query = $this->input->post('time_query', true);
+    	$minutes_range = $this->input->post('minutes_range', true);
+        
+        $data = $this->app_model()->carin_time_query($time_query, $minutes_range); 
+        echo json_encode($data);                       
+	}   
+	
 	// 查詢行動支付記錄
     public function tx_bill_query()
 	{                                
-        $data = $this->carpark_model->tx_bill_query();
+        $data = $this->app_model()->tx_bill_query();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	} 
 	
 	// 查詢月租繳款機記錄
     public function tx_bill_ats_query()
 	{                                
-        $data = $this->carpark_model->tx_bill_ats_query();
+        $data = $this->app_model()->tx_bill_ats_query();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	} 
 	
 	// 查詢樓層在席群組
     public function pks_group_query()
 	{                                
-        $data = $this->carpark_model->pks_group_query();
+        $data = $this->app_model()->pks_group_query();
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
 	} 
 	
@@ -980,7 +796,11 @@ class Carpark extends CI_Controller
 		$group_id = $this->uri->segment(3);		// id
         $value = $this->uri->segment(4, 0);		// value
 		$station_no = $this->uri->segment(5);	// station_no
-        $data = $this->sync_data_model->pks_availables_update($group_id, $value, true, $station_no);
+		
+		// 初始 mqtt
+		$this->init_mqtt();
+		
+        $data = $this->data_model()->pks_availables_update($group_id, $value, true, $station_no);
         echo json_encode($data, JSON_UNESCAPED_UNICODE);
     }
 
@@ -1002,11 +822,6 @@ class Carpark extends CI_Controller
 	}
 	*/
 	
-	public function test()
-	{
-		//echo `whoami`;
-		//echo phpinfo();
-	}
 	
 	// 博辰測試用
 	// http://localhost/carpark.html/test_8068_002/APK7310
@@ -1069,16 +884,6 @@ class Carpark extends CI_Controller
 
 		trigger_error($error_str);
 		exit;
-	}
-	
-	// test
-	public function test_phpexcel()
-	{
-		$query_year = 2017;
-		$query_month = 3;
-		
-		//$this->excel_model->export_cario_data($query_year, $query_month);
-		$this->excel_model->export_members();
 	}
 	
 }

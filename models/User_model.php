@@ -5,12 +5,18 @@ file: User_model.php 管理登入系統
 
 class User_model extends CI_Model 
 {             
+	var $vars = array();
 
 	function __construct()
 	{
 		parent::__construct(); 
 		$this->load->database(); 
     }   
+     
+	public function init($vars)
+	{
+		$this->vars = $vars;
+    } 
 
 	// 登入
 	public function user_login($data)
