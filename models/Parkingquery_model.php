@@ -69,7 +69,7 @@ class Parkingquery_model extends CI_Model
 	{                 
     	$lpr = strtoupper($lpr);	// 一律轉大寫
     	$data = array();         
-    	$rows = $this->db->select('pksno, pic_name')
+    	$rows = $this->db->select('pksno, pic_name, in_time')
         		->from('pks')
                 ->where('lpr', $lpr)	
         		->limit(1)
@@ -79,14 +79,16 @@ class Parkingquery_model extends CI_Model
         {
         	$data['result']['num'] = $lpr;
         	$data['result']['location_no'] = "{$rows['pksno']}";     
+			$data['result']['pic_name'] = $rows['pic_name'];
+			$data['result']['in_time'] = $rows['in_time'];
         	$data['result_code'] = 'OK';  
-        	$data['result']['pic_name'] = $rows['pic_name'];
         }    
         else	// 查無資料, 啟用模糊比對
         {     
+			/*
 			// 讀取最近一筆入場資料
         	$rows_cario = $this->db
-							->select('cario_no')
+							->select('cario_no, in_time')
         					->from('cario')
                 			->where(array('in_out' => 'CI', 'obj_id' => $lpr, 'finished' => 0, 'err' => 0, 'out_time IS NULL' => null))
                   			->order_by('cario_no', 'desc')
@@ -99,6 +101,7 @@ class Parkingquery_model extends CI_Model
             {
 				$data['result']['num'] = $lpr;
 				$data['result']['location_no'] = "7000";     
+				$data['result']['in_time'] = $rows_cario['in_time'];
 				$data['result_code'] = 'OK';  
 			}
 			else
@@ -106,7 +109,12 @@ class Parkingquery_model extends CI_Model
 				$data['result']['num'] = $lpr;
 				$data['result']['location_no'] = '0';
 				$data['result_code'] = 'FAIL';
-			}  
+			}
+			*/
+			
+			$data['result']['num'] = $lpr;
+			$data['result']['location_no'] = '0';
+			$data['result_code'] = 'FAIL';
         }      
         return $data; 
     }          
