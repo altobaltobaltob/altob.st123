@@ -20,6 +20,56 @@ class Carpark extends CC_Controller
 	
 	// ------------------------------------------------
 	//
+	// 報表
+	//
+	// ------------------------------------------------
+	
+	// 進出記錄表 (VIP)
+	public function export_vip_cario_report()
+	{
+		// 次月算上月
+		$last_day_of_previous_month = date("Y-n-j", strtotime("last day of previous month"));
+		$d = date_parse_from_format("Y-m-d", $last_day_of_previous_month);
+		
+		$station_name = empty($this->input->post('station_name', true)) ? '場站名稱' : $this->input->post('station_name', true);
+		$year = empty($this->input->post('year', true)) ? $d['year'] : $this->input->post('year', true);
+		$month = empty($this->input->post('month', true)) ? $d['month'] : $this->input->post('month', true);
+		$addr = empty($this->input->post('addr', true)) ? '地址' : $this->input->post('addr', true);
+		$phone_no = empty($this->input->post('phone_no', true)) ? '電話' : $this->input->post('phone_no', true);
+		
+		$result = $this->app_model('excel')->export_cario_report($station_name . '(VIP)', $year, $month, $addr, $phone_no, 250);
+		
+		if(empty($result))
+		{
+			echo '無記錄';
+			exit;
+		}
+	}
+	
+	// 進出記錄表
+	public function export_cario_report()
+	{
+		// 次月算上月
+		$last_day_of_previous_month = date("Y-n-j", strtotime("last day of previous month"));
+		$d = date_parse_from_format("Y-m-d", $last_day_of_previous_month);
+		
+		$station_name = empty($this->input->post('station_name', true)) ? '場站名稱' : $this->input->post('station_name', true);
+		$year = empty($this->input->post('year', true)) ? $d['year'] : $this->input->post('year', true);
+		$month = empty($this->input->post('month', true)) ? $d['month'] : $this->input->post('month', true);
+		$addr = empty($this->input->post('addr', true)) ? '地址' : $this->input->post('addr', true);
+		$phone_no = empty($this->input->post('phone_no', true)) ? '電話' : $this->input->post('phone_no', true);
+		
+		$result = $this->app_model('excel')->export_cario_report($station_name, $year, $month, $addr, $phone_no);
+		
+		if(empty($result))
+		{
+			echo '無記錄';
+			exit;
+		}
+	}
+	
+	// ------------------------------------------------
+	//
 	// CRM (START)
 	//
 	// ------------------------------------------------
