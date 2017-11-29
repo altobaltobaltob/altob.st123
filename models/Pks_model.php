@@ -171,7 +171,8 @@ class Pks_model extends CI_Model
         foreach ($retults as $rows)
         {
         	// 計算群組異動後的空車位數, 先讀出已停車位數
-        	$sql = "select count(*) as parked from pks where status != 'VA' and pksno in (select pksno from pks_group_member where group_id = '{$rows['group_id']}')";
+        	//$sql = "select count(*) as parked from pks where status != 'VA' and pksno in (select pksno from pks_group_member where group_id = '{$rows['group_id']}')";
+			$sql = "select count(*) as parked from pks where lpr != '' and pksno in (select pksno from pks_group_member where group_id = '{$rows['group_id']}')";
             $row_group = $this->db->query($sql)->row_array();
             $group_va = $rows['tot'] + $rows['renum'] -  $row_group['parked'];	// 群組空車位數
 
