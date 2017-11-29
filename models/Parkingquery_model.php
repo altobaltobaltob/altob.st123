@@ -21,7 +21,7 @@ class Parkingquery_model extends CI_Model
 	public function q_local_pks($group_id)
 	{
 		$sql = "SELECT
-					MID(pks.pksno, 3) as l_no, 
+					SUBSTR(pks.pksno, -3) as l_no, 
 					if(pks.lpr <> '', 1, 0) as s
 				FROM pks
 				LEFT JOIN pks_group_member ON (pks.pksno = pks_group_member.pksno AND pks.station_no = pks_group_member.station_no)
