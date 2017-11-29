@@ -22,7 +22,7 @@ class Parkingquery_model extends CI_Model
 	{
 		$sql = "SELECT
 					SUBSTR(pks.pksno, -3) as l_no, 
-					if(pks.lpr <> '', 1, 0) as s
+					if(pks.status <> 'VA', 1, 0) as s
 				FROM pks
 				LEFT JOIN pks_group_member ON (pks.pksno = pks_group_member.pksno AND pks.station_no = pks_group_member.station_no)
 				WHERE pks_group_member.group_id = '{$group_id}'
