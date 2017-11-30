@@ -70,6 +70,42 @@ class Carpark extends CC_Controller
 	
 	// ------------------------------------------------
 	//
+	// 博辰 (START)
+	//
+	// ------------------------------------------------
+	
+	// 同步 博辰 888
+	function sync_parktron_888()
+	{
+		try{
+            $ch = curl_init();
+            curl_setopt($ch, CURLOPT_URL, 'http://192.168.10.80:5477/parktron/ipms/services/areaCount/findAll');
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+            curl_setopt($ch, CURLOPT_POST, TRUE);
+            curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,5);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 5); //timeout in seconds
+            curl_setopt($ch, CURLOPT_POSTFIELDS, '{}');
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));  
+            $result = curl_exec($ch);
+			
+			$parktron_result = json_decode($result);
+			trigger_error(PARKTRON_LOG_TITLE . '..' . __FUNCTION__ . '..' . print_r($parktron_result, true));
+			$this->data_model()->sync_parktron_888($parktron_result);
+			
+			if(curl_errno($ch))
+			{
+				trigger_error(PARKTRON_LOG_TITLE . '..' . __FUNCTION__ . '..' . ', curl error: '. curl_error($ch));
+			}
+			
+            curl_close($ch);
+			
+		}catch (Exception $e){
+			trigger_error(PARKTRON_LOG_TITLE . '..' . __FUNCTION__ . '..' . 'error:'.$e->getMessage());
+		}
+	}
+	
+	// ------------------------------------------------
+	//
 	// CRM (START)
 	//
 	// ------------------------------------------------
@@ -416,6 +452,8 @@ class Carpark extends CC_Controller
 	// 同步 （由排程呼叫）
 	public function sync_minutely()
 	{
+		$this->sync_parktron_888();				// 同步博辰 888
+		
 		$this->data_model()->sync_pks_groups();	// 同步在席現況
 	}
 	

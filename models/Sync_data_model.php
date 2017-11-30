@@ -35,6 +35,75 @@ class Sync_data_model extends CI_Model
 	
 	// ------------------------------------------------
 	//
+	// 博辰 (START)
+	//
+	// ------------------------------------------------
+	
+	// 博辰 888 同步
+	public function sync_parktron_888($parktron_result)
+	{
+		if(empty($parktron_result))
+			return 'empty';
+		
+		// 解析資料
+		$pks_groups_arr = array();
+		
+		foreach($parktron_result as $content_result_list) 
+		{
+			foreach ($content_result_list as $item_result_list)
+			{
+				$area_id = 0;
+				$space_count = 0;
+				$parking_count = 0;
+				$blanking_count = 0;
+					
+				foreach ($item_result_list as $key => $value)
+				{
+					switch($key)
+					{
+						case 'areaId': $area_id = $value; break;
+						case 'spaceCount': $space_count = $value; break;
+						case 'parkingCount': $parking_count = $value; break;
+						case 'blankingCount': $blanking_count = $value; break;
+						default: trigger_error(__FUNCTION__ . "..unknown..{$key}|{$value}..");
+					}
+				}
+					
+				if($area_id > 0)
+				{
+					//trigger_error(__FUNCTION__ . "..$area_id, $space_count, $parking_count, $blanking_count..");
+					$pks_groups_arr["P{$area_id}"] = array('tot' => $space_count, 'parked' => $parking_count, 'availables' => $blanking_count);
+				}
+			}
+		}
+		
+		if(empty($pks_groups_arr))
+		{
+			trigger_error(__FUNCTION__ . "..empty pks_groups_arr..");
+			return 'empty';	
+		}
+		
+		// 取得場站編號
+		$station_setting = $this->station_setting_query();
+		$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
+		$station_no = $station_no_arr[0];
+		
+		trigger_error(__FUNCTION__ . "..$station_no.." . print_r($pks_groups_arr, true));
+		
+		// 更新博辰資料
+		$this->db->trans_start();
+		foreach($pks_groups_arr as $key => $data)
+		{
+			$data['renum'] = 0;
+			$this->db->where(array('group_id' => $key, 'station_no' => $station_no))->update('pks_groups', $data);
+		}
+		$this->db->trans_complete();
+
+		return 'ok';
+	}
+	
+	// ------------------------------------------------
+	//
 	// 在席系統同步 (START)
 	//
 	// ------------------------------------------------

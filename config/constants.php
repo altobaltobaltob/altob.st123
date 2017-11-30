@@ -129,6 +129,7 @@ define("MEMBER_LOG_TITLE", 'member-log://');		// 會員資料記錄
 define("TX_LOG_TITLE", 'tx-log://');				// 交易資料記錄
 define("ADMIN_LOG_TITLE", 'admin-log://');			// 管理操作記錄
 define("EXPORT_LOG_TITLE", 'export-log://');		// 檔案匯出記錄
+define("PARKTRON_LOG_TITLE", 'parktron-log://');	// 博辰資料記錄
 
 /*
 |--------------------------------------------------------------------------
