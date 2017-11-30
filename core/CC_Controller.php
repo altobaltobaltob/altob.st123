@@ -168,4 +168,12 @@ class CC_Controller extends CI_Controller
         $this->$model_name->init($this->vars);
 		return $this->$model_name;
 	}
+	
+	// 取得場站編號
+	public function get_station_no()
+	{
+		$station_setting = $this->data_model()->station_setting_query();
+		$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
+		return $station_no_arr[0];
+	}
 }
