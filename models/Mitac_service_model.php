@@ -19,7 +19,7 @@ class Mitac_service_model extends CI_Model
 		//define('MITAC_SERVICE_PORT', 49990);
 		
 		// MITAC 連線設定 (正式環境 - 現場呼叫)
-		define('MITAC_SERVICE_IP', '192.168.10.50');
+		define('MITAC_SERVICE_IP', '192.168.10.60');
 		define('MITAC_SERVICE_PORT', 49990);
     }
 	
