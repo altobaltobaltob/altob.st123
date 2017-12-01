@@ -94,8 +94,28 @@ class Sync_data_model extends CI_Model
 		$this->db->trans_start();
 		foreach($pks_groups_arr as $key => $data)
 		{
-			$data['renum'] = 0;
-			$this->db->where(array('group_id' => $key, 'station_no' => $station_no))->update('pks_groups', $data);
+			$where_group_arr = array('group_id' => $key, 'station_no' => $station_no);
+			$rows = $this->db->select('group_id')->from('pks_groups')
+                ->where($where_group_arr)
+                ->limit(1)
+                ->get()  
+                ->row_array(); 
+			
+			if(!isset($rows['group_id']))
+			{
+				// 不存在就新增
+				$data['station_no'] = $station_no;
+				$data['group_id'] = $key;
+				$data['floors'] = $key;
+				$data['group_name'] = '博辰 ' . $key;
+				$this->db->insert('pks_groups', $data);
+				trigger_error(__FUNCTION__ . '..insert pks_groups..'. print_r($data, true));
+			}
+			else
+			{
+				$data['renum'] = 0;
+				$this->db->where($where_group_arr)->update('pks_groups', $data);	
+			}
 		}
 		$this->db->trans_complete();
 
