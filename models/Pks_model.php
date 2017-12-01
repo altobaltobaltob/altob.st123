@@ -215,7 +215,7 @@ class Pks_model extends CI_Model
 		{
 			$new_pks_data = array( 'station_no' => $parms['sno'], 'pksno' => $parms['pksno'] );
 			$this->db->insert('pks', $new_pks_data);
-			trigger_error(__FUNCTION__ . '..'. print_r($new_pks_data, true));
+			trigger_error(__FUNCTION__ . '://..'. print_r($new_pks_data, true));
 			return true;
 		}
 		return false;
