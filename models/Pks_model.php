@@ -77,6 +77,12 @@ class Pks_model extends CI_Model
 
                 trigger_error('KL read pks:'.print_r($rows_pks, true));
 				
+				// 如果在席表未建立, 自動產生
+				if($this->gen_pks_row($rows_pks, $parms))
+				{
+					return false;	// 中斷
+				}
+				
                 // 如果已經人工確認或之前已比對有入場資料者, 則重覆再送來的車辨不予理會
 				if (($rows_pks['confirms'] == 1 || $rows_pks['lpr'] == $parms['lpr']) && $rows_pks['pic_name'] == $parms['pic_name'])
                 {
@@ -131,6 +137,13 @@ class Pks_model extends CI_Model
                     ->where(array('pksno' => $parms['pksno'], 'station_no' => $parms['sno']))
                     ->get()
                     ->row_array();
+					
+				// 如果在席表未建立, 自動產生
+				if($this->gen_pks_row($rows, $parms))
+				{
+					return false;	// 中斷
+				}
+					
                 // if (!empty($rows['status']) && $rows['status'] == 'LR')	break;	// 仍有車在席, 不應再有KI, ignore
                 if (!empty($rows['status']) && $rows['status'] == 'LR')	return true;	// 仍有車在席, 不應再有KI, ignore
 
@@ -194,6 +207,19 @@ class Pks_model extends CI_Model
 		
 		return true;
     }
+	
+	// 如果在席表未建立, 自動產生
+	function gen_pks_row($rows, $parms)
+	{
+		if(empty($rows['status']))
+		{
+			$new_pks_data = array( 'station_no' => $parms['sno'], 'pksno' => $parms['pksno'] );
+			$this->db->insert('pks', $new_pks_data);
+			trigger_error(__FUNCTION__ . '..'. print_r($new_pks_data, true));
+			return true;
+		}
+		return false;
+	}
 
 	 // 送出至message queue(目前用mqtt)
 	function mq_send($topic, $msg)
