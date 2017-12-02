@@ -472,7 +472,20 @@ class Carpayment_model extends CI_Model
         $rows = $this->db->query($sql)->row_array();
         if (!empty($rows['pksno']))
         {
-          	$data['seat_no'] = ($rows['group_id'] == 'B1' ? '-1' : '0' . substr($rows['group_id'], -1)) . '_0' . substr($rows['pksno'], -3);
+          	//$data['seat_no'] = ($rows['group_id'] == 'B1' ? '-1' : '0' . substr($rows['group_id'], -1)) . '_0' . substr($rows['pksno'], -3);
+			
+			$group_floor_type = preg_replace( '/[^A-Z]/', '', $rows['group_id']);
+			$group_floor_num = preg_replace( '/[^1-9]/', '', $rows['group_id']);
+			if($group_floor_type == 'B')
+			{
+				$data['seat_no'] = '-' . $group_floor_num . '_0' . substr($rows['pksno'], -3);
+			}
+			else
+			{
+				$group_floor_num = str_pad($group_floor_num, 2, '0', STR_PAD_LEFT);
+				$data['seat_no'] = $group_floor_num . '_0' . substr($rows['pksno'], -3);
+			}
+			
         } 
         else
         {
@@ -614,7 +627,20 @@ class Carpayment_model extends CI_Model
         $rows = $this->db->query($sql)->row_array();
         if (!empty($rows['pksno']))
         {
-          	$data['seat_no'] = ($rows['group_id'] == 'B1' ? '-1' : '0' . substr($rows['group_id'], -1)) . '_' . substr($rows['pksno'], -3);
+          	//$data['seat_no'] = ($rows['group_id'] == 'B1' ? '-1' : '0' . substr($rows['group_id'], -1)) . '_' . substr($rows['pksno'], -3);
+			
+			$group_floor_type = preg_replace( '/[^A-Z]/', '', $rows['group_id']);
+			$group_floor_num = preg_replace( '/[^1-9]/', '', $rows['group_id']);
+			if($group_floor_type == 'B')
+			{
+				$data['seat_no'] = '-' . $group_floor_num . '_0' . substr($rows['pksno'], -3);
+			}
+			else
+			{
+				$group_floor_num = str_pad($group_floor_num, 2, '0', STR_PAD_LEFT);
+				$data['seat_no'] = $group_floor_num . '_0' . substr($rows['pksno'], -3);
+			}
+			
         } 
         else
         {
