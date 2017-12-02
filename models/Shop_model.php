@@ -23,7 +23,7 @@ class Shop_model extends CI_Model
     } 
 	
 	// 取得產品資訊
-	public function q_product($product_id=0, $product_code='')
+	public function q_product($product_id=0, $product_code=PRODUCT_CODE_COFFEE_SHOP)
 	{
 		$now = date('Y/m/d H:i:s');
 		$where_arr = array('start_time <= ' => $now, 'valid_time > ' => $now);
