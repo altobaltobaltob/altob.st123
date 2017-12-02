@@ -15,6 +15,18 @@ class Shop extends CC_Controller
 		$this->show_page('main_page');
 	}
 	
+	// 付款流程頁面 (返回)
+	public function client_back()
+	{
+		$this->show_page('main_page');
+	}
+	
+	// 付款流程頁面 (返回)
+	public function order_result()
+	{
+		$this->show_page('main_page');
+	}
+	
 	// 咖啡包預覽頁
     public function coffee_shop()
 	{
@@ -65,6 +77,8 @@ class Shop extends CC_Controller
 		$proceed_bill['station_no'] = $this->get_station_no();
 		$proceed_bill['product_id'] = $product_id;
 		$proceed_bill['product_code'] = $product_code;
+		$proceed_bill['client_back_path'] = 'shop.html/client_back';
+		$proceed_bill['order_result_path'] = 'shop.html/order_result';
 		trigger_error(__FUNCTION__ . '..' . print_r($proceed_bill, true));
 		
 		try{
