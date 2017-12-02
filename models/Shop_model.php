@@ -27,14 +27,8 @@ class Shop_model extends CI_Model
 	{
 		$now = date('Y/m/d H:i:s');
 		$where_arr = array('start_time <= ' => $now, 'valid_time > ' => $now);
-		
-		// 指定產品流水號
-		if(!empty($product_id))
-			$where_arr['product_id'] = $product_id;
-		
-		// 指定產品包
-		if(!empty($product_code))
-			$where_arr['product_code'] = PRODUCT_CODE_COFFEE_SHOP;	// 預設咖啡包
+		$where_arr['product_id'] = $product_id;		// 指定產品流水號
+		$where_arr['product_code'] = $product_code;	// 指定產品包
 		
     	$data = array();
     	$result = $this->db->select('product_id, product_code, product_name, product_desc, amt, remarks, product_plan')
