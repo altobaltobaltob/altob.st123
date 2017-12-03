@@ -33,7 +33,7 @@ curl_setopt($ch, CURLOPT_POST, true); // 啟用POST
 $tcp_worker = new Worker("tcp://0.0.0.0:49993");      
 
 // 啟動N個進程對外提供服務
-$tcp_worker->count = 4;
+$tcp_worker->count = 6;
 
 $tcp_worker->onConnect = function($connection)
 {
@@ -54,13 +54,11 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 	$tcp_in = mb_convert_encoding($tcp_in, 'UTF-8', 'UTF-16LE');	// unicode to utf-8
 	
 	$explode_tcp_in = explode(',', $tcp_in);
-	$send_data = null;
 	
-	// 未知
+	// 處理
 	if(empty($explode_tcp_in) || empty($explode_tcp_in[0]))
 	{
 		trigger_error("..empty..". print_r($explode_tcp_in, true) .'|');
-		$connection->close($send_data);
 	}
 	else if($explode_tcp_in[0] == 'Mitac')
 	{
@@ -94,11 +92,10 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 			
 			// 加驗証
 			$parms['ck'] = md5($parms['seqno']. 'a' . date('dmh') . 'l' . $parms['lpr'] . 't'. $parms['amt']. 'o'. $parms['amt_discount'] . 'b'. $parms['amt_real'] . $function_name);
-			
 			curl_setopt($ch, CURLOPT_URL, "http://localhost/mitac_service.html/{$function_name}/"); 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parms));   
-			$send_data = curl_exec($ch);
-			trigger_error(".. curl {$function_name}|{$send_data} ..".print_r($parms, true));
+			$result = curl_exec($ch);
+			trigger_error(".. curl {$function_name}|{$result} ..".print_r($parms, true));
 		}
 		else
 		{
@@ -106,7 +103,11 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 		}
 	}
 	
-	$connection->close($send_data);
+	// 回覆
+	$connection->send('OK');
+	
+	// 斷開
+	$connection->close();
 };       
 
 // 執行worker
