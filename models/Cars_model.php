@@ -1411,19 +1411,215 @@ class Cars_model extends CI_Model
 		}
 	}
 	
+	
 	// ===============================================
 	// mitac cmd
 	// ===============================================
+	
+	// 檢查指定時間是否介於停車時段區間
+	function check_park_time($park_time, $target_time)
+	{
+		$pt_arr = $this->vars['mcache']->get('pt'); 
+		$now_time = substr($target_time, 11);				// 日期字串只取最後時間字串(13:25:32)
+		$week_no = date('w',strtotime($target_time));		// 取星期幾 
+		$park_time_array = explode(',', $park_time);		// 用 , 格開
+		foreach($park_time_array as $idx => $park_time_value)
+		{
+			foreach($pt_arr[$park_time_value]['timex'] as $idx => $pt_rows)
+			{
+				if ($week_no >= $pt_rows['w_start'] && 
+					$week_no <= $pt_rows['w_end'] && 
+					$now_time >= $pt_rows['time_start'] && 
+					$now_time <= $pt_rows['time_end'])
+					{
+						return true;
+					}
+			}
+		}
+		return false;
+	}
+	
+	// 取得會員時段區間起點
+	function gen_park_time_first($park_time, $target_time)
+	{
+		$pt_arr = $this->vars['mcache']->get('pt'); 
+		$now_time = substr($target_time, 11);				// 日期字串只取最後時間字串(13:25:32)
+		$week_no = date('w',strtotime($target_time));		// 取星期幾 
+		$park_time_array = explode(',', $park_time);		// 用 , 格開
+		$week_no_first = 0;
+		$time_end_first = '';
+		foreach($park_time_array as $idx => $park_time_value)
+		{
+			foreach($pt_arr[$park_time_value]['timex'] as $idx => $pt_rows)
+			{
+				if ($week_no >= $pt_rows['w_start'] && 
+					$week_no <= $pt_rows['w_end'] && 
+					$now_time >= $pt_rows['time_start'] && 
+					$now_time <= $pt_rows['time_end'])
+					{
+						$week_no_first = $pt_rows['w_start'];
+						$time_end_first = $pt_rows['time_start'];
+						trigger_error(__FUNCTION__ . "|$park_time, $target_time | $week_no_first, $time_end_first");
+						break;
+					}
+			}
+		}
+		
+		$day_offset = $week_no - $week_no_first;
+		if($day_offset < 0)
+		{
+			trigger_error(__FUNCTION__ . '..error..offset..' . $day_offset);
+			$day_offset = 0;
+		}
+		
+		return date('Y-m-d', strtotime("-$day_offset day", strtotime($target_time))). " $time_end_first";
+	}
+	
+	// 取得會員時段區間終點
+	function gen_park_time_last($park_time, $target_time)
+	{
+		$pt_arr = $this->vars['mcache']->get('pt'); 
+		$now_time = substr($target_time, 11);				// 日期字串只取最後時間字串(13:25:32)
+		$week_no = date('w',strtotime($target_time));		// 取星期幾 
+		$park_time_array = explode(',', $park_time);		// 用 , 格開
+		$week_no_last = 0;
+		$time_end_last = '';
+		foreach($park_time_array as $idx => $park_time_value)
+		{
+			foreach($pt_arr[$park_time_value]['timex'] as $idx => $pt_rows)
+			{
+				if ($week_no >= $pt_rows['w_start'] && 
+					$week_no <= $pt_rows['w_end'] && 
+					$now_time >= $pt_rows['time_start'] && 
+					$now_time <= $pt_rows['time_end'])
+					{
+						$week_no_last = $pt_rows['w_end'];
+						$time_end_last = $pt_rows['time_end'];
+						trigger_error(__FUNCTION__ . "|$park_time, $target_time | $week_no_last, $time_end_last");
+						break;
+					}
+			}
+		}
+		
+		$day_offset = $week_no_last - $week_no;
+		if($day_offset < 0)
+		{
+			trigger_error(__FUNCTION__ . '..error..offset..' . $day_offset);
+			$day_offset = 0;
+		}
+		
+		return date('Y-m-d', strtotime("+$day_offset day", strtotime($target_time))). " $time_end_last";
+	}
+	
+	// 取得會員身份減免後的費用起算時間
+	function check_member_state($lpr, $in_time, $out_time)
+	{
+		// 檢查月租身份修正
+		$member_info = $this->get_member($lpr, false);
+		
+		if ($member_info['member_no'] == 0)
+		{
+			// 查無會員身份
+			$member_state = 0;
+			$new_in_time = $in_time;
+			$new_out_time = $out_time;
+		}
+		else
+		{
+			$park_time = $member_info['park_time'];
+			$pt_arr = $this->vars['mcache']->get('pt'); 
+				
+			if(empty($pt_arr) || empty($park_time))
+			{
+				// ERROR: 無法驗証時段, 跳過時段限制判斷
+				$member_state = 1;
+				$new_in_time = $in_time;
+				$new_out_time = $out_time;
+			}
+			else
+			{
+				$in_time_in_park_time = $this->check_park_time($park_time, $in_time);
+				$out_time_in_park_time = $this->check_park_time($park_time, $out_time);
+				trigger_error(__FUNCTION__ . "|$lpr, $in_time, $out_time|..check_park_time: {$in_time_in_park_time}, {$out_time_in_park_time}..");
+				
+				if($in_time_in_park_time && $out_time_in_park_time)
+				{
+					// 進出時間都在會員區間內: 費用起算時間改為出場時間
+					$member_state = 2;
+					$new_in_time = $out_time;
+					$new_out_time = $out_time;
+				}
+				else if($in_time_in_park_time)
+				{
+					// 入場時間在會員區間內: 費用起算時間改為, 會員時段區間終點
+					$member_state = 3;
+					$new_in_time = $this->gen_park_time_last($park_time, $in_time);
+					$new_out_time = $out_time;
+					
+					if(strtotime($new_in_time) > strtotime($out_time))
+					{
+						trigger_error(__FUNCTION__ . "|$lpr, $in_time, $out_time|new_in_time error >> out_time..");
+						$new_in_time = $out_time;
+					}
+					
+				}
+				else if($out_time_in_park_time)
+				{
+					// 出場時間在會員區間內: 費用起算時間改為, 會員時段區間起點
+					$member_state = 4;
+					$new_in_time = $in_time;
+					$new_out_time = $this->gen_park_time_first($park_time, $out_time);
+					
+					if(strtotime($in_time) > strtotime($new_out_time))
+					{
+						trigger_error(__FUNCTION__ . "|$lpr, $in_time, $out_time|new_in_time error >> out_time..");
+						$new_out_time = $out_time;
+					}
+				}
+			}	
+		}
+
+		$member_result = array('state' => $member_state, 'in_time' => $new_in_time, 'out_time' => $new_out_time);
+		trigger_error(__FUNCTION__ . "|$lpr, $in_time, $out_time|..". print_r($member_result, true));
+		return $member_result;	
+	}
 	
 	// 要求 mitac 扣款
 	function call_mitac_pay($lpr, $ivsno, $rows_cario)
 	{
 		$function_name = 'parking_fee_altob';
 		$seqno = $rows_cario['cario_no'];
-		$lpr = $lpr;
 		$in_time =	$rows_cario['out_before_time'];
 		$out_time =	$this->now_str;
 		$gate_id = 1; // 20171124 改為強制 1//$ivsno;
+		
+		// 確認會員身份
+		$member_result = $this->check_member_state($lpr, $in_time, $out_time);
+		switch($member_result['state'])
+        {
+			case 0:
+				trigger_error(__FUNCTION__ . '|非會員|');
+				break;
+			case 1:
+				trigger_error(__FUNCTION__ . '|無法驗証時段|skip MITAC|'. print_r($member_result, true));
+				return false;	// 跳過 mitac
+				break;
+			case 2:
+				trigger_error(__FUNCTION__ . '|進出時間都在會員區間內|skip MITAC|'. print_r($member_result, true));
+				return false;	// 跳過 mitac
+				break;
+			case 3:
+				trigger_error(__FUNCTION__ . '|入場時間在會員區間內|'. print_r($member_result, true));
+				$in_time = $member_result['in_time'];
+				break;
+			case 4:
+				trigger_error(__FUNCTION__ . '|出場時間在會員區間內|'. print_r($member_result, true));
+				$out_time = $member_result['out_time'];
+				break;
+			default:
+				trigger_error(__FUNCTION__ . '|未定義|'. print_r($member_result, true));
+				break;
+		}
 		
 		// 通訊內容
 		$parms = array(
