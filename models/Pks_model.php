@@ -213,7 +213,7 @@ class Pks_model extends CI_Model
 	{
 		if(empty($rows['status']))
 		{
-			$new_pks_data = array( 'station_no' => $parms['sno'], 'pksno' => $parms['pksno'] );
+			$new_pks_data = array( 'station_no' => $parms['sno'], 'pksno' => $parms['pksno'], 'prioritys' => $parms['pksno'] );
 			$this->db->insert('pks', $new_pks_data);
 			trigger_error(__FUNCTION__ . '://..'. print_r($new_pks_data, true));
 			return true;
