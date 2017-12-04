@@ -104,7 +104,7 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 	}
 	
 	// 回覆
-	$connection->send('OK');
+	//$connection->send('OK');
 	
 	// 斷開
 	$connection->close();
