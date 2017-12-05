@@ -80,7 +80,7 @@ class Pks_model extends CI_Model
 				// 如果在席表未建立, 自動產生
 				if($this->gen_pks_row($rows_pks, $parms))
 				{
-					return false;	// 中斷
+					trigger_error(__FUNCTION__ . '..auto gen pks..' . print_r($parms, true));
 				}
 				
                 // 如果已經人工確認或之前已比對有入場資料者, 則重覆再送來的車辨不予理會
@@ -141,7 +141,7 @@ class Pks_model extends CI_Model
 				// 如果在席表未建立, 自動產生
 				if($this->gen_pks_row($rows, $parms))
 				{
-					return false;	// 中斷
+					trigger_error(__FUNCTION__ . '..auto gen pks..' . print_r($parms, true));
 				}
 					
                 // if (!empty($rows['status']) && $rows['status'] == 'LR')	break;	// 仍有車在席, 不應再有KI, ignore
