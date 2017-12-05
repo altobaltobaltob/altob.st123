@@ -113,7 +113,15 @@ class Parkingquery extends CI_Controller
         
     }    
     
-    
+    // 查詢各樓層剩餘車位 
+	public function check_space_all() 
+	{       
+    	$seqno = $this->uri->segment(3);
+        $data = $this->parkingquery_model->check_space_all($seqno);
+        $data['result']['num'] = $seqno; 
+        $data['result_code'] = 'OK'; 
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }
     	   
     // 查詢各樓層剩餘車位 
 	public function check_space() 
@@ -135,9 +143,17 @@ class Parkingquery extends CI_Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
     
+	// 查詢各樓層剩餘車位 (婦友)
+	public function check_space3() 
+	{       
+    	$seqno = $this->uri->segment(3);
+        $data = $this->parkingquery_model->check_space($seqno, 4);
+        $data['result']['num'] = $seqno; 
+        $data['result_code'] = 'OK'; 
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }
      
-    // 停車位置查詢(板橋好停車)
-    // http://xxxxxxxx/parkingquery.html/check_location/ABC1234
+    // 停車位置查詢
 	public function check_location() 
 	{       
     	$lpr = $this->uri->segment(3);
@@ -145,9 +161,7 @@ class Parkingquery extends CI_Controller
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }      
     
-     
     // 空車位導引
-    // http://xxxxxxxx/parkingquery.html/get_valid_seat
 	public function get_valid_seat() 
 	{                                          
     	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
@@ -156,7 +170,6 @@ class Parkingquery extends CI_Controller
     }    
 	
 	// 空車位導引 (身障)
-    // http://xxxxxxxx/parkingquery.html/get_valid_seat2
 	public function get_valid_seat2() 
 	{                                          
     	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
@@ -165,7 +178,6 @@ class Parkingquery extends CI_Controller
     }
     
 	// 空車位導引 (婦友)
-    // http://xxxxxxxx/parkingquery.html/get_valid_seat3
 	public function get_valid_seat3() 
 	{                                          
     	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 

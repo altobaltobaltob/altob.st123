@@ -39,9 +39,29 @@ class Parkingquery_model extends CI_Model
 
 		return $data;
 	}
+	
+	// 查詢各樓層剩餘車位 (不分類)
+	public function check_space_all($seqno) 
+	{           
+    	$data = array();         
+    	$results = $this->db->select('group_id, availables, tot')
+        		->from('pks_groups')
+                ->get()  
+                ->result_array();  
+                         
+        foreach($results as $idx => $rows)
+        {
+          	$data['result']['floor'][$idx] = array
+            (
+            	'floor_name' => $rows['group_id'], 
+            	'valid_count' => $rows['availables'], 
+            	'total_count' => $rows['tot'] 
+            );
+        }
+        return $data; 
+    }   
     
-    // 查詢各樓層剩餘車位 
-    // http://203.75.167.89/parkingquery.html/check_space/12345
+    // 查詢各樓層剩餘車位
 	public function check_space($seqno, $group_type=1) 
 	{           
     	$data = array();         
@@ -63,8 +83,7 @@ class Parkingquery_model extends CI_Model
         return $data; 
     }   
     
-    // 停車位置查詢(板橋好停車) 
-    // http://203.75.167.89/parkingquery.html/check_location/ABC1234
+    // 停車位置查詢
 	public function check_location($lpr) 
 	{                 
     	$lpr = strtoupper($lpr);	// 一律轉大寫
@@ -118,41 +137,6 @@ class Parkingquery_model extends CI_Model
         }      
         return $data; 
     }          
-    
-	/*
-    // 空車位導引
-    // http://203.75.167.89/parkingquery.html/get_valid_seat 
-    // 註記現在時間, 並保留10分鐘
-	public function get_valid_seat($pksno)
-	{           
-    	$data = array();   
-        $this->db->trans_start(); 
-        if ($pksno > 0)	// 限制從某一個車位開始指派車位
-        {   
-        	$sql = "select pksno from pks where status = 'VA' and pksno >= {$pksno} and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
-        }   
-        else
-        {
-        	$sql = "select pksno from pks where status = 'VA' and prioritys != 0 and (book_time is null or book_time <= now()) order by prioritys asc limit 1 for update;"; 
-        }
-        
-        $rows = $this->db->query($sql)->row_array(); 
-        if (!empty($rows['pksno']))
-        {
-        	$data['result']['location_no'] = "{$rows['pksno']}";
-        	$data['result_code'] = 'OK';  
-            $sql = "update pks set book_time = addtime(now(), '00:10:00') where pksno = {$rows['pksno']};";
-            $this->db->query($sql);
-        }      
-        else   
-        {
-        	$data['result']['location_no'] = '0';
-        	$data['result_code'] = 'FAIL';
-        }      
-        $this->db->trans_complete(); 
-        return $data; 
-    }  
-	*/
 	
 	// 空車位導引
 	public function get_valid_seat($pksno, $group_type=1)
@@ -228,7 +212,7 @@ class Parkingquery_model extends CI_Model
     
     
     // 緊急求救
-    // http://203.75.167.89/parkingquery.html/send_sos/B2/111/123
+    // http://xxxxxxxxxx/parkingquery.html/send_sos/B2/111/123
 	public function send_sos($floor, $x, $y)
 	{           
     	$data = array
@@ -241,27 +225,11 @@ class Parkingquery_model extends CI_Model
     
     
     // 防盜鎖車
-    // http://203.75.167.89/parkingquery.html/security_action/ABC1234/pswd/2
+    // http://xxxxxxxxxx/parkingquery.html/security_action/ABC1234/pswd/2
 	public function security_action($lpr, $pswd, $action)
 	{                      
     	$data = array();    
-        /*
-    	$rows = $this->db->select('member_no, passwd, locked')
-        		->from('members')
-                ->where(array('lpr' => $lpr, 'passwd' => $pswd))	     
-                ->limit(1)
-                ->get()  
-                ->row_array(); 
-        trigger_error('防盜鎖車:'.$this->db->last_query());
-                                                        
-        // 無資料或密碼錯誤
-        if (empty($rows['member_no']))
-        {
-          	$data['result_code'] = 'FAIL';
-            return($data);
-        } 
-        */
-          
+        
     	$rows = $this->db->select('member_no, passwd, locked')
         		->from('members')
                 ->where(array('lpr' => $lpr))	     
