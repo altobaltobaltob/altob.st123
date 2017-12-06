@@ -175,6 +175,7 @@ PRODUCT_RESULT.product_name = '<?= $product_name; ?>';
 PRODUCT_RESULT.product_desc = '<?= $product_desc; ?>';
 PRODUCT_RESULT.amt = '<?= $amt; ?>';
 PRODUCT_RESULT.remarks = '<?= $remarks; ?>';
+PRODUCT_RESULT.invoice_no = '<?= $invoice_no; ?>';
 
 // 暫存區
 var current_page_tags;				// 目前所在頁面

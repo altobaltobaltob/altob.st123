@@ -18,13 +18,33 @@ class Shop extends CC_Controller
 	// 付款流程頁面 (返回)
 	public function client_back()
 	{
+		trigger_error(__FUNCTION__ . '..'. print_r($_POST, true));
 		$this->show_page('main_page');
 	}
 	
-	// 付款流程頁面 (返回)
+	// 付款流程頁面 (完成, 返回)
 	public function order_result()
 	{
-		$this->show_page('main_page');
+		trigger_error(__FUNCTION__ . '..'. print_r($_POST, true));
+		$order_no = $this->input->post('order_no', true);
+		$product_plan = $this->input->post('product_plan', true);
+		$invoice_no = $this->input->post('invoice_no', true);
+		$ck = $this->input->post('ck', true);
+		
+		// 建立頁面資料
+		$data = array();
+		$data['invoice_no'] = $invoice_no;
+		
+		// 更新產品訂單
+		if($ck = md5($order_no.'alt'.$product_plan.'ob'.$invoice_no))
+		{
+			$this->app_model()->reload_product_bill($order_no, $invoice_no, $product_plan);
+			
+			// 取得發票待兌換訂單
+			//$data['invoice_ready_bill'] = $this->app_model()->q_invoice_ready_bill($invoice_no);
+		}
+		
+		$this->show_page('main_page', $data);
 	}
 	
 	// 咖啡包預覽頁
@@ -107,6 +127,7 @@ class Shop extends CC_Controller
 		echo $result;
 	}
 	
+	/*
 	// 買
 	public function i_do()
 	{
@@ -118,5 +139,14 @@ class Shop extends CC_Controller
 		
 		echo 'ok';
 	}
+	
+	public function test_product_plan()
+	{
+		$order_no = '151246880713876';
+		
+		$this->app_model()->redeem_product_bill($order_no);
+		echo 'ok';
+	}
+	*/
 	
 }

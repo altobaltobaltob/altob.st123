@@ -22,18 +22,38 @@ class Shop_model extends CI_Model
 		$this->vars = $vars;
     } 
 	
+	// 取得發票待兌換訂單
+	public function q_invoice_ready_bill($invoice_no)
+	{
+		$where_arr['invoice_no'] = $invoice_no;
+		$where_arr['status'] = 1;
+		
+    	$data = array();
+    	$result = $this->db->select('product_id, product_code, product_name, invoice_remark, product_plan')
+        		->from('product_bill')
+                ->where($where_arr)->order_by("create_time", "desc")
+                ->get()
+                ->row_array();
+        return $result;
+    }
+	
 	// 取得產品資訊
 	public function q_product($product_id=0, $product_code=PRODUCT_CODE_COFFEE_SHOP)
 	{
 		$now = date('Y/m/d H:i:s');
 		$where_arr = array('start_time <= ' => $now, 'valid_time > ' => $now);
-		$where_arr['product_id'] = $product_id;		// 指定產品流水號
-		$where_arr['product_code'] = $product_code;	// 指定產品包
+		
+		// 指定產品流水號
+		if($product_id != 0)
+			$where_arr['product_id'] = $product_id;
+		
+		// 指定產品包
+		$where_arr['product_code'] = $product_code;
 		
     	$data = array();
     	$result = $this->db->select('product_id, product_code, product_name, product_desc, amt, remarks, product_plan')
         		->from('products')
-                ->where($where_arr)
+                ->where($where_arr)->order_by("create_time", "desc")
 				->limit(1)
                 ->get()
                 ->row_array();
@@ -46,7 +66,7 @@ class Shop_model extends CI_Model
 		return time().rand(10000,99999);
 	}
 	
-	// 建立產品訂單
+	// S.1. 建立產品訂單
 	public function create_product_bill($product_id, $product_code)
 	{
 		// 取得商品資訊
@@ -76,7 +96,7 @@ class Shop_model extends CI_Model
 		return $data;
 	}
 	
-	// 處理產品訂單
+	// S.2. 處理產品訂單
 	public function proceed_product_bill($parms, $tx_type=0)
 	{
 		$order_no = $parms['order_no'];
@@ -143,4 +163,110 @@ class Shop_model extends CI_Model
 		trigger_error(__FUNCTION__ . ".." . print_r($data, true));
 		return $data;
     }
+	
+	// S.3. 更新產品訂單
+	public function reload_product_bill($order_no, $invoice_no, $product_plan)
+	{
+		// 更新為已結帳
+		$this->db->update('product_bill', 
+			array('status' => 1, 'invoice_no' => $invoice_no, 'product_plan' => $product_plan), 
+			array('status' => 100,	'order_no' => $order_no)
+		);
+		
+		$affect_rows = $this->db->affected_rows();
+
+		if ($affect_rows <= 0)
+			return 'fail';
+		
+		// 兌換
+		return $this->redeem_product_bill($order_no);
+	}
+	
+	// S.4. 兌換訂單商品
+	public function redeem_product_bill($order_no)
+	{
+		$product_info = $this->db->select('invoice_no, product_plan')
+				->from('product_bill')
+				->where(array('order_no' => $order_no))
+				->limit(1)
+				->get()
+				->row_array();
+		
+		$invoice_no = $product_info['invoice_no'];
+		$product_plan = $product_info['product_plan'];
+		
+		// 取得訂單內容
+		$data = json_decode($product_plan, true);
+		
+		if(!isset($data['product_code']))
+		{
+			trigger_error(__FUNCTION__ . "|$order_no|not_found");
+			return 'not_found';
+		}
+		
+		$product_code = $data['product_code'];
+		
+		// 咖啡
+		if($product_code == PRODUCT_CODE_COFFEE)
+		{
+			// 取得產品包資訊
+			$station_no = $data['station_no'];
+			$amount = $data['amount'];
+			$memo = $data['memo'];
+			$product = $this->q_product(0, $product_code);
+			
+			if(!isset($product['product_id']))
+			{
+				trigger_error(__FUNCTION__ . "|$order_no|$station_no, $product_code, $amount, $memo|product_not_found");
+				return 'product_contain_not_found';
+			}
+			
+			trigger_error(__FUNCTION__ . "|$order_no|$station_no, $product_code, $amount, $memo|兌換|" . print_r($product, true));
+			
+			// 兌換產品
+			return $this->redeem_product($order_no, $invoice_no, $product, $amount);
+		}
+		
+		trigger_error(__FUNCTION__ . "|$order_no|undefined_product|" . print_r($data, true));
+		return 'undefined_product';
+	}
+	
+	// 兌換產品
+	function redeem_product($order_no, $invoice_no, $product, $amount=1)
+	{
+		// [A.開始]
+		$this->db->trans_start();
+		
+		// 兌換時間
+		$tx_time = date('Y/m/d H:i:s');
+		
+		for($i = 0; $i < $amount; $i++)
+		{
+			$item = array();
+			$item['order_no'] = $this->gen_trx_no();
+			$item['tx_time'] = $tx_time;
+			$item['invoice_no'] = $invoice_no;
+			$item['product_id'] = $product["product_id"];
+			$item['product_code'] = $product["product_code"];
+			$item['product_plan'] = $product["product_plan"];
+			$item['invoice_remark'] = $product["product_name"];
+			$item['amt'] = $product["amt"];
+			$item['status'] = 1;
+			$this->db->insert('product_bill', $item);
+		}
+			
+		// 更新為已領取
+		$this->db->update('product_bill', array('status' => 111), array('status' => 1,	'order_no' => $order_no));
+			
+		// [C.完成]
+		$this->db->trans_complete();
+		if ($this->db->trans_status() === FALSE)
+		{
+			trigger_error(__FUNCTION__ . "..$order_no, $invoice_no..trans error..". '| last_query: ' . $this->db->last_query());
+			return 'fail';	 		// 中斷
+		}
+		
+		return 'ok';
+	}
+	
 }
