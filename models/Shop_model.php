@@ -22,16 +22,29 @@ class Shop_model extends CI_Model
 		$this->vars = $vars;
     } 
 	
-	// 取得發票待兌換訂單
+	// 取得待兌換訂單 (用戶代號)
+	public function q_uuid_ready_bill($uuid)
+	{
+		$where_arr['uuid'] = $uuid;
+		$where_arr['status'] = 1;
+		
+    	$result = $this->db->select('order_no, invoice_remark, product_plan, tx_time')
+        		->from('product_bill')
+                ->where($where_arr)->order_by("tx_time", "desc")
+                ->get()
+                ->result_array();
+        return $result;
+    }
+	
+	// 取得待兌換訂單 (發票)
 	public function q_invoice_ready_bill($invoice_no)
 	{
 		$where_arr['invoice_no'] = $invoice_no;
 		$where_arr['status'] = 1;
 		
-    	$data = array();
-    	$result = $this->db->select('product_id, product_code, product_name, invoice_remark, product_plan')
+    	$result = $this->db->select('order_no, invoice_remark, product_plan, tx_time')
         		->from('product_bill')
-                ->where($where_arr)->order_by("create_time", "desc")
+                ->where($where_arr)->order_by("tx_time", "desc")
                 ->get()
                 ->row_array();
         return $result;
@@ -104,6 +117,7 @@ class Shop_model extends CI_Model
 		$company_no = $parms['company_no'];
 		$email = $parms['email'];
 		$mobile = $parms['mobile'];
+		$uuid = $parms['uuid'];
 		
 		$product_info = $this->db->select('valid_time, product_plan')
 				->from('product_bill')
@@ -126,6 +140,7 @@ class Shop_model extends CI_Model
 		
 		$data = array();
 		$data['tx_type'] = $tx_type;		// 交易種類: 0:未定義, 1:現金, 40:博辰人工模組, 41:博辰自動繳費機, 50:歐付寶轉址刷卡, 51:歐付寶APP, 52:歐付寶轉址WebATM, 60:中國信託刷卡轉址
+		$data['uuid'] = $uuid;				// 客戶代號
 		
 		if(strlen($company_no) >= 8)
 		{
@@ -185,15 +200,16 @@ class Shop_model extends CI_Model
 	// S.4. 兌換訂單商品
 	public function redeem_product_bill($order_no)
 	{
-		$product_info = $this->db->select('invoice_no, product_plan')
+		$product_info = $this->db->select('invoice_no, product_plan, uuid')
 				->from('product_bill')
-				->where(array('order_no' => $order_no))
+				->where(array('order_no' => $order_no, 'status' => 1))
 				->limit(1)
 				->get()
 				->row_array();
 		
 		$invoice_no = $product_info['invoice_no'];
 		$product_plan = $product_info['product_plan'];
+		$uuid = $product_info['uuid'];
 		
 		// 取得訂單內容
 		$data = json_decode($product_plan, true);
@@ -224,7 +240,7 @@ class Shop_model extends CI_Model
 			trigger_error(__FUNCTION__ . "|$order_no|$station_no, $product_code, $amount, $memo|兌換|" . print_r($product, true));
 			
 			// 兌換產品
-			return $this->redeem_product($order_no, $invoice_no, $product, $amount);
+			return $this->redeem_product($order_no, $invoice_no, $product, $uuid, $amount);
 		}
 		
 		trigger_error(__FUNCTION__ . "|$order_no|undefined_product|" . print_r($data, true));
@@ -232,7 +248,7 @@ class Shop_model extends CI_Model
 	}
 	
 	// 兌換產品
-	function redeem_product($order_no, $invoice_no, $product, $amount=1)
+	private function redeem_product($order_no, $invoice_no, $product, $uuid, $amount=1)
 	{
 		// [A.開始]
 		$this->db->trans_start();
@@ -243,6 +259,7 @@ class Shop_model extends CI_Model
 		for($i = 0; $i < $amount; $i++)
 		{
 			$item = array();
+			$item['uuid'] = $uuid;	// 用戶代號
 			$item['order_no'] = $this->gen_trx_no();
 			$item['tx_time'] = $tx_time;
 			$item['invoice_no'] = $invoice_no;
@@ -267,6 +284,56 @@ class Shop_model extends CI_Model
 		}
 		
 		return 'ok';
+	}
+	
+	// S.5. 兌換 (兌換 商品包 或 商品)
+	public function redeem_order($order_no)
+	{
+		$product_info = $this->db->select('order_no, product_code, product_plan')
+				->from('product_bill')
+				->where(array('order_no' => $order_no, 'status' => 1))
+				->limit(1)
+				->get()
+				->row_array();
+		
+		if(!isset($product_info['product_code']))
+		{
+			trigger_error(__FUNCTION__ . "|$order_no|not_found");
+			return 'not_found';
+		}
+		
+		$bill_product_code = $product_info['product_code'];
+		
+		// 兌換產品包
+		if($bill_product_code == PRODUCT_CODE_COFFEE_SHOP)
+		{
+			return $this->redeem_product_bill($order_no);
+		}
+		// 兌換咖啡
+		else if($bill_product_code == PRODUCT_CODE_COFFEE)
+		{
+			// [A.開始]
+			$this->db->trans_start();
+			
+			// 兌換時間
+			$tx_time = date('Y/m/d H:i:s');
+			
+			// 更新為已領取
+			$this->db->update('product_bill', array('status' => 111, 'tx_time' => $tx_time), array('status' => 1, 'order_no' => $order_no));
+				
+			// [C.完成]
+			$this->db->trans_complete();
+			if ($this->db->trans_status() === FALSE)
+			{
+				trigger_error(__FUNCTION__ . "..$order_no..trans error..". '| last_query: ' . $this->db->last_query());
+				return 'fail';	 		// 中斷
+			}
+			
+			trigger_error(__FUNCTION__ . "|$order_no|已領取|" . print_r($product_info, true));
+			return 'ok';
+		}
+		
+		return 'gg';
 	}
 	
 }

@@ -118,6 +118,7 @@
 					<div class="form-group">
 						<input id="product_id" type="hidden" name="product_id" value="0" />
 						<input id="product_code" type="hidden" name="product_code" value="" />
+						<input id="product_uuid" type="hidden" name="uuid" value="" />
 					</div>
 					
                 </div>
@@ -149,6 +150,7 @@ function load_item_page()
 	$("#checkout_image").attr("src", "<?=SERVER_URL?>i3/pics/coffee.jpg");
 	$("#product_id").val(PRODUCT_RESULT.product_id);
 	$("#product_code").val(PRODUCT_RESULT.product_code);
+	$("#product_uuid").val(get_altob_shop_uuid());
 }
 
 // 開啟轉帳畫面

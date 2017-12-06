@@ -9,17 +9,27 @@ class Shop extends CC_Controller
 		parent::__construct('shop');
 	}
 	
+	// 共用首頁
+	function show_main_page($data=null)
+	{
+		if(empty($data))
+			$data = array();
+		
+		$data['ALTOB_SHOP_UUID'] = md5(uniqid() . time());
+		$this->show_page('main_page', $data);
+	}
+	
 	// 首頁
 	public function index()
 	{                   
-		$this->show_page('main_page');
+		$this->show_main_page();
 	}
 	
 	// 付款流程頁面 (返回)
 	public function client_back()
 	{
 		trigger_error(__FUNCTION__ . '..'. print_r($_POST, true));
-		$this->show_page('main_page');
+		$this->show_main_page();
 	}
 	
 	// 付款流程頁面 (完成, 返回)
@@ -39,12 +49,24 @@ class Shop extends CC_Controller
 		if($ck = md5($order_no.'alt'.$product_plan.'ob'.$invoice_no))
 		{
 			$this->app_model()->reload_product_bill($order_no, $invoice_no, $product_plan);
-			
-			// 取得發票待兌換訂單
-			//$data['invoice_ready_bill'] = $this->app_model()->q_invoice_ready_bill($invoice_no);
 		}
 		
-		$this->show_page('main_page', $data);
+		$this->show_main_page($data);
+	}
+	
+	// 取得用戶兌換單
+	public function query_uuid_bill()
+	{
+		$uuid = $this->input->post('uuid', true);
+		$data = $this->app_model()->q_uuid_ready_bill($uuid);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+	}
+	
+	// 領取
+	public function redeem_order()
+	{
+		$order_no = $this->input->post('order_no', true);
+		echo $this->app_model()->redeem_order($order_no);
 	}
 	
 	// 咖啡包預覽頁
@@ -53,7 +75,7 @@ class Shop extends CC_Controller
     	$product_id = $this->uri->segment(3);	// 商品代碼
         $data = $this->app_model()->q_product($product_id);
 		unset($data['product_plan']);
-		$this->show_page('main_page', $data);
+		$this->show_main_page($data);
 	}
 	
 	// 付款
@@ -65,6 +87,7 @@ class Shop extends CC_Controller
 		$company_no = $this->input->post('company_no', true);
 		$email = $this->input->post('email', true);
 		$mobile = $this->input->post('mobile', true);
+		$uuid = $this->input->post('uuid', true);
 		
 		// 建立訂單
 		$new_bill = $this->app_model()->create_product_bill($product_id, $product_code);
@@ -80,7 +103,8 @@ class Shop extends CC_Controller
 				'invoice_receiver' => $invoice_receiver,
 				'company_no' => $company_no,
 				'email' => $email,
-				'mobile' => $mobile
+				'mobile' => $mobile,
+				'uuid' => $uuid
 			);
 			
 		// 處理產品訂單

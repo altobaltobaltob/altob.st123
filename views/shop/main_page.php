@@ -54,7 +54,7 @@
                 <div class="pss-choose-box">
                     <h4 class="spacing-title">兌換快捷鍵</h4>
                     <div class="parkinsys-search-wrap">
-                        <ul id="order_history_list" class="psw-choose-num">
+                        <ul id="product_bill_list" class="psw-choose-num">
                             <!--li><a href="javascript:void(0)">ABC-1234</a></li>
                             <li><a href="javascript:void(0)">HT-114</a></li>
                             <li><a href="javascript:void(0)">YA-520</a></li>
@@ -183,10 +183,111 @@ var current_altob_check_list;		// 目前待結清單
 var current_altob_checkout_bill;	// 目前待繳帳單
 var AltobCookies = Cookies.noConflict();
 
+// 用戶代號
+function get_altob_shop_uuid()
+{
+	if(AltobCookies.get('ALTOB_SHOP_UUID') !== undefined)
+	{
+		return AltobCookies.get('ALTOB_SHOP_UUID');
+	}
+	
+	set_cookie('ALTOB_SHOP_UUID', '<?= $ALTOB_SHOP_UUID; ?>');
+	return AltobCookies.get('ALTOB_SHOP_UUID');
+}
+
 // 設定 cookie
 function set_cookie(key, value)
 {
-	AltobCookies.set(key, value, { expires: 30 });
+	AltobCookies.set(key, value, { expires: 365 });
+}
+
+// 載入兌換資訊
+function reload_order_list()
+{
+	var altob_shop_uuid = get_altob_shop_uuid();
+	
+	// 取得兌換資訊
+	$.ajax
+	({
+		url: "<?=APP_URL?>query_uuid_bill",
+		type: "post", 
+		dataType: "json",
+		data: {"uuid":altob_shop_uuid},
+		success:function(jdata)
+		{
+			var query_list = [];
+			
+			for(idx in jdata)
+			{   
+				var invoice_remark = jdata[idx]['invoice_remark'];
+				var product_plan = JSON.parse(jdata[idx]['product_plan']);
+				var order_no = jdata[idx]['order_no'];
+				var item_msg = '';
+				
+				// 分析產品內容
+				if(product_plan.amount > 0)
+					item_msg = '領取 ' + invoice_remark + ' 兌換卷';
+				else
+					item_msg = '兌換 ' + product_plan.memo + ' x 1';	
+				
+				query_list = query_list.concat(['<li><a href="javascript:void(0)" onclick="get_item(', order_no ,',\'', item_msg, '\');">', item_msg ,'</a></li>']);
+			}
+					
+			$("#product_bill_list").html('').append(query_list.join(''));
+		}
+	})
+}
+
+// 兌換
+function get_item(order_no, item_msg)
+{
+	alertify.set({ 
+		buttonFocus: "cancel",
+		labels: {
+			ok     : "兌換",
+			cancel : "取消"
+		}
+	});
+	alertify.confirm(
+		item_msg
+		, function (e){
+		if (e) {
+			$.ajax
+			({
+				url: "<?=APP_URL?>redeem_order",
+				dataType:"text",
+				type:"post",
+				data: {"order_no":order_no},
+				success:function(redeem_order_result)
+				{
+					if(redeem_order_result == 'ok')
+					{
+						alertify_success('操作完成');
+						
+						// 重新載入
+						reload_order_list();
+					}
+					else if(redeem_order_result == 'not_found')
+					{
+						alertify_error('查無訂單..');	
+					}
+					else
+					{
+						alertify_error('發生異常..' . redeem_order_result);
+					}
+				}
+			})
+		}})
+}
+
+// 回上頁
+function back_page(event)
+{
+	if(event !== undefined)
+		event.preventDefault();
+	
+	// 預設回首頁
+	show_item('home_page', 'home_page');
 }
 
 $(document).ready(function()   
@@ -209,87 +310,5 @@ $(document).ready(function()
 		show_item('home_page', 'home_page');
 	}
 }); 
-
-// 載入兌換資訊
-function reload_order_list()
-{
-	$("#order_history_list").html('');
-
-	if(AltobCookies.get('order_history') !== undefined)	// 清除 Cookies.expire('order_history')
-	{
-		var query_list = [];
-		var order_history_arr = AltobCookies.get('order_history').split(';');
-		for(key in order_history_arr)
-		{
-			if(order_history_arr[key] != '')
-			{
-				console.log('+' + order_history_arr[key]);
-			}
-			
-			/*
-			query_list = query_list.concat(['<li><a href="javascript:void(0)" onclick="get_item(', key ,');">', 
-					order_history_arr[key] ,'</a></li>']);
-			*/
-		}
-			
-		$("#order_history_list").append(query_list.join('')); 
-	}
-	else
-	{
-		// 重新下載兌換卷
-		
-	}
-}
-
-// 新增兌換記錄
-function new_order_list(order_key)
-{
-	var isNewLpr = true;
-	var order_history_arr = [];
-		
-	if(AltobCookies.get('order_history') !== undefined)	// 清除 Cookies.expire('order_history')
-	{	
-		order_history_arr = AltobCookies.get('order_history').split(';');
-		for(key in order_history_arr)
-		{
-			if(order_history_arr[key] == order_key)
-			{
-				isNewLpr = false;	
-				break;
-			}
-		}			
-	}
-	
-	if(isNewLpr && order_key != '-')
-	{
-		// 最多記錄 5 筆, 新的被清掉
-		if(order_history_arr.length >= 5)
-			order_history_arr.shift();
-				
-		order_history_arr.push(order_key);
-		set_cookie('order_history', order_history_arr.join(';'))
-		// 重建兌換記錄
-		reload_order_list();
-	}
-}
-
-// 設定車號
-function set_lpr(key)
-{
-	var order_history_arr = AltobCookies.get('order_history').split(';');
-	var order_front_tail = String(order_history_arr[key]).split('-');
-	$("#order_front").val('').val(order_front_tail[0]);
-	$("#order_tail").val('').val(order_front_tail[1]);
-}
-
-// 回上頁
-function back_page(event)
-{
-	if(event !== undefined)
-		event.preventDefault();
-	
-	// 預設回首頁
-	show_item('home_page', 'home_page');
-}
 
 </script>
