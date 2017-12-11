@@ -144,7 +144,7 @@ class Carpayment_model extends CI_Model
 		$sync_agent->init($result['station_no'], $result['in_time']);
 		$sync_agent->cario_no = $result['cario_no'];		// 進出編號
 		$sync_result = $sync_agent->sync_st_pay($parms['lpr'], $parms['pay_time'], $parms['pay_type'], 
-			date('Y-m-d H:i:s', strtotime("{$parms['pay_time']} + 15 minutes")));
+			date('Y-m-d H:i:s', strtotime("{$parms['pay_time']} + 15 minutes")), $finished);
 		trigger_error( "..sync_st_pay.." .  $sync_result);
 		
 		return 'ok';

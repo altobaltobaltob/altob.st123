@@ -128,7 +128,7 @@ class AltobSyncAgent
 	}
 
 	// 傳送付費更新記錄
-	public function sync_st_pay($lpr, $pay_time, $pay_type=0, $out_before_time='')
+	public function sync_st_pay($lpr, $pay_time, $pay_type=0, $out_before_time='', $finished=false)
 	{
 		$error_parms_msg = $this->check_init_parms();
 		if(!empty($error_parms_msg)) { return $error_parms_msg; }
@@ -148,7 +148,11 @@ class AltobSyncAgent
 		$this->post_parms['pay_time'] = $pay_time;
 		$this->post_parms['pay_type'] = $pay_type;
 		$this->post_parms['out_before_time'] = empty($out_before_time) ? date('Y-m-d H:i:s', strtotime("{$pay_time} + 15 minutes")) : $out_before_time;
-
+		
+		// 是否註記完結
+		if($finished)
+			$this->post_parms['finished'] = 1;
+		
 		// 初始化網路服務物件。
 		$oService = new AltobSyncService();
 		$oService->ServiceURL = AltobSyncAgent::SYNC_CARS_URL;
