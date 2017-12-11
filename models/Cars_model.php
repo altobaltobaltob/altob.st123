@@ -1629,6 +1629,15 @@ class Cars_model extends CI_Model
 			'out_time' => $out_time, 
 			'gate_id' => $gate_id);
 		
+		// 超過一天就擋掉
+		$in_time_value = strtotime($parms['in_time']);
+		$out_time_value = strtotime($parms['out_time']);
+		if($out_time_value - $in_time_value > 86400)
+		{
+			trigger_error(__FUNCTION__ . '|超過計費時限|skip MITAC|'. print_r($parms, true));
+			return false;	// 跳過 mitac
+		}
+		
 		// 驗証碼
 		$parms['ck'] = md5($parms['seqno']. 'a' . date('dmh') . 'l' . $parms['lpr'] . 't'. $parms['in_time']. 'o'. $parms['out_time'] . 'b'. $parms['gate_id'] . $function_name);
 		
