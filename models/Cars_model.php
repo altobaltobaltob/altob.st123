@@ -1630,9 +1630,7 @@ class Cars_model extends CI_Model
 			'gate_id' => $gate_id);
 		
 		// 超過一天就擋掉
-		$in_time_value = strtotime($parms['in_time']);
-		$out_time_value = strtotime($parms['out_time']);
-		if($out_time_value - $in_time_value > 86400)
+		if(strtotime($parms['out_time']) - strtotime($parms['in_time']) > 86400)
 		{
 			trigger_error(__FUNCTION__ . '|超過計費時限|skip MITAC|'. print_r($parms, true));
 			return false;	// 跳過 mitac
