@@ -325,7 +325,8 @@ class Carpark extends CC_Controller
 			usleep(300000); // 0.3 sec delay
 			
 			// 會員資料同步
-			$result = $data_model->sync_members(array('station_no_arr' => $station_setting['station_no_list']));	// 20171116 upd
+			$result = $data_model->sync_members(array('station_no_arr' => $station_setting['station_no_list'], 
+				'current_station_no_arr' => $station_setting['station_no']));	// 20171211 upd
 			trigger_error(__FUNCTION__ . '..sync_members: '. $result);
 			
 			usleep(300000); // 0.3 sec delay

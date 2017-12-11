@@ -410,11 +410,10 @@ class Sync_data_model extends CI_Model
 	// 同步場站會員 （功能: 會員同步）
 	public function sync_members($info_arr=array('station_no_arr' => STATION_NO))
 	{
-		$data_member_arr = array();
-		$data_car_arr = array();
+		// 查現況
+		$parms['station_no_arr'] = $info_arr['station_no_arr'];
 		
 		try{
-			// 查現況
 			$ch = curl_init();
 			curl_setopt($ch, CURLOPT_URL, SYNC_API_URL . 'member_query_all_in_one');
 			curl_setopt($ch, CURLOPT_HEADER, FALSE);
@@ -423,8 +422,8 @@ class Sync_data_model extends CI_Model
 			curl_setopt($ch, CURLOPT_POST, TRUE);
 			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,10);
 			curl_setopt($ch, CURLOPT_TIMEOUT, 10); //timeout in seconds
-			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($info_arr));
-			$data = curl_exec($ch);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($parms));
+			$result = curl_exec($ch);
 			curl_close($ch);
 
 		}catch (Exception $e){
@@ -432,31 +431,104 @@ class Sync_data_model extends CI_Model
 			trigger_error(SYNC_DATA_LOG_TITLE . $e->getMessage());
 		}
 		
-		$data_member_arr = json_decode($data, true);
+		// 取得資料
+		$result_arr = json_decode($result, true);
+		$data_member_arr = array();
+		$data_car_arr = array();
 		
-		if (sizeof($data_member_arr) <= 0)
+		if (sizeof($result_arr) <= 0)
 		{
 			trigger_error(SYNC_DATA_LOG_TITLE . '.. empty ..');	// 忽略完全沒會員的情況
 			return 'empty';
 		}
-		else
+		
+		/*
+		// 每一目標場站, 都建立一份會員清單 20171211 upd
+		if(isset($info_arr['current_station_no_arr']))
 		{
-			foreach($data_member_arr as $data)
+			$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $info_arr['current_station_no_arr']);	
+			
+			foreach($station_no_arr as $station_no)
 			{
-				// create member_car
-				$data_car = array
-						(
-							'station_no' => $data['station_no'],
-							'member_no' => $data['member_no'],                    
-							'lpr' => $data['lpr'],                    
-							'lpr_correct' => $data['lpr'],                    
-							'etag' => $data['etag'],                    
-							'start_time' => $data['start_date'],                    
-							'end_time' => $data['end_date']
-						);
-				array_push($data_car_arr, $data_car);
+				foreach($result_arr as $data)
+				{
+					// create member
+					$data_member = array
+					(
+						'member_no' => $data['member_no'],                    
+						'station_no' => $station_no,
+						'member_name' => $data['member_name'],                    
+						'member_attr' => $data['member_attr'],                    
+						'member_type' => $data['member_type'],    
+						'contract_no' => $data['contract_no'],   
+						'mobile_no' => $data['mobile_no'],   
+						'lpr' => $data['lpr'],                   
+						'locked' => $data['locked'],               
+						'etag' => $data['etag'],                   
+						'fee_period' => $data['fee_period'],           							
+						'start_date' => $data['start_date'],                    
+						'end_date' => $data['end_date'],
+						'remarks' => $data['remarks'],
+						'park_time' => $data['park_time'],
+						'valid_time' => $data['valid_time']
+					);
+					array_push($data_member_arr, $data_member);
+						
+					// create member_car
+					$data_car = array
+					(
+						'station_no' => $station_no,
+						'member_no' => $data['member_no'],                    
+						'lpr' => $data['lpr'],                    
+						'lpr_correct' => $data['lpr'],                    
+						'etag' => $data['etag'],                    
+						'start_time' => $data['start_date'],                    
+						'end_time' => $data['end_date']
+					);
+					array_push($data_car_arr, $data_car);
+				}
 			}
 		}
+		*/
+		
+				// 暫時版
+				foreach($result_arr as $data)
+				{
+					// create member
+					$data_member = array
+					(
+						'member_no' => $data['member_no'],                    
+						'station_no' => $data['station_no'], 
+						'member_name' => $data['member_name'],                    
+						'member_attr' => $data['member_attr'],                    
+						'member_type' => $data['member_type'],    
+						'contract_no' => $data['contract_no'],   
+						'mobile_no' => $data['mobile_no'],   
+						'lpr' => $data['lpr'],                   
+						'locked' => $data['locked'],               
+						'etag' => $data['etag'],                   
+						'fee_period' => $data['fee_period'],           							
+						'start_date' => $data['start_date'],                    
+						'end_date' => $data['end_date'],
+						'remarks' => $data['remarks'],
+						'park_time' => $data['park_time'],
+						'valid_time' => $data['valid_time']
+					);
+					array_push($data_member_arr, $data_member);
+						
+					// create member_car
+					$data_car = array
+					(
+						'station_no' => $data['station_no'], 
+						'member_no' => $data['member_no'],                    
+						'lpr' => $data['lpr'],                    
+						'lpr_correct' => $data['lpr'],                    
+						'etag' => $data['etag'],                    
+						'start_time' => $data['start_date'],                    
+						'end_time' => $data['end_date']
+					);
+					array_push($data_car_arr, $data_car);
+				}
 		
 		//trigger_error(SYNC_DATA_LOG_TITLE . '.. test ..' . print_r($data_member_arr, true));
 		
