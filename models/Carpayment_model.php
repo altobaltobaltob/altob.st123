@@ -23,54 +23,14 @@ class Carpayment_model extends CI_Model
     	$this->vars = $vars;
     } 
 	
-	/*
-	// MITAC 通知付款完成
-	public function mitac2payed($parms) 
-	{           
-		$where_arr = array('obj_type' => 1, 'cario_no' => $parms['cario_no'], 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0);
-		$result = $this->db->select("in_time, cario_no, station_no")
-        		->from('cario')	
-                ->where($where_arr)
-                ->limit(1)
-                ->get()
-                ->row_array();
-		
-		$in_time = new DateTime($result['in_time']);
-		$pay_time = new DateTime($parms['pay_time']);
-			
-		$data = array
-			(
-				'out_before_time' =>  date('Y-m-d H:i:s', strtotime("{$parms['pay_time']} + 15 minutes")),
-				'pay_time' => $parms['pay_time'],
-				'pay_type' => $parms['pay_type'],
-				'payed' => 1
-			);
-						
-		// 更新
-		$this->db->where($where_arr)->update('cario', $data); 
-			
-		if (!$this->db->affected_rows())
-		{
-			trigger_error("付款失敗:{$parms['lpr']}|{$data['out_before_time']}");
-			return 'fail';
-		}
-			
-		trigger_error("付款後更新時間:{$parms['lpr']}|{$data['out_before_time']}");
-		
-		// 傳送付款更新記錄
-		$sync_agent = new AltobSyncAgent();
-		$sync_agent->init($result['station_no'], $result['in_time']);
-		$sync_agent->cario_no = $result['cario_no'];		// 進出編號
-		$sync_result = $sync_agent->sync_st_pay($parms['lpr'], $parms['pay_time'], $parms['pay_type'], 
-			date('Y-m-d H:i:s', strtotime("{$parms['pay_time']} + 15 minutes")));
-		trigger_error( "..sync_st_pay.." .  $sync_result);
-		
-		return 'ok';
-	}
-	*/
+	////////////////////////////////////////
+	//
+	// 付款後, 付款資訊建檔
+	//
+	////////////////////////////////////////
        
     // 通知付款完成
-	public function p2payed($parms, $opay=false) 
+	public function p2payed($parms, $opay=false, $finished=false) 
 	{           
 		$result = $this->db->select("in_time, cario_no, station_no")
         		->from('cario')	
@@ -81,7 +41,7 @@ class Carpayment_model extends CI_Model
                 ->row_array();
 		
 		// 查不到車號才找備援碼
-		if(!isset($result['in_time']) && is_numeric($parms['lpr']) && strlen($parms['lpr']) == 6)
+		if(!isset($result['in_time']) || (is_numeric($parms['lpr']) && strlen($parms['lpr']) == 6))
 		{
 			$result = $this->db->select("in_time, cario_no, station_no")
 				->from('cario')	
@@ -108,7 +68,7 @@ class Carpayment_model extends CI_Model
 			{
 				// A. （備援碼）歐付寶
 				$parms2 = array('seqno' => $result['cario_no'], 'amt' => $parms['amt'], 'lpr' => $parms['lpr']);
-				return $this->m2payed($parms2);
+				return $this->m2payed($parms2, $finished);
 
 			}
 			else
@@ -121,7 +81,11 @@ class Carpayment_model extends CI_Model
 						'pay_type' =>  $parms['pay_type'],
 						'payed' => 1
 					);
-							
+				
+				// 是否註記完結
+				if($finished)
+					$data['finished'] = 1;
+				
 				$this->db->where(array('cario_no' => $result['cario_no']))->update('cario', $data); 
 					
 				if (!$this->db->affected_rows())
@@ -139,10 +103,7 @@ class Carpayment_model extends CI_Model
 		if($opay)
 		{
 			$parms2 = array('seqno' => $result['cario_no'], 'amt' => $parms['amt'], 'lpr' => $parms['lpr']);
-			$result = $this->m2payed($parms2);
-			
-			if($result != 'ok')
-				return $result;
+			return $this->m2payed($parms2, $finished);
 		}
 		else
 		{
@@ -160,7 +121,11 @@ class Carpayment_model extends CI_Model
 						'pay_type' =>  $parms['pay_type'],
 						'payed' => 1
 					);
-						
+
+			// 是否註記完結
+			if($finished)
+				$data['finished'] = 1;
+					
 			$this->db
 				->where(array('obj_type' => 1, 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0)) 
 				->update('cario', $data); 
@@ -171,7 +136,7 @@ class Carpayment_model extends CI_Model
 				return 'fail';
 			}
 			
-			trigger_error("付款後更新時間:{$parms['lpr']}|{$data['out_before_time']}");
+			trigger_error("付款後更新時間:{$parms['lpr']}|{$data['out_before_time']}|". print_r($data, true));
 		}
 		
 		// 傳送付款更新記錄
@@ -185,51 +150,12 @@ class Carpayment_model extends CI_Model
 		return 'ok';
     }                                 
     
-	
-	// 繳費機告知已付款 (new 2016/07/15)
-	// http://localhost/carpayment.html/ats2payed/車牌/金額/場站編號/序號/MD5 
-	// md5(車牌.金額.場站編號.序號)
-	public function ats2payed($parms)
-	{            
-    	$order_no = $parms['order_no'];
-		$bill_result = $this->db->from('tx_bill_ats')
-				  ->where(array('order_no' => $order_no, 'status' => 111))
-				  ->limit(1)
-				  ->get()
-				  ->row_array();
-				
-		if(!empty($bill_result)){
-			$member_no = $bill_result['member_no'];
-			$station_no = $bill_result['station_no'];
-			$next_start_time = $bill_result['next_start_time'];
-			$next_end_time = $bill_result['next_end_time'];
-			
-			$data = array(
-				'end_date' => $bill_result['next_end_time'] // TODO: 有被任何一筆序號蓋資料的可能
-			);
-                    
-			$this->db
-				->where(array('member_no' => $member_no, 'station_no' => $station_no))
-				->update('members', $data); 
-			if ($this->db->affected_rows())
-			{
-				trigger_error("繳費機更新會員資料完成,{$parms['lpr']},金額:{$parms['amt']},序號:{$parms['order_no']}");
-				return 'ok';
-			}     
-			else
-			{
-				trigger_error("繳費機更新會員資料失敗,{$parms['lpr']},金額:{$parms['amt']},序號:{$parms['order_no']}");
-				return 'fail';
-			}
-		}		  
-    }
-    
     
     // 行動支付, 手機告知已付款            
     // http://203.75.167.89/carpayment.html/m2payed/ABC1234/120/12112/12345/1f3870be274f6c49b3e31a0c6728957f 
     // http://203.75.167.89/carpayment.html/m2payed/車牌/金額/場站編號/序號/MD5 
     // md5(車牌.金額.場站編號.序號)
-	public function m2payed($parms) 
+	public function m2payed($parms, $finished=false) 
 	{           
         $data = array
             		(
@@ -238,10 +164,13 @@ class Carpayment_model extends CI_Model
                     	'pay_type' => 4, // 歐付寶行動支付
                     	'payed' => 1		
                     );
-                    
-        $this->db
-            ->where(array('cario_no' => $parms['seqno'])) 
-        	->update('cario', $data); 
+			
+		// 是否註記完結
+		if($finished)
+			$data['finished'] = 1;
+		
+        $this->db->where(array('cario_no' => $parms['seqno']))->update('cario', $data); 
+		
         if ($this->db->affected_rows())
         {
           	trigger_error("歐付寶行動支付成功,{$parms['lpr']}金額:{$parms['amt']},序號:{$parms['seqno']}");
@@ -253,21 +182,17 @@ class Carpayment_model extends CI_Model
             return 'fail';
         }
     }    
-         
-    
-     
-    /*
-    月租繳款完成          
-	http://203.75.167.89/carpayment.html/memberpayed/12345/ABC1234/120/12112/1/2016-01-31/1f3870be274f6c49b3e31a0c6728957f 
-	http://203.75.167.89/carpayment.html/memberpayed/會員號碼/車牌/金額/場站編號/月繳/本期到期日/md5 
-    md5(會員號碼.車牌.金額.場站編號.月繳.本期到期日)  
-    
-	public function memberpayed($parms)
-	{           
-        // update members (???)
-    }  
-	*/
+
+
+
+	////////////////////////////////////////
+	//
+	// 付款前, 入場資訊查找
+	//
+	////////////////////////////////////////
+
 	
+    
 	// 模糊比對
 	function getLevenshteinSQLStatement($word, $target)
 	{
