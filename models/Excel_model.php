@@ -571,11 +571,13 @@ class Excel_model extends CI_Model
 		}
 
 		$objPHPExcel->setActiveSheetIndex(0);
+		$col_A0_mapping = array('col_name' => 'A', 'col_title' => '', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_A_mapping = array('col_name' => 'B', 'col_title' => '車號', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_B_mapping = array('col_name' => 'C', 'col_title' => '進場時間(A)', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_C_mapping = array('col_name' => 'E', 'col_title' => '出場時間(B)', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_D_mapping = array('col_name' => 'G', 'col_title' => '停車時間', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 
+		$col_E0_mapping = array('col_name' => 'I', 'col_title' => '', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_E_mapping = array('col_name' => 'J', 'col_title' => '車號', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_F_mapping = array('col_name' => 'K', 'col_title' => '進場時間(A)', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
 		$col_G_mapping = array('col_name' => 'M', 'col_title' => '出場時間(B)', 'col_type' => PHPExcel_Cell_DataType::TYPE_STRING);
@@ -627,6 +629,7 @@ class Excel_model extends CI_Model
 		$count = 0;
 		foreach($results as $rows)
 		{
+			$member_name = $rows['member_name'];
 			$plate_no = $rows['plate_no'];
 			$in_time = $rows['in_time'];
 			$out_time = empty($rows['out_time']) ? '無離場記錄或車辨失敗' : $rows['out_time'];
@@ -635,12 +638,14 @@ class Excel_model extends CI_Model
 			if($count % 2 == 0)
 			{
 				$raw_index += 1;
+				$sheet->setCellValueExplicit($col_A0_mapping['col_name'].$raw_index, $member_name, $col_A0_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_A_mapping['col_name'].$raw_index, $plate_no, $col_A_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_B_mapping['col_name'].$raw_index, $in_time, $col_B_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_C_mapping['col_name'].$raw_index, $out_time, $col_C_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_D_mapping['col_name'].$raw_index, $time_period, $col_D_mapping['col_type']);
 				//$sheet->getStyle("A1:B1")->applyFromArray($style);
 
+				$sheet->getStyle($col_A0_mapping['col_name'].$raw_index)->applyFromArray($basic_style);
 				$sheet->getStyle($col_A_mapping['col_name'].$raw_index)->applyFromArray($lpr_style);
 				$sheet->getStyle($col_B_mapping['col_name'].$raw_index)->applyFromArray($basic_style);
 				$sheet->getStyle($col_C_mapping['col_name'].$raw_index)->applyFromArray($basic_style);
@@ -648,11 +653,13 @@ class Excel_model extends CI_Model
 			}
 			else
 			{
+				$sheet->setCellValueExplicit($col_E0_mapping['col_name'].$raw_index, $member_name, $col_E0_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_E_mapping['col_name'].$raw_index, $plate_no, $col_E_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_F_mapping['col_name'].$raw_index, $in_time, $col_F_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_G_mapping['col_name'].$raw_index, $out_time, $col_G_mapping['col_type']);
 				$sheet->setCellValueExplicit($col_H_mapping['col_name'].$raw_index, $time_period, $col_H_mapping['col_type']);
 
+				$sheet->getStyle($col_E0_mapping['col_name'].$raw_index)->applyFromArray($basic_style);
 				$sheet->getStyle($col_E_mapping['col_name'].$raw_index)->applyFromArray($lpr_style);
 				$sheet->getStyle($col_F_mapping['col_name'].$raw_index)->applyFromArray($basic_style);
 				$sheet->getStyle($col_G_mapping['col_name'].$raw_index)->applyFromArray($basic_style);
