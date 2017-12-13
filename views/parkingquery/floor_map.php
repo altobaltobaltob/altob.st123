@@ -154,7 +154,7 @@ $(document).ready(function()
 		{
 			floorName: floor_name,
 			canvasId: canvas_name,
-			src: 'i3/pics/' + canvas_key + '_map_iii.png'
+			src: '/i3/pics/' + canvas_key + '_map_iii.png'
 		};
 		
 		// 建立地圖 DIV
