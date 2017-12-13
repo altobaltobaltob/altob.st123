@@ -42,12 +42,9 @@
                     <ul class="nav" id="side-menu">
                         <li>
                             <a href="#"><i class="fa fa-user fa-fw"></i>服務項目<span class="fa arrow"></span></a>
-                            <ul class="nav nav-second-level">
+                            <ul class="nav nav-second-level" id="side_menu_box">
 								<li>
                                     <a href="#" onclick="show_item('homepage');">首頁</a>
-                                </li>
-                                <li>
-                                    <a href="#" onclick="show_item('B1');">B1 樓層</a>
                                 </li>
 								<li>
                                     <a href="#" onclick="AltobObject.SosMap.stopAlertSound();">[ 解除警報聲 ]</a>
@@ -55,9 +52,6 @@
 								<li>
                                     <a href="#" onclick="AltobObject.SosMap.cleanMapSOS();">[ 清除位置標示 ]</a>
                                 </li>
-								<!--li>
-                                    <a href="#" onclick="test();">test</a>
-                                </li-->
                             </ul>
                             <!-- /.nav-second-level -->
                         </li>
@@ -100,28 +94,6 @@
             </div>
             <?php /* ----- 首頁(結束) ----- */ ?>
 			
-			<?php /* ----- B1 樓層 ----- */ ?>
-            <div data-items="B1" class="row" style="display:none;">
-                <div class="col-lg-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading"><?php /* 資料顯示區灰色小表頭 */ ?>
-							<span>B1 樓層 - 操作：</span>
-							<button id="zoom0b1canvas">還原</button>
-							<button id="zoomInb1canvas">放大</button>
-							<button id="zoomOutb1canvas">縮小</button>
-                        </div>
-                        <!-- /.panel-heading -->
-                        <div class="panel-body">
-                            <canvas id="b1canvas"></canvas>
-                        </div><?php /* ----- end of panel-body ----- */?>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
-                </div>
-                <!-- /.col-lg-12 -->
-            </div>
-            <?php /* ----- B1 樓層(結束) ----- */ ?>
-			
         <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
@@ -154,6 +126,11 @@
 
 <script>
 
+// 取得樓層資訊
+var FLOOR_MAP_RESULT = {};
+FLOOR_MAP_RESULT.SERVER_URL = '<?=SERVER_URL?>';
+FLOOR_MAP_RESULT.floor_info = JSON.parse('<?= $floor_info; ?>');
+
 <?php /* 顯示指定項目 */ ?>
 function show_item(tags)
 {
@@ -164,22 +141,52 @@ function show_item(tags)
 
 $(document).ready(function()
 {
-	<?php /* 緊急求救平面圖 */ ?>
-	AltobObject.SosMap({
-		getSosUrl: "<?=SERVER_URL?>parkingquery.html/floor_map_read_sos",
-		dataReloadIntervalTimeMillis: 5000,				// 資料, 自動更新週期 ( 5 sec )
-		dataReloadErrorLimit: 5,						// 資料, 連線容錯次數
-		soundInfo: {
-			src: '<?=SERVER_URL?>sos/red_alert.wav'
-		},
-		mapInfo: {
-			map1: {
-				floorName: 'B1',
-				canvasId: 'b1canvas',
-				src: '<?=SERVER_URL?>i3/pics/b1_map_iii.png'
-			}
-		}
-	});
+	var side_menu_box = document.getElementById('side_menu_box');
+	var page_wrapper = document.getElementById('page-wrapper');
+	var sos_map_info = {};
+	for(var idx in FLOOR_MAP_RESULT.floor_info)
+	{
+		// 建立地圖索引資訊
+		var floor_name = FLOOR_MAP_RESULT.floor_info[idx]['floor_name'];
+		var canvas_key = floor_name.toLowerCase();
+		var canvas_name = canvas_key + 'canvas';
+		sos_map_info[floor_name] = 
+		{
+			floorName: floor_name,
+			canvasId: canvas_name,
+			src: 'i3/pics/' + canvas_key + '_map_iii.png'
+		};
+		
+		// 建立地圖 DIV
+		var map_div = document.createElement("div");
+		map_div.setAttribute("data-items", floor_name);
+		map_div.setAttribute("class", 'row');
+		map_div.setAttribute("style", 'display:none;');
+		map_div.innerHTML = [
+			"<div class='col-lg-12'>", 
+				"<div class='panel panel-default'>", 
+					"<div class='panel-heading'><span>", floor_name, " 樓層 - 操作：</span>", 
+						"<button id='zoom0b1canvas'>還原</button>",
+						"<button id='zoomInb1canvas'>放大</button>", 
+						"<button id='zoomOutb1canvas'>縮小</button>",
+					"</div>",
+				"<div class='panel-body'><canvas id='", canvas_name, "'></canvas></div>",
+			"</div></div>"].join('');
+		
+		page_wrapper.appendChild(map_div);
+		
+		// 建立樓層切換
+		$('<li/>', {html: ["<a href='#' onclick='show_item(\"", floor_name, "\");'>", floor_name, " 樓層</a>"].join('')})
+			.appendTo('ul.nav-second-level');
+	}
 	
+	// 動態產生地圖資訊
+	var sos_map_setting = {};
+	sos_map_setting.getSosUrl = FLOOR_MAP_RESULT.SERVER_URL + "parkingquery.html/floor_map_read_sos";
+	sos_map_setting.dataReloadIntervalTimeMillis = 5000;	// 資料, 自動更新週期 ( 5 sec )
+	sos_map_setting.dataReloadErrorLimit = 5;				// 資料, 連線容錯次數
+	sos_map_setting.soundInfo = { src: FLOOR_MAP_RESULT.SERVER_URL + 'sos/red_alert.wav' };
+	sos_map_setting.mapInfo = sos_map_info;
+	AltobObject.SosMap(sos_map_setting);
 });
 </script>

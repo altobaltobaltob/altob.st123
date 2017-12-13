@@ -213,7 +213,12 @@ class Parkingquery extends CI_Controller
 	// [警急求救] 警急求救地圖
 	public function floor_map()
 	{
-		$this->show_page("floor_map");
+		$data = $this->parkingquery_model->check_space(0);
+		
+		if(isset($data['result']['floor']))
+			$page_data['floor_info'] = json_encode($data['result']['floor'], JSON_UNESCAPED_UNICODE);
+		
+		$this->show_page("floor_map", $page_data);
 	}
 	
 	// [警急求救] 警急求救地圖, 讀取緊急求救檔

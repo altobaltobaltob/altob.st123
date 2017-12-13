@@ -64,13 +64,18 @@ class Parkingquery_model extends CI_Model
     // 查詢各樓層剩餘車位
 	public function check_space($seqno, $group_type=1) 
 	{           
-    	$data = array();         
+    	$data = array();  
+		
     	$results = $this->db->select('group_id, availables, tot')
         		->from('pks_groups')
-                ->where('group_type', $group_type)	
+                ->where('group_type', $group_type)
+				->order_by('cast(group_name as unsigned)', 'desc')
                 ->get()  
                 ->result_array();  
-                         
+			
+		//$sql = "SELECT group_id, availables, tot FROM `pks_groups` WHERE pks_groups.group_type = $group_type order by cast(group_name as unsigned) desc"; 
+		//$results = $this->db->query($sql)->row_array(); 
+		
         foreach($results as $idx => $rows)
         {
           	$data['result']['floor'][$idx] = array
