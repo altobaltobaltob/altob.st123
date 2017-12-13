@@ -255,6 +255,12 @@ class Parkingquery extends CI_Controller
         $data = $this->parkingquery_model->send_sos($floor, $x, $y);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
+	
+	// [第三方] 展示頁
+	public function any_map()
+	{
+		$this->show_page("any_map");
+	}
     
 	// 取得 IP
 	function my_ip()
