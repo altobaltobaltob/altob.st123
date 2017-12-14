@@ -44,7 +44,7 @@
                             <a href="#"><i class="fa fa-user fa-fw"></i>服務項目<span class="fa arrow"></span></a>
                             <ul class="nav nav-second-level" id="side_menu_box">
 								<li>
-                                    <a href="#" onclick="show_item('homepage');">首頁</a>
+                                    <a href="#" onclick="show_item('homepage');">使用說明</a>
                                 </li>
 								<li>
                                     <a href="#" onclick="AltobObject.SosMap.stopAlertSound();">[ 解除警報聲 ]</a>
@@ -74,17 +74,30 @@
                 <div class="col-lg-12">
                     <div class="panel panel-default">
                         <div class="panel-heading"><?php /* 資料顯示區灰色小表頭 */ ?>
-                            首頁
+                            注意事項
                         </div>
                         <!-- /.panel-heading -->
                         <div class="panel-body">
-                            <div class="dataTable_wrapper">
+							<!--div class="form-group">
+								<label style="font-size:18px"> [&nbsp;注意事項&nbsp;] </label>
+							</div--> 
+				
+							<ul>
+								<li style='color:blue;'>由場站 APP 於停車場內，開啟藍芽情況下，點撃 APP 中的 sos 觸發緊急求救</li>
+								<li style='color:blue;'>請搭配桌機音響，才能聽到緊報聲</li>
+								<li style='color:red;'>本服務限定 “車辨主機” 開啟</li>
+								<li style='color:red;'>本服務限定 “單一網頁” 開啟</li>
+								<!--li style='color:red;'>2017/12/01 - 限定單一網頁開啟</li-->
+								<!--li style='color:blue;'>2017/12/01 - </li-->
+							</ul>
+							
+                            <!--div class="dataTable_wrapper">
                                 <table class="table table-striped table-bordered table-hover">
                                         <tr>
                                             <td style="text-align:center;"><input type="button" value="B1 樓層" onclick="show_item('B1');" /></td>
                                         </tr>
                                 </table>
-                            </div><?php /* ----- end of dataTable_wrapper ----- */?>
+                            </div--><?php /* ----- end of dataTable_wrapper ----- */?>
                         </div><?php /* ----- end of panel-body ----- */?>
                         <!-- /.panel-body -->
                     </div>
@@ -166,9 +179,9 @@ $(document).ready(function()
 			"<div class='col-lg-12'>", 
 				"<div class='panel panel-default'>", 
 					"<div class='panel-heading'><span>", floor_name, " 樓層 - 操作：</span>", 
-						"<button id='zoom0b1canvas'>還原</button>",
-						"<button id='zoomInb1canvas'>放大</button>", 
-						"<button id='zoomOutb1canvas'>縮小</button>",
+						"<button id='zoom0", canvas_name, "'>還原</button>",
+						"<button id='zoomIn", canvas_name, "'>放大</button>", 
+						"<button id='zoomOut", canvas_name, "'>縮小</button>",
 					"</div>",
 				"<div class='panel-body'><canvas id='", canvas_name, "'></canvas></div>",
 			"</div></div>"].join('');
