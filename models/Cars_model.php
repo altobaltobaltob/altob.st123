@@ -890,7 +890,7 @@ class Cars_model extends CI_Model
 		}
 		
         trigger_error('讀取會員:' . print_r($rows, true) . ", park_time_check: {$park_time_check}");
-		
+		/*
 		// 20171025 強制先不導入會員
 		$rows = array
             (
@@ -903,7 +903,7 @@ class Cars_model extends CI_Model
             	'end_time' => '',
             );
 		trigger_error(__FUNCTION__ . '..force not found..');
-		
+		*/
         return $rows;
     }
 
