@@ -41,7 +41,7 @@ class Carpayment_model extends CI_Model
                 ->row_array();
 		
 		// 查不到車號才找備援碼
-		if(!isset($result['in_time']) || (is_numeric($parms['lpr']) && strlen($parms['lpr']) == 6))
+		if(!isset($result['in_time']) && (is_numeric($parms['lpr']) && strlen($parms['lpr']) == 6))
 		{
 			$result = $this->db->select("in_time, cario_no, station_no")
 				->from('cario')	
