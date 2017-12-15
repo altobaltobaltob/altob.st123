@@ -242,6 +242,7 @@ class Carpayment_model extends CI_Model
 		{
 			return null;
 		}
+		/*
 		// 備援數字使用
 		else if(is_numeric($word) && strlen($word) == 6)
 		{
@@ -256,6 +257,7 @@ class Carpayment_model extends CI_Model
 			$retults = $this->db->query($sql)->result_array();
 			return $retults;
 		}
+		*/
 		$fuzzy_statement = $this->getLevenshteinSQLStatement($word, 'obj_id');
 		//trigger_error("模糊比對 {$word} where: {$fuzzy_statement}");
 		
