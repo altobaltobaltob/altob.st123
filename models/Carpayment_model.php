@@ -32,6 +32,7 @@ class Carpayment_model extends CI_Model
 	// [付款完成] 付款後續流程
 	function payed_finished($cario_no, $lpr, $etag, $in_time)
 	{
+		$LOG_TAG = 'set_payed://';
 		trigger_error(__FUNCTION__ . "|$cario_no 付款完成|$lpr, $etag, $in_time|");
 		
 		$in_time_value = strtotime($in_time);
@@ -43,7 +44,10 @@ class Carpayment_model extends CI_Model
 		// 挑出已付款入場記錄, 入場時間附近 2 秒內, 但尚未結清之入場記錄
 		$sql = "SELECT cario_no, obj_id as lpr, etag, in_time
 				FROM cario
-				WHERE in_time in ('$in_time', '$in_time_1', '$in_time_2', '$in_time_3', '$in_time_4') AND finished = 0 AND err = 0
+				WHERE in_time in ('$in_time', '$in_time_1', '$in_time_2', '$in_time_3', '$in_time_4') 
+					AND cario_no != $cario_no 
+					AND finished = 0 
+					AND err = 0
 				";
 		$in_time_retults = $this->db->query($sql)->result_array();
 		
@@ -59,13 +63,9 @@ class Carpayment_model extends CI_Model
 				
 				if(empty($result_lpr) || $result_lpr == 'NONE')
 				{
-					if(empty($result_etag) || $result_etag == 'NONE')
+					if(strlen($result_etag) > 20 && $result_etag == $etag)
 					{
-						continue;	// 跳過 無車牌 無ETAG	
-					}
-					else if(strlen($result_etag) > 20 && $result_etag == $etag)
-					{
-						trigger_error('set_payed://' . "|時間ETAG相同|$cario_no, $lpr, $etag, $in_time|註記已繳費|$result_cario_no, $result_lpr, $result_etag, $result_in_time..");
+						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|無車牌|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|註記已繳費");
 					}
 				}
 				else
@@ -73,7 +73,14 @@ class Carpayment_model extends CI_Model
 					$levenshtein_value = levenshtein($result_lpr, $lpr);
 					if(	$levenshtein_value == 0 || $levenshtein_value == 1)
 					{
-						trigger_error('set_payed://' . "|時間車牌相近|$cario_no, $lpr, $etag, $in_time|註記已繳費|$result_cario_no, $result_lpr, $result_etag, $result_in_time..");
+						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差0-1碼|$result_cario_no, $result_lpr, $result_etag, $result_in_time|註記已繳費");
+					}
+					else if($levenshtein_value == 2)
+					{
+						if(strlen($result_etag) > 20 && $result_etag == $etag)
+						{
+							trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差2碼|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|註記已繳費");
+						}
 					}
 				}
 			}
@@ -171,7 +178,6 @@ class Carpayment_model extends CI_Model
 		$sync_agent->cario_no = $result['cario_no'];		// 進出編號
 		$sync_result = $sync_agent->sync_st_pay($parms['lpr'], $pay_time, $pay_type, $out_before_time, $finished);
 		trigger_error( "..sync_st_pay.." .  $sync_result);
-		
 		return 'ok';
     }                                 
     
