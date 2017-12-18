@@ -130,7 +130,7 @@ class Carpayment_model extends CI_Model
 		else
 		{
 			// 若間隔小於 15 分鐘, 拿現在時間來當付款時間
-			$pay_time = ((strtotime($result['pay_time']) - strtotime($result['in_time'])) / 60 < 15) ? $this->now_str : $parms['pay_time'];
+			$pay_time = ((strtotime($parms['pay_time']) - strtotime($result['in_time'])) / 60 < 15) ? $this->now_str : $parms['pay_time'];
 		
 			// 限時離場時間
 			$out_before_time = date('Y-m-d H:i:s', strtotime("{$pay_time} + 15 minutes"));
