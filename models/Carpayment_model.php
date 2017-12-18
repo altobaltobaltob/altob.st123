@@ -35,6 +35,8 @@ class Carpayment_model extends CI_Model
 		$LOG_TAG = 'set_payed://';
 		trigger_error(__FUNCTION__ . "|$cario_no 付款完成|$lpr, $etag, $in_time|");
 		
+		$payed_finished_cario_no_arr = array();	// 需處理的進場索引
+		
 		$in_time_value = strtotime($in_time);
 		$in_time_1 = date('Y-m-d H:i:s', $in_time_value + 1);	// +1 sec
 		$in_time_2 = date('Y-m-d H:i:s', $in_time_value - 1);	// -1 sec
@@ -65,7 +67,8 @@ class Carpayment_model extends CI_Model
 				{
 					if(strlen($result_etag) > 20 && $result_etag == $etag)
 					{
-						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|無車牌|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|註記已繳費");
+						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|無車牌|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time");
+						array_push($payed_finished_cario_no_arr, $result_cario_no);
 					}
 				}
 				else
@@ -73,19 +76,40 @@ class Carpayment_model extends CI_Model
 					$levenshtein_value = levenshtein($result_lpr, $lpr);
 					if(	$levenshtein_value == 0 || $levenshtein_value == 1)
 					{
-						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差0-1碼|$result_cario_no, $result_lpr, $result_etag, $result_in_time|註記已繳費");
+						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差0-1碼|$result_cario_no, $result_lpr, $result_etag, $result_in_time");
+						array_push($payed_finished_cario_no_arr, $result_cario_no);
 					}
 					else if($levenshtein_value == 2)
 					{
 						if(strlen($result_etag) > 20 && $result_etag == $etag)
 						{
-							trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差2碼|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|註記已繳費");
+							trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差2碼|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time");
+							array_push($payed_finished_cario_no_arr, $result_cario_no);
 						}
 					}
 				}
 			}
 		}
 		
+		// 執行註記
+		if(!empty($payed_finished_cario_no_arr))
+		{
+			/*
+			$this->db->where_in('cario_no', $payed_finished_cario_no_arr)->update('cario', array('finished' => 1)); 
+			
+			if (!$this->db->affected_rows())
+			{
+				trigger_error($LOG_TAG . "註記失敗|" . $this->db->last_query());
+				return 'fail';
+			}
+			
+			trigger_error($LOG_TAG . "註記成功|" . $this->db->last_query());
+			*/
+			
+			trigger_error(__FUNCTION__ . '..payed_finished_cario_no_arr..' . print_r($payed_finished_cario_no_arr, true));
+		}
+		
+		return 'ok';
 	}
        
     // 通知付款完成
@@ -108,7 +132,7 @@ class Carpayment_model extends CI_Model
 		
 		if($opay)
 		{
-			$pay_time = date('Y-m-d H:i:s');
+			$pay_time = $this->now_str;
 			$out_before_time = date('Y-m-d H:i:s', strtotime(" + 15 minutes"));
 			$pay_type = 4;
 			
