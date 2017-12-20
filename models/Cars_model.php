@@ -25,6 +25,13 @@ class Cars_model extends CI_Model
     	$this->vars = $vars;
     }
 	
+	// 產生回傳訊息
+	function gen_return_msg($msg_id, $open_or_not=false)
+	{
+		$open_id = $open_or_not ? 1 : 0;
+		return $open_id . ',' . str_pad($msg_id, 5, '0', STR_PAD_LEFT);
+	}
+	
 	// 特殊方式進出註記
 	public function ipcam_meta($parms)
 	{
@@ -95,8 +102,7 @@ class Cars_model extends CI_Model
 
         $rows = $this->get_member($parms['lpr']);
 
-        $this->save_db_io($parms, $rows, true);
-        return true;
+        return $this->save_db_io($parms, $rows, true);
     }
 
     // 車輛進出傳入車牌號碼
@@ -124,14 +130,15 @@ class Cars_model extends CI_Model
 
         $rows = $this->get_member($parms['lpr']);
 
-        $this->save_db_io($parms, $rows);
-        return true;
+        return $this->save_db_io($parms, $rows);
     }
 
 
     // 入出口異動cario
     public function save_db_io($parms, $rows, $opendoor=false)
 	{
+		$msg_id = 0;		// 訊息代碼
+		
         if (!empty($rows['lpr_correct'])) $parms['lpr'] = $rows['lpr_correct'];
 		
 		// [START] 擋重覆 20170912 前端不止一筆 opendoor 送來時, 只處理第一個 （限 2 sec 內）
@@ -176,7 +183,10 @@ class Cars_model extends CI_Model
 			if($skip_or_not)
 			{
 				trigger_error(__FUNCTION__ . '..skip..');	
-				return false;
+				
+				// [msg] 0: 不處理
+				$msg_id = 0;
+				return $this->gen_return_msg($msg_id);
 			}
 		}
 		// [END] 擋重覆
@@ -186,23 +196,17 @@ class Cars_model extends CI_Model
         {
 			if($opendoor)
 			{
-				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",1,{$parms['ivsno']}".MQ_ALTOB_MSG_END_TAG);
-				// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},車辨失敗");
+				// [msg] 1: 車辨失敗
+				$msg_id = 1;
+			
+				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']}".MQ_ALTOB_MSG_END_TAG);
 				
-				if(substr($parms['io'], -strlen('O')) === 'O')
-				{
-					// [acer] cmd:102 離場車辨失敗流程 START
-					$this->call_acer('102', array('cario_no' => 0, 'ivs_no' => $parms['ivsno'], 'msg_code' => 1));
-					// [acer] cmd:102 離場車辨失敗流程 END
-				}
+				return $this->gen_return_msg($msg_id);
 			}
 			else
 			{
 				if(substr($parms['io'], -strlen('I')) === 'I')
 				{
-					// [acer] cmd:101 入場車辨失敗流程 START
-					$ticket_no = $this->gen_pass_code();
-					
 					$data = array
 					(
 						'station_no' => $parms['sno'],
@@ -216,42 +220,32 @@ class Cars_model extends CI_Model
 						'in_lane' => $parms['ivsno'],
 						'in_pic_name' => empty($parms['pic_name']) ? '' : $parms['pic_name'],
 						'out_before_time' => date("Y-m-d H:i:s"),
-						'ticket_no' => $ticket_no
+						'ticket_no' => $this->gen_pass_code()
 					);
 					$this->db->insert('cario', $data);
 					trigger_error("[車辨失敗] 新增入場資料:".print_r($parms, true));
-					
-					$acer_parms = array
-					(
-						'cario_no' => $this->db->insert_id(),
-						'in_time' => $this->now_str,
-						'ticket_no' => $ticket_no,
-						'lpr' => '',
-						'ivs_no' => $parms['ivsno']
-					);
-					$this->call_acer('101', $acer_parms);
-					// [acer] cmd:101 入場車辨失敗流程 END
 				}
 			}
-        	return false;
+			
+			return false;
         }
 
         $msg = $rows['member_no'] != 0 ? "{$parms['lpr']}." : $parms['lpr'];	// 月租車號加.符號
 
         // 月租鎖車, 結束
-        //if (($parms['io'] == 'CO' || $parms['io'] == 'MO') && $rows['member_no'] != 0 && !empty($rows['locked']) && $rows['locked'] == 1)
 		if ((substr($parms['io'], -strlen('O')) === 'O') && $rows['member_no'] != 0 && !empty($rows['locked']) && $rows['locked'] == 1)
         {
-        	if($opendoor){
-				//// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}已鎖車!");
-				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",2,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-				// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}禁止離場請後退");
+        	if($opendoor)
+			{
+				// [msg] 2: 已鎖車
+				$msg_id = 2;
 				
-				// [acer] cmd:102 離場車辨已鎖車 START
-				$this->call_acer('102', array('cario_no' => 0, 'ivs_no' => $parms['ivsno'], 'msg_code' => 2));
-				// [acer] cmd:102 離場車辨已鎖車 END
+				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+				
+				return $this->gen_return_msg($msg_id);
 			}
-        	return false;
+			
+			return false;
         }
 
         // 取得會員資訊
@@ -262,40 +256,8 @@ class Cars_model extends CI_Model
           	case 'CI':
 			case 'MI':
 
-				if($opendoor){
-					// 開門
-					/*
-					if ($rows['member_no'] != 0)
-					{
-						$this->member_opendoors($parms);
-					}
-					else
-					{
-						$this->temp_opendoors($parms);
-					}
-					*/
-					
-					// 取得出入口 888 資訊
-					/*
-					$pks_888_arr = $this->get_888_info($parms);
-					if ($pks_888_arr['availables'] == 0)
-					{
-						if ($rows['member_no'] == 0)
-						{
-							// 滿車訊號 (臨停)
-							$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",14,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-							// 開門訊號 (臨停)
-							$this->temp_opendoors($parms);
-							return false;
-						}
-						else
-						{
-							// 滿車訊號 (會員)
-							$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",15,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-						}
-					}
-					*/
-
+				if($opendoor)
+				{
 					// 空車位導引
 					$pks_arr = $this->get_valid_seat();
 					if ($pks_arr['result']['location_no'] != 0)
@@ -319,43 +281,39 @@ class Cars_model extends CI_Model
 						$results = json_decode($jdata, true);
 						if($results['result_code'] == 0)
 						{	
-							// 歐pa, 開門
+							// [msg] 3: 歐pa卡, 開門
+							$msg_id = 3;
+							
+							// 會員開門
 							$this->member_opendoors($parms);
-							
-							// 歐pa, 進場
-							$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",3,{$parms['ivsno']},{$parms['lpr']},{$pks_floors},{$pks_loc_no}".MQ_ALTOB_MSG_END_TAG);	
-							
-							// old msg
-							// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}，歐pa卡用戶您好：請停{$pks_loc_name}{$pks_loc_no}車位");
 						}
 						else
 						{
-							// 臨停車, 開門 (同會員)
+							// [msg] 11: 臨停車, 開門
+							$msg_id = 11;
+							
+							// 臨停開門
 							$this->temp_opendoors($parms);
-							
-							// 臨停車, 進場
-							$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",11,{$parms['ivsno']},{$parms['lpr']},{$pks_floors},{$pks_loc_no}".MQ_ALTOB_MSG_END_TAG);	
-							
-							// old msg
-							// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}請停{$pks_loc_name}{$pks_loc_no}車位");
 						}
 					}
 					else
 					{
-						// 會員, 開門
+						// [msg] 4: 會員, 開門
+						$msg_id = 4;
+							
+						// 會員開門
 						$this->member_opendoors($parms);
-						
-						// 會員, 進場
-						$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",4,{$parms['ivsno']},{$parms['lpr']},{$pks_floors},{$pks_loc_no}".MQ_ALTOB_MSG_END_TAG);
-						
-						// old msg
-						// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}，月租戶請進場：請停{$pks_loc_name}{$pks_loc_no}車位");
 					}
+					
+					// 字幕
+					$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']},{$pks_floors},{$pks_loc_no}".MQ_ALTOB_MSG_END_TAG);	
 
-
-				}else{
-					// 資料流
-
+					// 產生回傳
+					return $this->gen_return_msg($msg_id, true);
+				}
+				else	
+				// 資料流
+				{
 					if ($parms['lpr'] != 'NONE')
 					{
 						$data = array
@@ -374,9 +332,6 @@ class Cars_model extends CI_Model
 						}
 					}
 					
-					// [acer] cmd:101 入場車辨成功流程 START
-					$ticket_no = $this->gen_pass_code();
-					
 					$data = array
 					(
 						'station_no' => $parms['sno'],
@@ -391,21 +346,10 @@ class Cars_model extends CI_Model
 						'in_pic_name' => empty($parms['pic_name']) ? '' : $parms['pic_name'],
 						'out_before_time' => date("Y-m-d H:i:s"),
 						//'out_before_time' => date('Y-m-d H:i:s', strtotime(" + 15 minutes")), // 15分鐘內, 可直接離場 
-						'ticket_no' => $ticket_no
+						'ticket_no' => $this->gen_pass_code()
 					);
 					$this->db->insert('cario', $data);
 					trigger_error("新增入場資料:".print_r($parms, true));
-					
-					$acer_parms = array
-					(
-						'cario_no' => $this->db->insert_id(),
-						'in_time' => $this->now_str,
-						'ticket_no' => $ticket_no,
-						'lpr' => $parms['lpr'],
-						'ivs_no' => $parms['ivsno']
-					);
-					$this->call_acer('101', $acer_parms);
-					// [acer] cmd:101 入場車辨成功流程 END
 					
 					// 傳送進場記錄
 					$sync_agent = new AltobSyncAgent();
@@ -414,9 +358,9 @@ class Cars_model extends CI_Model
 					$sync_agent->member_no = $rows['member_no'];		// 會員編號
 					$sync_result = $sync_agent->sync_st_in($parms);
 					trigger_error( "..sync_st_in.." .  $sync_result);
-					
 				}
 
+				return true;
                 break;
 
             // 出場
@@ -448,15 +392,17 @@ class Cars_model extends CI_Model
 							
 							// 判斷時段租是否超時 (超過 12 小時)
 							if($rows['park_time'] != 'RE' && $co_time_minutes > 720)
-							{
+							{	
 								if($opendoor)
 								{
-									// 時段租超時字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",16,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);	
+									// [msg] 16: 時段租超時字幕
+									$msg_id = 16;
 									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 16));
-									// [acer] cmd:102 離場車辨成功流程 END
+									// 字幕
+									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+									
+									// 產生回傳
+									return $this->gen_return_msg($msg_id);
 								}
 								else
 								{
@@ -479,20 +425,23 @@ class Cars_model extends CI_Model
 									$sync_result = $sync_agent->sync_st_out($parms);
 									trigger_error( "..sync_st_out.." .  $sync_result);											
 								}
-								return false;
+								
+								return true;
 							}
 							
 							if($opendoor)
 							{
+								// [msg] 5: 會員離場開門
+								$msg_id = 5;
+								
 								// 會員開門
 								$this->member_opendoors($parms);
-								// 會員字幕
-								$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",5,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-								// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}謝謝光臨");
 								
-								// [acer] cmd:102 離場車辨成功流程 START
-								$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 5));
-								// [acer] cmd:102 離場車辨成功流程 END
+								// 字幕
+								$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+								
+								// 產生回傳
+								return $this->gen_return_msg($msg_id, true);
 							}
 							else
 							{
@@ -518,7 +467,8 @@ class Cars_model extends CI_Model
 								$sync_result = $sync_agent->sync_st_out($parms);
 								trigger_error( "..sync_st_out.." .  $sync_result);
 							}
-
+							
+							return true;
                             break;
 
                         case strtotime($rows_cario['out_before_time']) >= time():
@@ -528,16 +478,17 @@ class Cars_model extends CI_Model
 								// CO.B.1 臨停車已付款
 								if($opendoor)
 								{
+									// [msg] 6: 臨停車已付款
+									$msg_id = 6;
+								
 									// 臨停開門
 									$this->temp_opendoors($parms);
-									// 臨停字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",6,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-									//// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}付款確認請 離 場謝謝光臨");
-									// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}謝謝光臨");
 									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 6));
-									// [acer] cmd:102 離場車辨成功流程 END
+									// 字幕
+									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+									
+									// 產生回傳
+									return $this->gen_return_msg($msg_id, true);
 								}
 								else
 								{
@@ -562,19 +513,22 @@ class Cars_model extends CI_Model
 									$sync_result = $sync_agent->sync_st_out($parms);
 									trigger_error( "..sync_st_out.." .  $sync_result);
 								}
+								
+								return true;
                             }
 							else
                             {
 								// CO.B.2 臨停車未付款
 								if($opendoor)
 								{
-									// 臨停字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",8,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-									// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}臨時車請投票卡或刷卡出場");
+									// [msg] 8: 臨停車未付款
+									$msg_id = 8;
+								
+									// 字幕
+									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
 									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 8));
-									// [acer] cmd:102 離場車辨成功流程 END
+									// 產生回傳
+									return $this->gen_return_msg($msg_id);
 								}
 								else
 								{
@@ -601,6 +555,8 @@ class Cars_model extends CI_Model
 									$this->call_mitac_pay($parms['lpr'], $parms['ivsno'], $rows_cario);
 									// [mitac] 要求 mitac 扣款 END
 								}
+								
+								return true;
                             }
                             break;
 
@@ -618,13 +574,15 @@ class Cars_model extends CI_Model
 								{
 									if($results['result_code'] == 0)
 									{
+										// [msg] 7: 歐pa卡付款
+										$msg_id = 7;
+										
 										// 臨停開門
 										$this->temp_opendoors($parms);
+										
 										// 歐pa卡, 字幕
-										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",7,{$parms['ivsno']},{$parms['lpr']},{$results['amt']}".MQ_ALTOB_MSG_END_TAG);
-										// // $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}扣{$results['amt']}點請離場");
-										// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}請離場歐pa卡扣:{$results['amt']}點謝謝光臨");
-										// updated 2016/09/01
+										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']},{$results['amt']}".MQ_ALTOB_MSG_END_TAG);
+										
 										$data = array(
 												'out_before_time' =>  date('Y-m-d H:i:s', strtotime(" + 15 minutes")),
 												'pay_time' => $this->now_str,
@@ -633,49 +591,36 @@ class Cars_model extends CI_Model
 											);
 										$this->db->update('cario', $data, array('cario_no' => $rows_cario['cario_no']));	// 記錄出場
 										
-										// [acer] cmd:102 離場車辨成功流程 START
-										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 7));
-										// [acer] cmd:102 離場車辨成功流程 END
+										// 產生回傳
+										return $this->gen_return_msg($msg_id, true);
 									}
 									else if ($results['result_code'] == 12)	// 歐pa卡, 餘額不足
 									{
-										// 臨停字幕
-										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",12,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-										
-										// [acer] cmd:102 離場車辨成功流程 START
-										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 12));
-										// [acer] cmd:102 離場車辨成功流程 END
+										// [msg] 12: 歐pa卡, 餘額不足
+										$msg_id = 12;
 									}
 									else if ($results['result_code'] == 11)	// 歐pa卡, 查無會員
 									{
-										// 臨停字幕
-										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",9,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-										//// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}其它付款方式");
-										// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}臨時車請投票卡或刷卡出場");
-										
-										// [acer] cmd:102 離場車辨成功流程 START
-										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 9));
-										// [acer] cmd:102 離場車辨成功流程 END
+										// [msg] 9: 其它付款方式
+										$msg_id = 9;
 									}
 									else
 									{
-										// 臨停字幕
-										$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",9,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-										
-										// [acer] cmd:102 離場車辨成功流程 START
-										$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 9));
-										// [acer] cmd:102 離場車辨成功流程 END
+										// [msg] 9: 其它付款方式
+										$msg_id = 9;
 									}
 								}
 								else
 								{
-									// 臨停字幕
-									$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",9,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-									
-									// [acer] cmd:102 離場車辨成功流程 START
-									$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 9));
-									// [acer] cmd:102 離場車辨成功流程 END
+									// [msg] 9: 其它付款方式
+									$msg_id = 9;
 								}
+								
+								// 字幕
+								$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+										
+								// 產生回傳
+								return $this->gen_return_msg($msg_id);
 							}
 							else
 							{
@@ -701,6 +646,8 @@ class Cars_model extends CI_Model
 								$this->call_mitac_pay($parms['lpr'], $parms['ivsno'], $rows_cario);
 								// [mitac] 要求 mitac 扣款 END
 							}
+							
+							return true;
                             break;
                     }
 
@@ -710,15 +657,17 @@ class Cars_model extends CI_Model
 					// CO.Z.1 月租車無入場資料
 					if($opendoor)
 					{
+						// [msg] 10: 月租車無入場資料
+						$msg_id = 10;
+									
 						// 會員開門
 						$this->member_opendoors($parms);
-						// 會員字幕
-						$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",10,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
-						// $this->mq_send(MQ_TOPIC_SUBTEXT, "{$parms['ivsno']},{$msg}月租戶請離場謝謝光臨");
 						
-						// [acer] cmd:102 離場車辨成功流程 START
-						$this->call_acer('102', array('cario_no' => $rows_cario['cario_no'], 'ivs_no' => $parms['ivsno'], 'msg_code' => 10));
-						// [acer] cmd:102 離場車辨成功流程 END
+						// 會員字幕
+						$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+						
+						// 產生回傳
+						return $this->gen_return_msg($msg_id, true);
 					}
 					else
 					{
@@ -732,17 +681,21 @@ class Cars_model extends CI_Model
 						$sync_result = $sync_agent->sync_st_out($parms);
 						trigger_error( "..sync_st_out.." .  $sync_result);
 					}
+					
+					return true;
 				}
 				else
 				{
 					// CO.Z.Z 無入場資料
 					if($opendoor)
 					{
-						$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",13,{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+						// [msg] 13: 無入場資料
+						$msg_id = 13;
 						
-						// [acer] cmd:102 離場車辨成功流程 START
-						$this->call_acer('102', array('cario_no' => 0, 'ivs_no' => $parms['ivsno'], 'msg_code' => 13));
-						// [acer] cmd:102 離場車辨成功流程 END
+						$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_MSG.",{$msg_id},{$parms['ivsno']},{$parms['lpr']}".MQ_ALTOB_MSG_END_TAG);
+						
+						// 產生回傳
+						return $this->gen_return_msg($msg_id);
 					}
 					else
 					{
@@ -754,6 +707,8 @@ class Cars_model extends CI_Model
 						$sync_result = $sync_agent->sync_st_out($parms);
 						trigger_error( "..sync_st_out.." .  $sync_result);
 					}
+					
+					return true;
 				}
             	break;
         }
