@@ -468,10 +468,7 @@ $(document).ready(function()
 
   		}
 
-  	}).addTyping({
-      showTyping: true,
-      delay: 250
-    });
+  	});
 
 	// 定時自動更新頁面
 	(function autoReloadPage(){
@@ -502,5 +499,7 @@ $(document).ready(function()
 		setTimeout(refresh, pageCheckReloadTimeMillis);
 	})();
 
+	// 自動鎖定輸入欄位
+	$( "#fuzzy_input" ).focus();
 });
 </script>
