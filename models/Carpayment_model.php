@@ -33,9 +33,10 @@ class Carpayment_model extends CI_Model
 	function payed_finished($cario_no, $lpr, $etag, $in_time)
 	{
 		$LOG_TAG = 'set_payed://';
+		$LOG_TAG_FATAL = 'set_payed_fatal://';
 		trigger_error(__FUNCTION__ . "|$cario_no 付款完成|$lpr, $etag, $in_time|");
 		
-		$payed_finished_cario_no_arr = array();	// 需處理的進場索引
+		$trim_finished_cario_no_arr = array();	// 需處理的進場索引
 		
 		$in_time_value = strtotime($in_time);
 		$in_time_1 = date('Y-m-d H:i:s', $in_time_value + 1);	// +1 sec
@@ -49,6 +50,7 @@ class Carpayment_model extends CI_Model
 				WHERE in_time in ('$in_time', '$in_time_1', '$in_time_2', '$in_time_3', '$in_time_4') 
 					AND cario_no != $cario_no 
 					AND finished = 0 
+					AND payed = 0 
 					AND err = 0
 				";
 		$in_time_retults = $this->db->query($sql)->result_array();
@@ -67,8 +69,8 @@ class Carpayment_model extends CI_Model
 				{
 					if(strlen($result_etag) > 20 && $result_etag == $etag)
 					{
-						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|無車牌|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time");
-						array_push($payed_finished_cario_no_arr, $result_cario_no);
+						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|無車牌|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|待註銷|skip");
+						//array_push($trim_finished_cario_no_arr, $result_cario_no);
 					}
 				}
 				else
@@ -76,37 +78,42 @@ class Carpayment_model extends CI_Model
 					$levenshtein_value = levenshtein($result_lpr, $lpr);
 					if(	$levenshtein_value == 0 || $levenshtein_value == 1)
 					{
-						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差0-1碼|$result_cario_no, $result_lpr, $result_etag, $result_in_time");
-						array_push($payed_finished_cario_no_arr, $result_cario_no);
+						trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差0-1碼|$result_cario_no, $result_lpr, $result_etag, $result_in_time|待註銷");
+						array_push($trim_finished_cario_no_arr, $result_cario_no);
 					}
 					else if($levenshtein_value == 2)
 					{
 						if(strlen($result_etag) > 20 && $result_etag == $etag)
 						{
-							trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差2碼|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time");
-							array_push($payed_finished_cario_no_arr, $result_cario_no);
+							trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌 差2碼|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|待註銷|skip");
+							//array_push($trim_finished_cario_no_arr, $result_cario_no);
+						}
+					}
+					else
+					{
+						if(strlen($result_etag) > 20 && $result_etag == $etag)
+						{
+							trigger_error($LOG_TAG . "$cario_no, $lpr, $etag, $in_time|車牌不合|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|??");
+							trigger_error($LOG_TAG_FATAL . "$cario_no, $lpr, $etag, $in_time|車牌不合|ETAG吻合|$result_cario_no, $result_lpr, $result_etag, $result_in_time|??");
 						}
 					}
 				}
 			}
 		}
 		
-		// 執行註記
-		if(!empty($payed_finished_cario_no_arr))
+		// 執行註銷
+		if(!empty($trim_finished_cario_no_arr))
 		{
-			/*
-			$this->db->where_in('cario_no', $payed_finished_cario_no_arr)->update('cario', array('finished' => 1)); 
+			$this->db->where_in('cario_no', $trim_finished_cario_no_arr)->update('cario', array('err' => 2))->limit(5);
 			
 			if (!$this->db->affected_rows())
 			{
-				trigger_error($LOG_TAG . "註記失敗|" . $this->db->last_query());
+				trigger_error($LOG_TAG . "註銷失敗|" . $this->db->last_query());
 				return 'fail';
 			}
 			
-			trigger_error($LOG_TAG . "註記成功|" . $this->db->last_query());
-			*/
-			
-			trigger_error(__FUNCTION__ . '..payed_finished_cario_no_arr..' . print_r($payed_finished_cario_no_arr, true));
+			trigger_error($LOG_TAG . "註銷成功|" . $this->db->last_query());
+			trigger_error(__FUNCTION__ . '..trim_finished_cario_no_arr..' . print_r($trim_finished_cario_no_arr, true));
 		}
 		
 		return 'ok';
