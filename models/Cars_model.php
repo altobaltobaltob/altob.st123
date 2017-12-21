@@ -372,7 +372,7 @@ class Cars_model extends CI_Model
         					->select('cario_no, payed, in_time, pay_time, out_before_time')
         					->from('cario')
                 			//->where(array('in_out' => 'CI', 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0))
-							        ->where(array('obj_id' => $parms['lpr'], 'err' => 0))
+								->where(array('obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0))
                   			->order_by('cario_no', 'desc')
                   			->limit(1)
                 			->get()
