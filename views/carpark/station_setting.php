@@ -101,6 +101,10 @@ function do_reload_station_setting(reload=0)
 				$("#ss_station_service_url").val(station_service_url);
 				$("#ss_station_info").val(station_info);
 				alertify_success('完成。。');	
+				
+				// 設定暫存檔
+				AltobObject.station_no = jdata['station_no'];
+				AltobObject.station_name = jdata['station_name'];
             }
         }); 
 }

@@ -608,6 +608,7 @@
                     <div class="panel panel-default">
                         <div class="panel-heading">
                             進出場現況表
+							&nbsp;<button id='create_cario_btn' class="btn btn-large btn-success pull-right" style="font-size:16px;" onclick='show_create_cario_dialog();'>手動建檔</button>
                         </div>
                         <!-- /.panel-heading -->
                         <div class="panel-body">
@@ -908,6 +909,13 @@
     <!--script src="<?=BOOTSTRAPS?>bower_components/morrisjs/morris.min.js"></script-->
     <!--script src="<?=BOOTSTRAPS?>js/morris-data.js"></script-->
 	
+	<!-- virtual keyboard -->
+  	<link href="<?=WEB_LIB?>virtual-keyboard/css/jquery-ui.min.css" rel="stylesheet">
+	<link href="<?=WEB_LIB?>virtual-keyboard/css/keyboard.css" rel="stylesheet">
+  	<script src="<?=WEB_LIB?>virtual-keyboard/js/jquery-ui.min.js"></script>
+  	<script src="<?=WEB_LIB?>virtual-keyboard/js/jquery.keyboard.js"></script>
+  	<script src="<?=WEB_LIB?>virtual-keyboard/js/jquery.keyboard.extension-caret.js"></script>
+	
 	<!-- alertify -->
 	<link href="<?=WEB_LIB?>css/alertify.core.css" rel="stylesheet">
 	<link href="<?=WEB_LIB?>css/alertify.bootstrap.css" rel="stylesheet">
@@ -921,6 +929,16 @@
 </html>   
 
 <script>
+var AltobObject = AltobObject || {}; // ALTOB 專用命名空間
+/*
+	客製化參數
+*/
+(function(){
+	AltobObject.xvars = {};
+	AltobObject.station_no = '<?= $station_no; ?>';
+	AltobObject.station_name = '<?= $station_name; ?>';
+})();
+
 var timer;
 var timeout_sec = 10;<?php /* 每多少秒檢查一次空車位 */ ?> 
 
@@ -939,6 +957,15 @@ function alertify_success($msg)
 {
 	alertify.set({delay : 2000});
 	alertify.success($msg);
+}
+function alertify_msg($msg)
+{
+	alertify.set({ labels: {
+		ok     : "確定"
+	} });
+	alertify.alert($msg, function (e){
+		// do nothing
+	});
 }
 
 <?php /* 連接mqtt Queue */ ?>
@@ -1662,6 +1689,73 @@ $(document).ready(function()
     
     	return true;
 	}); 
+	
+	
+	// Custom: altob-keyaction
+  	// ********************
+	$.extend($.keyboard.keyaction, {
+		accept : function(base) {
+			base.close(true); // same as base.accept();
+			
+			// do something
+			
+			return false;     // return false prevents further processing
+		}
+	});
+	
+	// Custom: altob-input
+  	// ********************
+  	$('#cms_lpr').keyboard({
+
+		usePreview: false,
+	
+		css : {
+		  // input & preview styles
+		  input          : 'ui-widget-content ui-corner-all',
+		  // keyboard container - this wraps the preview area (if `usePreview` is true) and all keys
+		  container      : 'ui-widget-content ui-widget ui-corner-all ui-helper-clearfix',
+		  // default keyboard button state, these are applied to all keys, the remaining css options are toggled as needed
+		  buttonDefault  : 'ui-state-default ui-corner-all',
+		  // hovered button
+		  buttonHover    : 'ui-state-hover',
+		  // Action keys (e.g. Accept, Cancel, Tab, etc); this replaces the "actionClass" option
+		  buttonAction   : 'ui-state-active',
+		  // used when disabling the decimal button {dec} when a decimal exists in the input area
+		  buttonDisabled : 'ui-state-disabled'
+		},
+		
+		position : {
+		  // null (attach to input/textarea) or a jQuery object (attach elsewhere)
+		  of : null,
+		  my : 'center top',
+		  at : 'center top',
+		  // at2 is used when "usePreview" is false (centers keyboard at the bottom
+		  // of the input/textarea)
+		  at2: 'center bottom',
+		  collision: 'flipfit flipfit'
+		},
+
+  		display: {
+  			'bksp'    : '\u2190',
+  			'default' : 'ABC',
+  			'accept'  : '確 認'
+  		},
+
+  		layout: 'custom',
+
+  		customLayout: {
+
+  			'default': [
+  				'1 2 3 4 5 6 7 8 9 0 {bksp}',
+  				'Q W E R T Y U I O P',
+  				'A S D F G H J K L',
+  				'Z X C V B N M {accept}'
+  			]
+
+  		}
+
+  	});
+	
 }); 
 
 function opendoors(lane_no)
@@ -1784,6 +1878,171 @@ function logout(event)
 }
 
 
-
-
 </script>
+
+
+
+
+
+
+<!-- ----- 進出資料建立小框 ----- -->
+<div class="modal fade" id="show_create_cario_dialog">
+<div class="modal-dialog" style="width:70%;height:100%">
+<div class="modal-content" style="width:70%;height:100%">
+<div class="modal-header"><h3>手動建立資料</h3></div>
+<div class="modal-body" style="max-height: calc(100vh - 210px); overflow-y: auto">
+<form id="show_create_cario_form" class="center-block">    
+<div class="main">
+<div class="dataTable_wrapper">
+<table class="table table-striped table-bordered table-hover" style="font-size:28px;">
+<tbody>
+
+<tr class="form-group">
+	<td style="text-align:right;">場站</td>
+	<td style="text-align:left;" id="create_cario_station_name"></td>
+</tr>
+<tr class="form-group">
+	<td style="text-align:right;">場站編號</td>
+	<td style="text-align:left;" id="create_cario_station_no"></td>
+</tr> 
+<!--tr class="form-group">
+<td style="text-align:right;">車道</td>
+	<td style="text-align:left;">
+		<div id="cms_ivsno_box"/>
+	</td>
+</tr-->
+<tr class="form-group">
+<td style="text-align:right;">進出場</td>
+	<td style="text-align:left;">
+		<div id="cms_io_box"/>
+	</td>
+</tr>
+<tr class="form-group">
+<td style="text-align:right;">車種</td>
+	<td style="text-align:left;">
+		<div id="cms_ctype_box"/>
+	</td>
+</tr>
+<tr class="form-group">
+	<td style="text-align:right;">車牌號碼</td>
+	<td style="text-align:left;">
+		<input id="cms_lpr" name="lpr" class="form-control" placeholder="限英數字碼" style="text-transform:uppercase;font-size:48px;height:56px;" />
+	</td>
+</tr> 
+
+
+</tbody>
+</table>                    
+<button type="button" class="btn btn-large btn-success pull-right" style="font-size:22px;"   onclick="do_create_cario();">確認送出</button>
+&nbsp;&nbsp;
+<button type="button" class="btn btn-large btn-cancel" onclick="$('#show_create_cario_dialog').modal('hide');">取消</button>
+</div><!-- ----- end of dataTable_wrapper ----- -->  
+</div><!-- ----- end of main ----- -->
+</form>
+</div><!-- end of modal-body --> 
+</div><!-- end of modal-content --> 
+</div><!-- end of modal-dialog -->
+</div><!-- end of modal show -->
+<!-- ----- 進出資料建立小框(結束) ----- -->  
+
+
+
+<script>  
+
+// 顯示新增車辨記錄
+function show_create_cario_dialog()
+{				
+	if(typeof AltobObject.station_no == 'undefined' || AltobObject.station_no == '' || AltobObject.station_no == 0)
+	{
+		alertify_msg("尚未設定場站。。");
+		return false;
+	}
+	
+	if(typeof AltobObject.xvars == 'undefined')
+	{
+		alertify_msg("未知的錯誤。。");
+		return false;
+	}
+
+	AltobObject.xvars["create_cario_info"] = {};
+	AltobObject.xvars["create_cario_info"]["station_no"] = AltobObject.station_no;
+	AltobObject.xvars["create_cario_info"]["cmd"] = 1;
+
+	$("#create_cario_station_name").text(AltobObject.station_name);
+	$("#create_cario_station_no").text(AltobObject.station_no);
+	
+	// 進出場
+	var cms_io_content = [];
+	cms_io_content = cms_io_content.concat(["<select id='sel_cms_io_", AltobObject.station_no, "'><option value='choice'>請選擇</option>"]);
+	cms_io_content = cms_io_content.concat(["<option value='I'>進場</option>"]);
+	cms_io_content = cms_io_content.concat(["<option value='O'>離場</option>"]);
+	$("#cms_io_box").html('').html(cms_io_content.join(''));
+	
+	// 車種
+	var cms_ctype_content = [];
+	cms_ctype_content = cms_ctype_content.concat(["<select id='sel_cms_ctype_", AltobObject.station_no, "'><option value='choice'>請選擇</option>"]);
+	cms_ctype_content = cms_ctype_content.concat(["<option value='C'>汽車</option>"]);
+	cms_ctype_content = cms_ctype_content.concat(["<option value='M'>機車</option>"]);
+	$("#cms_ctype_box").html('').html(cms_ctype_content.join(''));
+	
+	// 車號
+	$("#cms_lpr").val('');
+	
+	$("#show_create_cario_dialog").modal({backdrop:false,keyboard:false});
+}
+	
+// 完成
+function do_create_cario()
+{
+	if (!confirm("確認資料無誤並送出 ?")) return false; 
+	
+	var station_no = AltobObject.xvars["create_cario_info"]["station_no"];
+	var cmd = AltobObject.xvars["create_cario_info"]["cmd"];
+	var io = $("#sel_cms_io_" + station_no).val();
+	var ctype = $("#sel_cms_ctype_" + station_no).val();
+	var lpr = $("#cms_lpr").val();
+	
+	if(!(station_no && lpr))
+	{
+		alertify_msg("資料不足。。");
+		return false;
+	}
+	
+	$.ajax
+    ({
+        url: "<?=APP_URL?>local_lprio", 
+        dataType: "text",
+        type:"post",
+        data:
+        {
+			"cmd":cmd,
+        	"station_no":station_no,
+			"ivsno": 0,	//  都帶 0
+			"io":io,
+			"ctype":ctype,
+			"lpr":lpr
+        },
+		error:function(xhr, ajaxOptions, thrownError)
+        {
+			alertify_msg(xhr.responseText);
+        	console.log("error:"+xhr.responseText+"|"+ajaxOptions+"|"+thrownError);  
+        },
+        success:function(jdata)
+        {                                                                            
+			if (jdata == "ok")	
+            {                              
+				alertify_msg("操作完成。。");
+				
+				show_item('cario_list', 'cario_list');	// 更新
+            }
+            else
+            {
+				alertify_msg("操作失敗。。" + jdata);
+            }
+        }
+    });
+    
+    delete AltobObject.xvars["create_cario_info"];
+    $('#show_create_cario_dialog').modal('hide'); 
+}
+</script>  

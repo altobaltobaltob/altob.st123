@@ -149,6 +149,63 @@ class Carpark extends CC_Controller
 		return md5($parms['sno']. 'a' . date('dmh') . 'l' . $parms['ts'] . 't'. $parms['lpr']. 'o'. $parms['ivsno'] . 'b'. $parms['io'] . $function_name);
 	}
 	
+	// [local] 新增車辨記錄
+	public function local_lprio()
+	{
+		$LOG_FLAG = 'cms://';
+		
+		$sno = $this->input->post('station_no', true);
+		$ivsno = $this->input->post('ivsno', true);
+		$io = $this->input->post('io', true);
+		$ctype = $this->input->post('ctype', true);
+		$lpr = $this->input->post('lpr', true);
+		$cmd = $this->input->post('cmd', true);
+		
+		// 判斷 cmd 正確性
+		if($cmd == 1)
+		{
+			// 新增車辨記錄
+		}
+		else
+		{
+			echo 'unknown_cmd';
+			exit;
+		}
+		
+		// 摸擬連結參數
+		$parms = array();
+		$parms['sno'] = $sno;
+		$parms['ivsno'] = $ivsno;
+		$parms['io'] = $ctype.$io;
+		$parms['type'] = 'C';
+		$parms['lpr'] = preg_replace('/[^0-9A-Z]/', '', strtoupper(urldecode($lpr)));
+		$parms['color'] = 'NONE';
+		$parms['sq'] = 0;
+		$parms['ts'] = date('YmdHis');
+		$parms['sq2'] = 0;
+		$parms['etag'] = 'NONE';
+		$parms['ant'] = 1;
+		
+		// 補充
+		$parms['obj_type'] = 1;
+        $parms['curr_time_str'] = date('Y-m-d H:i:s');
+        $parms['pic_name'] = '';
+		
+		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
+		
+		// 判斷 io 正確性
+		if(!in_array($parms['io'], array('CI', 'CO', 'MI', 'MO')))
+		{
+			echo 'unknown_io';
+			exit;
+		}
+		
+		// 執行
+		$this->app_model('cars')->lprio($parms);
+		echo 'ok';
+		exit;
+	}
+	
 	// [remote] 新增車辨記錄
 	public function remote_lprio()
 	{
@@ -507,6 +564,14 @@ class Carpark extends CC_Controller
 			$session_data = $this->session->userdata('logged_in');
 			$data['username'] = $session_data['username'];
 			$data['type'] = $session_data['type'];
+			
+			// 取得場站設定
+			$station_setting = $this->data_model()->station_setting_query();
+			if(isset($station_setting['station_no']))
+			{
+				$data['station_no'] = $station_setting['station_no'];	
+				$data['station_name'] = $station_setting['station_name'];	
+			}			
 			
 			if($data['type'] == 'admin')
 			{
