@@ -565,19 +565,32 @@
                                         <td style="text-align:left;"><input type="text" id="lpr_query" name="lpr_query" class="form-control" style="text-transform:uppercase" placeholder="請至少輸入四碼" /></td>
                                     	<td style="text-align:left;"><input type="button" name="lpr_query" value="查詢" onclick="carin_lpr_query();" /></td>
                                     </tr>
-                                    <tr> 
+                                    <!--tr> 
                                     	<td style="text-align:right;">時間</td>   
                                         <td style="text-align:left;">
                                         	<input type="datetime-local" id="carin_time_query" />&nbsp;&nbsp;前後範圍
                                         	<select name="minutes_range" id="minutes_range">
-                                            <option value="10" selected>10分鐘</option>
-                                            <option value="15">15分鐘</option>
-                                            <option value="20">20分鐘</option>
-                                            <option value="30">30分鐘</option>
+												<option value="10" selected>10分鐘</option>
+												<option value="15">15分鐘</option>
+												<option value="20">20分鐘</option>
+												<option value="30">30分鐘</option>
                                             </select>
                                         </td>
                                     	<td style="text-align:left;"><input type="button" value="查詢" onclick="carin_time_query();" /></td>
-                                    </tr>   
+                                    </tr-->   
+									<tr> 
+                                    	<td style="text-align:right;">入場<br/>車辨失敗</td>   
+                                        <td style="text-align:left;">
+                                        	<input type="datetime-local" id="carin_none_query"/>&nbsp;&nbsp;前後範圍
+                                        	<select name="hours_range" id="hours_range">
+												<option value="1" selected>1小時</option>
+												<option value="3">3小時</option>
+												<option value="12">12小時</option>
+												<option value="24">24小時</option>
+                                            </select>
+                                        </td>
+                                    	<td style="text-align:left;"><input type="button" value="查詢" onclick="carin_none_query();" /></td>
+                                    </tr> 
                                 </table>
                             </div><?php /* ----- end of dataTable_wrapper ----- */?> 
                             <!--div id="carin_query_list" class="dataTable_wrapper" style="display:none;"-->
@@ -1238,7 +1251,13 @@ function show_item(tags, type)
                     {                                         
                     	$("#cario_"+idx+">[data-tag=io_name]").text(jdata[idx]['io_name']);
                     	$("#cario_"+idx+">[data-tag=io_time]").html(jdata[idx]['io_time']);
-                    	$("#cario_"+idx+">[data-tag=lpr]").text(jdata[idx]['lpr']);
+						
+						// 車辨失敗可新增車號
+						if(jdata[idx]['lpr'] == 'NONE')
+							$("#cario_"+idx+">[data-tag=lpr]").html('<span style="font-size:16px;">車辨失敗</span><br/><button class="btn-default" onclick="show_upd_cario_dialog(' + jdata[idx]['cario_no'] + ', \'' + jdata[idx]['lpr'] + '\');">輸入車號</button>');
+						else
+							$("#cario_"+idx+">[data-tag=lpr]").html('<span style="font-size:28px;">' + jdata[idx]['lpr'] +'</span>');
+						
                     	$("#cario_"+idx+">[data-tag=etag]").text(jdata[idx]['etag']);
                     	$("#cario_"+idx+">[data-tag=owner]").text(jdata[idx]['owner']);
                     	$("#cario_"+idx+">[data-tag=pic_name]>img").attr("src",jdata[idx]['pic_name']);   
@@ -1428,6 +1447,73 @@ function carin_time_query()
             }
                         
             $("#carin_query_tbody").html(str);
+                        
+            <?php /* mouse滑過時放大照片 */ ?>
+			$('.carin_resize').hover
+    		(         
+    			function()
+        		{       
+        			pos_x = $(this).position().left;
+        			pos_y = $(this).position().top;
+            
+            		$("#works").css
+            		({	"position":"absolute",
+            			"top":pos_y,
+                		"left":pos_x
+            		}).html("<img src='"+$(this).attr("src")+"' width='300px' height='140px' />").show();
+    			},
+    			function()
+        		{                                 
+					$("#works").hide();        
+    			}
+			);
+            
+            $("#carin_query_list").show();
+        }
+    });
+}  
+
+// 車辨失敗查詢
+function carin_none_query()
+{                      
+	var time_query = $("#carin_none_query").val();
+	if (time_query == "")
+    {
+     	alert("時間欄位必填");
+        return false;
+    }
+    
+    $.ajax
+    ({
+    	url: "<?=APP_URL?>carin_none_query/",
+        type: "post", 
+        dataType:"json",
+        data: {"time_query":time_query, "hours_range":$("#hours_range").val()},
+        success: function(jdata)
+        {       
+        	var content_arr = [];              
+        	for(idx in jdata)
+            {           
+            	content_arr = content_arr.concat([
+									"<tr><td style='text-align:center;vertical-align:middle;'>", jdata[idx]['io_name'], 
+									"</td><td style='text-align:center;vertical-align:middle;'>", jdata[idx]['io_time'],
+									"</td><td style='text-align:center;vertical-align:middle;'>"
+							]);
+									
+				// 車辨失敗可新增車號
+				content_arr = content_arr.concat([
+								'<span style="font-size:16px;">車辨失敗</span><br/><button class="btn-default" onclick="show_upd_cario_dialog(', jdata[idx]['cario_no'], ', \'', jdata[idx]['lpr'], '\');">輸入車號</button>'
+							]);
+									
+				content_arr = content_arr.concat([
+									"</td><td style='text-align:center;vertical-align:middle;'>", jdata[idx]['etag'], 
+									"</td><td style='text-align:center;vertical-align:middle;'>", jdata[idx]['owner'], 
+									"</td><td style='text-align:center;vertical-align:middle;'>", 
+										"<img height='57' width='150' class='carin_resize' src='", jdata[idx]['pic_name'], "' /></td></tr>"
+							]);
+            }
+                        
+            $("#carin_query_tbody").html(content_arr.join(''));
                         
             <?php /* mouse滑過時放大照片 */ ?>
 			$('.carin_resize').hover
@@ -1705,7 +1791,7 @@ $(document).ready(function()
 	
 	// Custom: altob-input
   	// ********************
-  	$('#cms_lpr').keyboard({
+  	$('#upd_cario_lpr, #cms_lpr').keyboard({
 
 		usePreview: false,
 	
@@ -1877,7 +1963,6 @@ function logout(event)
 	}); 
 }
 
-
 </script>
 
 
@@ -1966,7 +2051,6 @@ function show_create_cario_dialog()
 
 	AltobObject.xvars["create_cario_info"] = {};
 	AltobObject.xvars["create_cario_info"]["station_no"] = AltobObject.station_no;
-	AltobObject.xvars["create_cario_info"]["cmd"] = 1;
 
 	$("#create_cario_station_name").text(AltobObject.station_name);
 	$("#create_cario_station_no").text(AltobObject.station_no);
@@ -1997,7 +2081,6 @@ function do_create_cario()
 	if (!confirm("確認資料無誤並送出 ?")) return false; 
 	
 	var station_no = AltobObject.xvars["create_cario_info"]["station_no"];
-	var cmd = AltobObject.xvars["create_cario_info"]["cmd"];
 	var io = $("#sel_cms_io_" + station_no).val();
 	var ctype = $("#sel_cms_ctype_" + station_no).val();
 	var lpr = $("#cms_lpr").val();
@@ -2015,7 +2098,7 @@ function do_create_cario()
         type:"post",
         data:
         {
-			"cmd":cmd,
+			"cmd": 1,
         	"station_no":station_no,
 			"ivsno": 0,	//  都帶 0
 			"io":io,
@@ -2046,3 +2129,151 @@ function do_create_cario()
     $('#show_create_cario_dialog').modal('hide'); 
 }
 </script>  
+
+
+
+<!-- ----- 進出資料修改小框 ----- -->
+<div class="modal fade" id="show_upd_cario_dialog">
+<div class="modal-dialog" style="width:70%;height:100%">
+<div class="modal-content" style="width:70%;height:100%">
+<div class="modal-header"><h3>手動建立資料</h3></div>
+<div class="modal-body" style="max-height: calc(100vh - 210px); overflow-y: auto">
+<form id="show_upd_cario_form" class="center-block">    
+<div class="main">
+<div class="dataTable_wrapper">
+<table class="table table-striped table-bordered table-hover" style="font-size:28px;">
+<tbody>
+
+<tr class="form-group">
+	<td style="text-align:right;">場站</td>
+	<td style="text-align:left;" id="upd_cario_station_name"></td>
+</tr>
+<tr class="form-group">
+	<td style="text-align:right;">場站編號</td>
+	<td style="text-align:left;" id="upd_cario_station_no"></td>
+</tr> 
+<tr class="form-group">
+	<td style="text-align:right;">車牌號碼</td>
+	<td style="text-align:left;">
+		<input id="upd_cario_lpr" name="lpr" class="form-control" placeholder="限英數字碼" style="text-transform:uppercase;font-size:48px;height:56px;" />
+	</td>
+</tr> 
+
+
+</tbody>
+</table>                    
+<button type="button" class="btn btn-large btn-success pull-right" style="font-size:22px;"   onclick="do_upd_cario();">確認送出</button>
+&nbsp;&nbsp;
+<button type="button" class="btn btn-large btn-cancel" onclick="$('#show_upd_cario_dialog').modal('hide');">取消</button>
+</div><!-- ----- end of dataTable_wrapper ----- -->  
+</div><!-- ----- end of main ----- -->
+</form>
+</div><!-- end of modal-body --> 
+</div><!-- end of modal-content --> 
+</div><!-- end of modal-dialog -->
+</div><!-- end of modal show -->
+<!-- ----- 進出資料修改小框(結束) ----- -->  
+
+
+
+<script>  
+
+// 顯示新增車辨記錄
+function show_upd_cario_dialog(cario_no, lpr)
+{				
+	if(typeof AltobObject.station_no == 'undefined' || AltobObject.station_no == '' || AltobObject.station_no == 0)
+	{
+		alertify_msg("尚未設定場站。。");
+		return false;
+	}
+	
+	if(typeof AltobObject.xvars == 'undefined')
+	{
+		alertify_msg("未知的錯誤。。");
+		return false;
+	}
+
+	AltobObject.xvars["upd_cario_info"] = {};
+	AltobObject.xvars["upd_cario_info"]["station_no"] = AltobObject.station_no;
+	AltobObject.xvars["upd_cario_info"]["cario_no"] = cario_no;
+	AltobObject.xvars["upd_cario_info"]["old_lpr"] = lpr;
+
+	$("#upd_cario_station_name").text(AltobObject.station_name);
+	$("#upd_cario_station_no").text(AltobObject.station_no);
+	
+	// 車號
+	if(lpr == 'NONE')
+		$("#upd_cario_lpr").val('');
+	else
+		$("#upd_cario_lpr").val(lpr);
+	
+	$("#show_upd_cario_dialog").modal({backdrop:false,keyboard:false});
+}
+	
+// 完成
+function do_upd_cario()
+{
+	if (!confirm("確認資料無誤並送出 ?")) return false; 
+	
+	var station_no = AltobObject.xvars["upd_cario_info"]["station_no"];
+	var cario_no = AltobObject.xvars["upd_cario_info"]["cario_no"];
+	var old_lpr = AltobObject.xvars["upd_cario_info"]["old_lpr"];
+	var new_lpr = $("#upd_cario_lpr").val();
+	
+	if(!(station_no && cario_no))
+	{
+		alertify_msg("資料不足。。");
+		return false;
+	}
+	
+	$.ajax
+    ({
+        url: "<?=APP_URL?>local_lprio", 
+        dataType: "text",
+        type:"post",
+        data:
+        {
+			"cmd": 2,
+        	"station_no":station_no,
+			"cario_no":cario_no,
+			"old_lpr":old_lpr,
+			"new_lpr":new_lpr
+        },
+		error:function(xhr, ajaxOptions, thrownError)
+        {
+			alertify_msg(xhr.responseText);
+        	console.log("error:"+xhr.responseText+"|"+ajaxOptions+"|"+thrownError);  
+        },
+        success:function(jdata)
+        {                                                                            
+			if (jdata == "ok")	
+            {                              
+				alertify_msg("操作完成。。");
+				
+				show_item('cario_list', 'cario_list');	// 更新
+            }
+            else
+            {
+				alertify_msg("操作失敗。。" + jdata);
+            }
+        }
+    });
+    
+    delete AltobObject.xvars["upd_cario_info"];
+    $('#show_upd_cario_dialog').modal('hide'); 
+}
+</script> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+

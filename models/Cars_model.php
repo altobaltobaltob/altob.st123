@@ -32,6 +32,32 @@ class Cars_model extends CI_Model
 		return $open_id . ',' . str_pad($msg_id, 5, '0', STR_PAD_LEFT);
 	}
 	
+	// 修改車辨記錄
+	public function upd_cario($parms)
+	{
+		trigger_error(__FUNCTION__ . '|修改車辨記錄:' . print_r($parms, true));
+		
+		// 更新入場記錄
+		$data = array('obj_id' => $parms['lpr']);
+		$this->db->update('cario', $data, array('station_no' => $parms['sno'], 'cario_no' => $parms['cno'], 'obj_id' => $parms['old_lpr'], 'err' => 0, 'finished' => 0));
+		if ($this->db->affected_rows() <= 0)
+		{
+			trigger_error(__FUNCTION__ . '|fail|' . $this->db->last_query());
+			return 'fail';
+		}
+		
+		/* 20171226 車辨失敗暫不同步
+		
+		// 傳送更新記錄
+		$sync_agent = new AltobSyncAgent();
+		$sync_agent->init($parms['sno'], $this->now_str);
+		$sync_agent->cario_no = $parms['cno'];		// 進出編號
+		$sync_result = $sync_agent->sync_st_io_meta($data);
+		trigger_error( __FUNCTION__ . "..sync_st_io_meta|{$sync_agent->cario_no}|$sync_result|..". print_r($data, true));
+		*/
+		return 'ok';
+	}
+	
 	// 特殊方式進出註記
 	public function ipcam_meta($parms)
 	{
@@ -75,7 +101,7 @@ class Cars_model extends CI_Model
 			$sync_agent->init($parms['sno'], $this->now_str);
 			$sync_agent->cario_no = $rows_cario['cario_no'];		// 進出編號
 			$sync_result = $sync_agent->sync_st_io_meta($data);
-			trigger_error( __FUNCTION__ . "..sync_st_io_meta.." .  $sync_result);
+			trigger_error( __FUNCTION__ . "..sync_st_io_meta|{$sync_agent->cario_no}|$sync_result|..". print_r($data, true));
 		}
 	}
 

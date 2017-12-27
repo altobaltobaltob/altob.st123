@@ -140,11 +140,13 @@ class Carpark_model extends CI_Model
             
 	        $pic_name = str_replace('.jpg', '', empty($rows['out_pic_name']) ? $rows['in_pic_name'] : $rows['out_pic_name']);
             $arr = explode('-', $pic_name);
-            $pic_path = APP_URL.'pics/'.substr($arr[7], 0, 8).'/'.$pic_name;
+			$pic_path = isset($arr[7]) ? APP_URL.'pics/'.substr($arr[7], 0, 8).'/'.$pic_name : '';
               
             $data[$idx] = array
             (
               	// 'io_name' => $io_name[$rows['in_out']],
+				'cario_no' => $rows['cario_no'],
+				
               	'io_name' => $lane_no,
               	'lpr' => $rows['lpr'],
               	// 'etag' => $rows['etag'],
@@ -298,6 +300,57 @@ class Carpark_model extends CI_Model
               	'lpr' => $rows['lpr'],
               	'etag' => $rows['etag'],
               	'owner' => empty($rows['owner']) ? '' : $rows['owner'],
+              	'io_time' => $io_time,
+              	'pic_name' => $pic_path
+            );            
+        }
+            
+        return $data; 
+    }    
+	
+	
+	// 車辨失敗查詢
+	public function carin_none_query($time_query, $hours_range) 
+	{            
+    	$curr_time = date('Y-m-d H:i:s');
+		
+    	$start_time = date('Y-m-d H:i:s', strtotime("{$time_query} - {$hours_range} hours"));
+    	$end_time = date('Y-m-d H:i:s', strtotime("{$time_query} + {$hours_range} hours"));
+        
+    	$data_cario = $this->db
+        ->select('c.cario_no, c.in_out, in_lane, out_lane, c.in_time, c.out_time, c.minutes, c.obj_id as lpr, c.etag, c.in_pic_name, c.out_pic_name')
+        ->from('cario c')
+        ->where(array(	'c.in_time >=' => $start_time, 
+						'c.in_time <=' => $end_time, 
+						'c.obj_id' => 'NONE', 
+						'c.err' => 0, 
+						'c.finished' => 0
+			)) 
+        ->order_by('c.in_time', 'desc')
+        ->get()
+        ->result_array();  
+        
+        $data = array();
+        $idx = 0;   
+        foreach($data_cario as $rows)
+        {                                
+        	++$rows['in_lane'];
+        	++$rows['out_lane'];    
+            
+			$lane_no = empty($rows['out_time']) ? "入{$rows['in_lane']}" : "入{$rows['in_lane']} -> 出{$rows['out_lane']}"; 
+            $io_time = empty($rows['out_time']) ? $rows['in_time'] : "{$rows['in_time']}(入)<br>{$rows['out_time']}(出)<br>{$rows['minutes']}分(停留時間)";                    
+            
+	        $pic_name = str_replace('.jpg', '', empty($rows['out_pic_name']) ? $rows['in_pic_name'] : $rows['out_pic_name']);
+            $arr = explode('-', $pic_name);
+            $pic_path = APP_URL.'pics/'.substr($arr[7], 0, 8).'/'.$pic_name;
+            
+            $data[$idx++] = array
+            (
+				'cario_no' => $rows['cario_no'],
+              	'io_name' => $lane_no,
+              	'lpr' => $rows['lpr'],
+              	'etag' => $rows['etag'],
+              	'owner' => '',
               	'io_time' => $io_time,
               	'pic_name' => $pic_path
             );            

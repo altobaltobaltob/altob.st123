@@ -14,8 +14,7 @@ class Cars extends CC_Controller
 			'ipcam', 'ipcam_meta', 
 			'check_lpr_etag', 
 			'opendoor',
-			'temp_opendoors', 'member_opendoors',
-			'post_ipcam'
+			'temp_opendoors', 'member_opendoors'
 		)))
 		{
 			ob_end_clean();
@@ -23,6 +22,19 @@ class Cars extends CC_Controller
 			ob_start();
 			
 			echo 'ok';
+			
+			header('Connection: close');
+			header('Content-Length: ' . ob_get_length());
+			ob_end_flush();
+			flush();
+		}
+		else if(in_array($this->router->fetch_method(), array('post_ipcam')))
+		{
+			ob_end_clean();
+			ignore_user_abort();
+			ob_start();
+			
+			echo 'OK';	// 痾
 			
 			header('Connection: close');
 			header('Content-Length: ' . ob_get_length());
@@ -65,11 +77,11 @@ class Cars extends CC_Controller
         $pic_folder = CAR_PIC.$this->vars['date_num'].'/';		// 今日資料夾名(yyyymmdd)
         if (!file_exists($pic_folder))	mkdir($pic_folder);		// 如果資料夾不存在, 建立日期資料夾
         
-        $config['upload_path'] = $pic_folder;
-        // $config['allowed_types'] = 'gif|jpg|png';                 
-        $config['allowed_types'] = '*';                 
-        // ex. lpr_1625AB_I_1_152_C_1_2015080526.jpg -> car_交易序號_進出_順序_車號_時間.jpg
+        $config['upload_path'] = $pic_folder;           
+        $config['allowed_types'] = 'jpg';                 
         $config['file_name'] = "lpr-{$parms['lpr']}-{$parms['io']}-{$parms['ivsno']}-{$parms['sq']}-C-1-{$this->vars['time_num']}.jpg"; 
+		
+		trigger_error(__FUNCTION__ . '..' . print_r($_FILES, true));
 		
 		if (!isset($_FILES['cars'])) 
 		{

@@ -149,61 +149,94 @@ class Carpark extends CC_Controller
 		return md5($parms['sno']. 'a' . date('dmh') . 'l' . $parms['ts'] . 't'. $parms['lpr']. 'o'. $parms['ivsno'] . 'b'. $parms['io'] . $function_name);
 	}
 	
-	// [local] 新增車辨記錄
+	// [local] 手動車辨記錄
 	public function local_lprio()
 	{
-		$LOG_FLAG = 'cms://';
+		$LOG_FLAG = 'local-cms://';
 		
-		$sno = $this->input->post('station_no', true);
-		$ivsno = $this->input->post('ivsno', true);
-		$io = $this->input->post('io', true);
-		$ctype = $this->input->post('ctype', true);
-		$lpr = $this->input->post('lpr', true);
+		// 判斷 cmd
 		$cmd = $this->input->post('cmd', true);
 		
-		// 判斷 cmd 正確性
+		// 新增車辨記錄
 		if($cmd == 1)
 		{
-			// 新增車辨記錄
+			$sno = $this->input->post('station_no', true);
+			$ivsno = $this->input->post('ivsno', true);
+			$io = $this->input->post('io', true);
+			$ctype = $this->input->post('ctype', true);
+			$lpr = $this->input->post('lpr', true);
+			
+			$parms = array();
+			$parms['sno'] = preg_replace('/[^0-9]/', '', strtoupper(urldecode($sno)));
+			$parms['ivsno'] = $ivsno;
+			$parms['io'] = $ctype.$io;
+			$parms['type'] = 'C';
+			$parms['lpr'] = strtoupper(urldecode($lpr));
+			$parms['color'] = 'NONE';
+			$parms['sq'] = 0;
+			$parms['ts'] = date('YmdHis');
+			$parms['sq2'] = 0;
+			$parms['etag'] = 'NONE';
+			$parms['ant'] = 1;
+			// 補充
+			$parms['obj_type'] = 1;
+			$parms['curr_time_str'] = date('Y-m-d H:i:s');
+			$parms['pic_name'] = '';
+			
+			trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
+			
+			// 判斷 io 正確性
+			if(!in_array($parms['io'], array('CI', 'CO', 'MI', 'MO')))
+			{
+				echo 'unknown_io';
+				exit;
+			}
+			
+			// 執行
+			$this->app_model('cars')->lprio($parms);
+			echo 'ok';
+			exit;
 		}
+		
+		// 修改車辨記錄
+		else if($cmd == 2)
+		{
+			$station_no = $this->input->post('station_no', true);
+			$cario_no = $this->input->post('cario_no', true);
+			$old_lpr = $this->input->post('old_lpr', true);
+			$new_lpr = $this->input->post('new_lpr', true);
+			
+			$parms = array();
+			$parms['sno'] = preg_replace('/[^0-9]/', '', strtoupper(urldecode($station_no)));
+			$parms['cno'] = preg_replace('/[^0-9]/', '', strtoupper(urldecode($cario_no)));
+			$parms['old_lpr'] = strtoupper(urldecode($old_lpr));
+			$parms['lpr'] = strtoupper(urldecode($new_lpr));
+			
+			trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
+			
+			// 判斷 lpr 正確性
+			if($parms['new_lpr'] == $parms['old_lpr'])
+			{
+				echo 'no_changed';
+				exit;
+			}
+			else if($parms['lpr'] == 'NONE')
+			{
+				echo 'lpr_none';
+				exit;
+			}
+
+			// 執行
+			echo $this->app_model('cars')->upd_cario($parms);
+			exit;
+		}
+		
+		// 未知
 		else
 		{
 			echo 'unknown_cmd';
 			exit;
 		}
-		
-		// 摸擬連結參數
-		$parms = array();
-		$parms['sno'] = $sno;
-		$parms['ivsno'] = $ivsno;
-		$parms['io'] = $ctype.$io;
-		$parms['type'] = 'C';
-		$parms['lpr'] = preg_replace('/[^0-9A-Z]/', '', strtoupper(urldecode($lpr)));
-		$parms['color'] = 'NONE';
-		$parms['sq'] = 0;
-		$parms['ts'] = date('YmdHis');
-		$parms['sq2'] = 0;
-		$parms['etag'] = 'NONE';
-		$parms['ant'] = 1;
-		
-		// 補充
-		$parms['obj_type'] = 1;
-        $parms['curr_time_str'] = date('Y-m-d H:i:s');
-        $parms['pic_name'] = '';
-		
-		trigger_error($LOG_FLAG . __FUNCTION__ . '..' . print_r($parms, true));
-		
-		// 判斷 io 正確性
-		if(!in_array($parms['io'], array('CI', 'CO', 'MI', 'MO')))
-		{
-			echo 'unknown_io';
-			exit;
-		}
-		
-		// 執行
-		$this->app_model('cars')->lprio($parms);
-		echo 'ok';
-		exit;
 	}
 	
 	// [remote] 新增車辨記錄
@@ -921,7 +954,17 @@ class Carpark extends CC_Controller
         
         $data = $this->app_model()->carin_time_query($time_query, $minutes_range); 
         echo json_encode($data);                       
-	}   
+	}
+
+	// 車辨失敗查詢
+    public function carin_none_query()
+	{              
+    	$time_query = $this->input->post('time_query', true);
+    	$hours_range = $this->input->post('hours_range', true);
+        
+        $data = $this->app_model()->carin_none_query($time_query, $hours_range); 
+        echo json_encode($data);                          
+	}  	
 	
 	// 查詢行動支付記錄
     public function tx_bill_query()
