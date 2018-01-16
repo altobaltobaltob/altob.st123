@@ -544,6 +544,8 @@ class Carpayment_model extends CI_Model
 	{          
 		$fuzzy_result = $this->q_fuzzy_pks($lpr);
 		
+		$data_count = 0;
+		
 		if(!empty($fuzzy_result) && count($fuzzy_result) > 0)
 		{
 			$data = array();
@@ -562,7 +564,11 @@ class Carpayment_model extends CI_Model
 					$tmp_data = $this->gen_query_data($result_lpr);			// 模糊搜尋
 				}
 				
-				if($tmp_data['in_time'] == '')
+				if($tmp_data['ticket'] == 1)
+				{
+					trigger_error("月租車, 直接乎略這筆[{$result_lpr}]:".print_r($rows, true));
+				}
+				else if($tmp_data['in_time'] == '')
 				{
 					// 若查無入場時間, 直接乎略這筆
 					trigger_error("查無入場時間, 直接乎略這筆[{$result_lpr}]:".print_r($rows, true));
@@ -570,12 +576,15 @@ class Carpayment_model extends CI_Model
 				else
 				{
 					$data['results'][$idx] = $tmp_data;	
+					$data_count++;
 				}
 				
 			}
-			$data['count'] = count($fuzzy_result);
+			$data['count'] = $data_count;
 		}
-		else
+		
+		// 查無資料
+		if($data_count == 0)
 		{
 			$data_0 = array();
 			$data_0['lpr'] = str_pad($lpr, 7, ' ', STR_PAD_RIGHT);
