@@ -28,10 +28,8 @@ function post_data($url, $data)
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL, $url);
 		curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data)); 
-		curl_setopt($ch, CURLOPT_HEADER, FALSE);
 		curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
-		curl_setopt($ch, CURLOPT_POST, FALSE);
+		curl_setopt($ch, CURLOPT_POST, TRUE);
 		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,10);
 		curl_setopt($ch, CURLOPT_TIMEOUT, 10); //timeout in seconds
 		$output = curl_exec($ch);
