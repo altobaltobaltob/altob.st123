@@ -141,7 +141,49 @@ class Parkingquery_model extends CI_Model
 			$data['result_code'] = 'FAIL';
         }      
         return $data; 
-    }          
+    }  
+
+	// 停車位置查詢 (2)
+	public function check_location2($lpr) 
+	{                 
+    	$lpr = strtoupper($lpr);	// 一律轉大寫
+    	$data = array();         
+    	$rows = $this->db->select('pksno, pic_name, in_time, station_no')
+        		->from('pks')
+                ->where('lpr', $lpr)	
+        		->limit(1)
+                ->get()  
+                ->row_array();  
+				
+		$sql = "SELECT 	pks.pksno, pks.pic_name, pks.in_time, pks.station_no, 
+						pks_groups.group_name
+				FROM pks 
+				LEFT JOIN pks_group_member ON (pks_group_member.pksno = pks.pksno)
+				LEFT JOIN pks_groups ON (pks_groups.group_id = pks_group_member.group_id)
+					WHERE pks.lpr = '{$lpr}'
+					AND pks_groups.group_type = 1
+				LIMIT 1"; 
+		
+		$rows = $this->db->query($sql)->row_array(); 
+				
+        if (!empty($rows['pksno']))
+        {
+        	$data['num'] = $lpr;
+        	$data['location_no'] = "{$rows['pksno']}";
+			$data['station_no'] = "{$rows['station_no']}";
+			$data['station_name'] = $rows['group_name'];
+			$data['image_url2'] = "http://{$rows['station_no']}.altob.com.tw/pkspic/{$rows['pic_name']}";
+			$data['in_time'] = $rows['in_time'];
+        	$data['result_code'] = 'OK';  
+        }    
+        else	// 查無資料, 啟用模糊比對
+        {     
+			$data['num'] = $lpr;
+			$data['location_no'] = '0';
+			$data['result_code'] = 'FAIL';
+        }      
+        return $data; 
+    } 	
 	
 	// 空車位導引
 	public function get_valid_seat($pksno, $group_type=1)

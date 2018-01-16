@@ -159,7 +159,15 @@ class Parkingquery extends CI_Controller
     	$lpr = $this->uri->segment(3);
         $data = $this->parkingquery_model->check_location($lpr);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
-    }      
+    }   
+
+	// 停車位置查詢 (2)
+	public function check_location2() 
+	{       
+    	$lpr = $this->uri->segment(3);
+        $data = $this->parkingquery_model->check_location2($lpr);
+        echo json_encode($data, JSON_UNESCAPED_UNICODE); 
+    }	
     
     // 空車位導引
 	public function get_valid_seat() 
