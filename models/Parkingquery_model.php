@@ -186,10 +186,12 @@ class Parkingquery_model extends CI_Model
     } 	
 	
 	// 空車位導引
-	public function get_valid_seat($pksno, $group_type=1)
+	public function get_valid_seat($pksno, $group_type=1, $group_id='')
 	{           
     	$data = array();   
         $this->db->trans_start(); 
+		
+		$where_group_id = empty($group_id) ? '' : " and pks_group_member.group_id = '{$group_id}' ";	// 指定車位群組
 		
 		$sql = '';
         if ($pksno > 0)	// 限制從某一個車位開始指派車位
@@ -218,6 +220,7 @@ class Parkingquery_model extends CI_Model
 						where 
 							pks.status = 'VA' and prioritys != 0 and (pks.book_time is null or pks.book_time <= now()) 
 							and pks_groups.group_type = {$group_type}
+							{$where_group_id}
 						order by v asc limit 1 for update;
 						";
 			}
@@ -233,6 +236,7 @@ class Parkingquery_model extends CI_Model
 							AND pks.prioritys != 0 
 							AND (pks.book_time IS NULL OR pks.book_time <= now()) 
 							AND pks_groups.group_type = {$group_type}
+							{$where_group_id}
 						ORDER BY pks.prioritys ASC LIMIT 1 FOR UPDATE;"; 
 						
 		trigger_error(__FUNCTION__ . "..sql: {$sql}..");

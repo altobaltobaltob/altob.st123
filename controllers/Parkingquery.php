@@ -172,24 +172,39 @@ class Parkingquery extends CI_Controller
     // 空車位導引
 	public function get_valid_seat() 
 	{                                          
-    	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
-        $data = $this->parkingquery_model->get_valid_seat($pksno);
+    	$pksno = $this->uri->segment(3, 0);		// 從某一個車位開始, 若無則設0 
+		$group_id = $this->uri->segment(4, 0);	// 指定樓層群組
+		
+		if(empty($group_id))
+			$group_id = '';
+		
+        $data = $this->parkingquery_model->get_valid_seat($pksno, 1, $group_id);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }    
 	
 	// 空車位導引 (身障)
 	public function get_valid_seat2() 
 	{                                          
-    	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
-        $data = $this->parkingquery_model->get_valid_seat($pksno, 3);
+    	$pksno = $this->uri->segment(3, 0);		// 從某一個車位開始, 若無則設0 
+		$group_id = $this->uri->segment(4, 0);	// 指定樓層群組
+		
+		if(empty($group_id))
+			$group_id = '';
+		
+        $data = $this->parkingquery_model->get_valid_seat($pksno, 3, $group_id);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
     
 	// 空車位導引 (婦友)
 	public function get_valid_seat3() 
 	{                                          
-    	$pksno = $this->uri->segment(3, 0);	// 從某一個車位開始, 若無則設0 
-        $data = $this->parkingquery_model->get_valid_seat($pksno, 4);
+    	$pksno = $this->uri->segment(3, 0);		// 從某一個車位開始, 若無則設0 
+		$group_id = $this->uri->segment(4, 0);	// 指定樓層群組
+		
+		if(empty($group_id))
+			$group_id = '';
+		
+        $data = $this->parkingquery_model->get_valid_seat($pksno, 4, $group_id);
         echo json_encode($data, JSON_UNESCAPED_UNICODE); 
     }
     
