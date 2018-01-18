@@ -167,56 +167,57 @@ class Cars_model extends CI_Model
 		
         if (!empty($rows['lpr_correct'])) $parms['lpr'] = $rows['lpr_correct'];
 		
-		// [START] 擋重覆 20170912 前端不止一筆 opendoor 送來時, 只處理第一個 （限 2 sec 內）
-		if($opendoor)
+		// [START] 擋重覆
+		$skip_or_not = false;
+		$new_cars_tmp = array
+		(
+			'timestamp' => time(),
+			'sno_io' => $parms['sno'] . $parms['io'],
+			'lpr' => $parms['lpr'],
+			'opendoor' => $opendoor									// 20180118 開門與否訊號都過濾
+		);
+		$cars_tmp_arr = array();
+		$cars_tmp_log_arr = $this->vars['mcache']->get(CARS_TMP_LOG);
+		if(!empty($cars_tmp_log_arr))
 		{
-			$skip_or_not = false;
-			$new_cars_tmp = array
-			(
-				'timestamp' => time(),
-				'sno_io' => $parms['sno'] . $parms['io'],
-				'lpr' => $parms['lpr']
-			);
-			$cars_tmp_arr = array();
-			$cars_tmp_log_arr = $this->vars['mcache']->get(CARS_TMP_LOG);
-			if(!empty($cars_tmp_log_arr))
+			foreach($cars_tmp_log_arr as $tmp)
 			{
-				foreach($cars_tmp_log_arr as $tmp)
+				if(isset($tmp['timestamp']) && $tmp['timestamp'] > time() - 3) // 時限內才判斷 (3 sec)
 				{
-					if(isset($tmp['timestamp']) && $tmp['timestamp'] > time() - 2) // 時限內才判斷
-					{
-						array_push($cars_tmp_arr, $tmp);
-					}
+					array_push($cars_tmp_arr, $tmp);
 				}
 			}
+		}
 			
-			// 判斷是否繼續
-			foreach($cars_tmp_arr as $tmp)
+		// 判斷是否繼續
+		foreach($cars_tmp_arr as $tmp)
+		{
+			if(	$new_cars_tmp['lpr'] == $tmp['lpr'] && 
+				$new_cars_tmp['sno_io'] == $tmp['sno_io'] &&
+				$new_cars_tmp['opendoor'] == $tmp['opendoor']		// 20180118 開門與否訊號都過濾
+			)
 			{
-				if(	$new_cars_tmp['lpr'] == $tmp['lpr'] && 
-					$new_cars_tmp['sno_io'] == $tmp['sno_io'])
-				{
-					$skip_or_not = true;
-				}
+				$skip_or_not = true;
 			}
+		}
 			
-			// 更新
-			array_push($cars_tmp_arr, $new_cars_tmp);
-			$this->vars['mcache']->set(CARS_TMP_LOG, $cars_tmp_arr);
-			trigger_error(__FUNCTION__ . '..new ' . CARS_TMP_LOG . " |s:{$skip_or_not}|" . print_r($cars_tmp_arr, true));	
+		// 更新 CARS_TMP_LOG
+		array_push($cars_tmp_arr, $new_cars_tmp);
+		$this->vars['mcache']->set(CARS_TMP_LOG, $cars_tmp_arr);
+		trigger_error(__FUNCTION__ . '..new ' . CARS_TMP_LOG . " |s:{$skip_or_not}|" . print_r($cars_tmp_arr, true));	
 			
-			// 跳過
-			if($skip_or_not)
-			{
-				trigger_error(__FUNCTION__ . '..skip..');	
-				
-				// [msg] 0: 不處理
-				$msg_id = 0;
-				return $this->gen_return_msg($msg_id);
-			}
+		// 跳過
+		if($skip_or_not)
+		{
+			trigger_error(__FUNCTION__ . '..skip..');	
+			
+			// [msg] 0: 不處理
+			$msg_id = 0;
+			return $this->gen_return_msg($msg_id);
 		}
 		// [END] 擋重覆
 
+		
 		// 車辨失敗, 結束
         if ($parms['lpr'] == 'NONE')
         {
