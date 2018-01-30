@@ -511,7 +511,8 @@ class Carpayment_model extends CI_Model
                 
         $result = $this->db->select("in_time, date_format(pay_time, '%Y/%m/%d %T') as pay_time, in_pic_name, member_no, in_lane, in_out, station_no")
         		->from('cario')	
-                ->where(array('obj_type' => 1, 'obj_id' => $lpr, 'finished' => 0, 'err' => 0))
+                //->where(array('obj_type' => 1, 'obj_id' => $lpr, 'finished' => 0, 'err' => 0))
+				->where(array('obj_type' => 1, 'obj_id' => $lpr, 'finished' => 0, 'err' => 0, 'ticket_type' => 0))	// 20180130 刷卡進的跳過
                 ->order_by('cario_no', 'desc') 
                 ->limit(1)
                 ->get()
