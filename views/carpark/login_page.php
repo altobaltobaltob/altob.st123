@@ -77,6 +77,19 @@
 					</div>
 					<!-- /.col-lg-6 -->
 				</div>
+				
+				<br/>
+				
+				<hr>
+				
+				<div class="form-group">
+					<label style="font-size:18px"> [&nbsp;說明&nbsp;] </label>
+				</div> 
+				
+				<ul>
+					<li>[選單] 現場管理 〉會員現況：現場主機會員資料 （每日更新）</li>
+					<li>[選單] 場站設定 〉重新載入：可立即更新場站設定與 “會員資料”</li>
+				</ul>
                      
         </div>
         <!-- /#page-wrapper -->
