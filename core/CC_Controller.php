@@ -176,4 +176,22 @@ class CC_Controller extends CI_Controller
 		$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
 		return $station_no_arr[0];
 	}
+	
+	// 取得免費時間
+	public function get_free_time()
+	{
+		$station_setting = $this->data_model()->station_setting_query();
+		
+		if(!isset($station_setting['settings']))
+			return 0;
+		
+		$station_no_arr = explode(SYNC_DELIMITER_ST_NO, $station_setting['station_no']);
+		$station_no = $station_no_arr[0];
+		
+		if(!isset($station_setting['settings'][$station_no]['free_time']))
+			return 0;
+		
+		return $station_setting['settings'][$station_no]['free_time'];
+	}
+	
 }

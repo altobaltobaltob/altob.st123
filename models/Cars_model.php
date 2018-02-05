@@ -363,6 +363,12 @@ class Cars_model extends CI_Model
 						}
 					}
 					
+					// 15分鐘內, 可直接離場 (刷進刷出需過卡修正)
+					if(isset($parms['free_time']) && $parms['free_time'] > 0)
+						$out_before_time_value = date('Y-m-d H:i:s', strtotime(" + {$parms['free_time']} minutes"));
+					else
+						$out_before_time_value = date("Y-m-d H:i:s");
+					
 					$data = array
 					(
 						'station_no' => $parms['sno'],
@@ -375,8 +381,7 @@ class Cars_model extends CI_Model
 						'in_time' => $this->now_str,
 						'in_lane' => $parms['ivsno'],
 						'in_pic_name' => empty($parms['pic_name']) ? '' : $parms['pic_name'],
-						//'out_before_time' => date("Y-m-d H:i:s"),
-						'out_before_time' => date('Y-m-d H:i:s', strtotime(" + 15 minutes")), // 15分鐘內, 可直接離場 (刷進刷出需過卡修正)
+						'out_before_time' => $out_before_time_value,
 						'ticket_no' => $this->gen_pass_code()
 					);
 					$this->db->insert('cario', $data);

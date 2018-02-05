@@ -107,6 +107,9 @@ class Cars extends CC_Controller
         $parms['obj_type'] = 1;	// 車牌類  
         $parms['curr_time_str'] = $this->vars['date_time'];	// 現在時間, 例2015-09-21 15:36:47  
         $parms['pic_name'] = $config['file_name'];	// 圖片檔名 
+		
+		// 免費時間設定
+		$parms['free_time'] = $this->get_free_time();
         
         $return_msg = $this->app_model()->lprio($parms);
 		trigger_error(__FUNCTION__ . "|{$parms['lpr']}|return_msg|" . $return_msg);
@@ -197,6 +200,9 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
         $parms['curr_time_str'] = $this->vars['date_time'];	// 現在時間, 例2015-09-21 15:36:47  
         $parms['pic_name'] = $config['file_name'];	// 圖片檔名 
         
+		// 免費時間設定
+		$parms['free_time'] = $this->get_free_time();
+		
         $return_msg = $this->app_model()->lprio($parms);	// 測試eTag
 		trigger_error(__FUNCTION__ . "|{$parms['lpr']}|return_msg|" . $return_msg);
 	}  

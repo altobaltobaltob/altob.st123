@@ -864,6 +864,7 @@ class Sync_data_model extends CI_Model
 			{
 				$settings[$station_no] = array();
 			}
+			$settings[$station_no]['free_time'] = empty($data['free_time']) ? 0 : $data['free_time'];		// 20180205 免費入場 (minutes)
 			$settings[$station_no]['station_888'] = empty($data['station_888']) ? 1 : $data['station_888'];
 			$settings[$station_no]['mqtt_ip'] = empty($data['mqtt_ip']) ? MQ_HOST : $data['mqtt_ip'];
 			$settings[$station_no]['mqtt_port'] = empty($data['mqtt_port']) ? MQ_PORT : $data['mqtt_port'];
