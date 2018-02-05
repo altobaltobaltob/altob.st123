@@ -58,7 +58,7 @@ class Cars extends CC_Controller
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
 		
 		$return_msg = $this->app_model()->opendoor_lprio($parms);
-		trigger_error(__FUNCTION__ . "|{$parms['lpr']}|return_msg|" . $return_msg);
+		trigger_error(__FUNCTION__ . "|{$parms['sno']}|{$parms['ivsno']}|{$parms['io']}|{$parms['lpr']}|return_msg|" . $return_msg);
 		
 		echo $return_msg;
 		exit;
@@ -112,7 +112,7 @@ class Cars extends CC_Controller
 		$parms['free_time'] = $this->get_free_time();
         
         $return_msg = $this->app_model()->lprio($parms);
-		trigger_error(__FUNCTION__ . "|{$parms['lpr']}|return_msg|" . $return_msg);
+		trigger_error(__FUNCTION__ . "|{$parms['sno']}|{$parms['ivsno']}|{$parms['io']}|{$parms['lpr']}|return_msg|" . $return_msg);
 	}
 	
 	// ------------------------------------
@@ -134,7 +134,7 @@ class Cars extends CC_Controller
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
 		
 		$return_msg = $this->app_model()->opendoor_lprio($parms);
-		trigger_error(__FUNCTION__ . "|{$parms['lpr']}|return_msg|" . $return_msg);
+		trigger_error(__FUNCTION__ . "|{$parms['sno']}|{$parms['io']}|{$parms['lpr']}|return_msg|" . $return_msg);
 	}
     
     // IVS -> 車號, 影像 
@@ -204,7 +204,7 @@ http://192.168.10.201/cars.html/ipcam/sno/12119/ivsno/0/io/O/type/C/lpr/4750YC/c
 		$parms['free_time'] = $this->get_free_time();
 		
         $return_msg = $this->app_model()->lprio($parms);	// 測試eTag
-		trigger_error(__FUNCTION__ . "|{$parms['lpr']}|return_msg|" . $return_msg);
+		trigger_error(__FUNCTION__ . "|{$parms['sno']}|{$parms['io']}|{$parms['lpr']}|return_msg|" . $return_msg);
 	}  
 
 	/*
