@@ -66,7 +66,7 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
         	  
         case '003':		// 繳費完成 
 			list($ticket_no, $lpr, $in_time, $pay_time, $last_field) = explode(chr(31), $data);		// 0x1F data欄位分隔
-    		$pay_type = substr($last_field, 0, -2); 
+    		$pay_type = 0; //substr($last_field, 0, -2); 
     		// echo "{$ticket_no}|{$lpr}|{$in_time}|{$pay_time}|{$pay_type}|/n"; 
             $connection->send('OK'); 
             
@@ -81,13 +81,14 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
                   		'lpr' => $lpr,				// 車號
                         'in_time' => $in_time,      // 入場時間
                         'pay_time' => $pay_time,	// 繳款時間
-                        'pay_type' => $pay_type		// 繳款方式(0:現金, 1:月票, 2:多卡通)
+                        'pay_type' => $pay_type	// 繳款方式(0:現金, 1:月票, 2:多卡通)
                     );
                     
 			curl_setopt($ch, CURLOPT_URL, 'http://localhost/carpayment.html/p2payed/'); 
 			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data)); 
 			$results = curl_exec($ch);     
             
+			$data['last_field'] = $last_field;
     		file_put_contents('/tmp/aps.log.txt', date('Y-m-d H:i:s').":{$err_lpr}\n".print_r($data, true)."\n\n", FILE_APPEND);
         
         	break;
