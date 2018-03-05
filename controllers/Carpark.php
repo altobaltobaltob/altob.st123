@@ -500,7 +500,8 @@ class Carpark extends CC_Controller
 		$station_setting = $data_model->station_setting_query(false);
 		trigger_error(__FUNCTION__ . '..station_setting: '. print_r($station_setting, true));
 		
-		$station_no_arr = array('station_no_arr' => $station_setting['station_no']);
+		$station_no_arr = array(array('station_no_arr' => $station_setting['station_no_list'], 
+				'current_station_no_arr' => $station_setting['station_no']));
 		
 		// 1. 月租系統
 		$result = $data_model->sync_members($station_no_arr);
