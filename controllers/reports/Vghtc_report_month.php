@@ -125,11 +125,23 @@ class Vghtc_report_month extends CI_Controller {
 				
 				
 			}
-			foreach($sel_in_lane as $key1 => $value1){
-				$sel_cario2=$this->erpapidb->sel_cario($value1['in_lane'],$start,$end);
-				$dateba_lane00[]=array("dateba_lane_0".$key1=>count($sel_cario2));
-			}
-
+				$dateba_lane00=array(
+						"dateba_lane_0"		=>	$dateba_lane_0,
+						"dateba_lane_1"		=>	$dateba_lane_1,
+						"dateba_lane_2"		=>	$dateba_lane_2,
+						"dateba_lane_3"		=>	$dateba_lane_3,
+						"dateba_lane_4"		=>	$dateba_lane_4,
+						"dateba_lane_5"		=>	$dateba_lane_5,
+						"dateba_lane_6"		=>	$dateba_lane_6,
+						"dateba_lane_8"		=>	$dateba_lane_8,
+						"dateba_lane_9"		=>	$dateba_lane_9,
+						"dateba_lane_10"	=>	$dateba_lane_10,
+						"dateba_lane_11"	=>	$dateba_lane_11,
+						"dateba_lane_12"	=>	$dateba_lane_12,
+				);
+				//		"sel_cario_tatal"	=>	$sel_cario_tatal
+				//		"dateba"			=>	$alltatle,
+					//	"hourba"			=>	$alltatle/24
 			$this->front->sel_cario_tatal[$start0]=$sel_cario_tatal;
 			$this->front->dateba_lane[$start0]=$dateba_lane00;
 			$this->front->sel_in_lane[$start0]=$sel_in_lane;
@@ -140,17 +152,18 @@ class Vghtc_report_month extends CI_Controller {
 			$dateba_lane_tot_1[]=$dateba_lane_1;
 			$dateba_lane_tot_2[]=$dateba_lane_2;
 			$dateba_lane_tot_3[]=$dateba_lane_3;
-			$dateba_lane_tot_4[]=$dateba_lane_4;
-			$dateba_lane_tot_5[]=$dateba_lane_5;
-			$dateba_lane_tot_6[]=$dateba_lane_6;
-			$dateba_lane_tot_8[]=$dateba_lane_8;
-			$dateba_lane_tot_9[]=$dateba_lane_9;
-			$dateba_lane_tot_10[]=$dateba_lane_10;
-			$dateba_lane_tot_11[]=$dateba_lane_11;
-			$dateba_lane_tot_12[]=$dateba_lane_12;
+			//$dateba_lane_tot_4[]=$dateba_lane_4;
+			//$dateba_lane_tot_5[]=$dateba_lane_5;
+			//$dateba_lane_tot_6[]=$dateba_lane_6;
+			//$dateba_lane_tot_8[]=$dateba_lane_8;
+			//$dateba_lane_tot_9[]=$dateba_lane_9;
+			//$dateba_lane_tot_10[]=$dateba_lane_10;
+			//$dateba_lane_tot_11[]=$dateba_lane_11;
+			//$dateba_lane_tot_12[]=$dateba_lane_12;
 		}
 		
-		$this->front->dateba_lane_tot=array(array_sum($dateba_lane_tot_0),array_sum($dateba_lane_tot_1),array_sum($dateba_lane_tot_2),array_sum($dateba_lane_tot_3),array_sum($dateba_lane_tot_4),array_sum($dateba_lane_tot_5),array_sum($dateba_lane_tot_6),array_sum($dateba_lane_tot_8),array_sum($dateba_lane_tot_9),array_sum($dateba_lane_tot_10),array_sum($dateba_lane_tot_11),array_sum($dateba_lane_tot_12));
+		//$this->front->dateba_lane_tot=array(array_sum($dateba_lane_tot_0),array_sum($dateba_lane_tot_1),array_sum($dateba_lane_tot_2),array_sum($dateba_lane_tot_3),array_sum($dateba_lane_tot_4),array_sum($dateba_lane_tot_5),array_sum($dateba_lane_tot_6),array_sum($dateba_lane_tot_8),array_sum($dateba_lane_tot_9),array_sum($dateba_lane_tot_10),array_sum($dateba_lane_tot_11),array_sum($dateba_lane_tot_12));
+		$this->front->dateba_lane_tot=array(array_sum($dateba_lane_tot_0),array_sum($dateba_lane_tot_1),array_sum($dateba_lane_tot_2),array_sum($dateba_lane_tot_3));
 		$this->front->monthba=array_sum($dateba_lane);
 		$this->front->dateba=array_sum($dateba_lane)/$dd;
 		$this->front->hourba=array_sum($dateba_lane)/$dd/24;
@@ -165,4 +178,3 @@ class Vghtc_report_month extends CI_Controller {
 	
 	
 }
-

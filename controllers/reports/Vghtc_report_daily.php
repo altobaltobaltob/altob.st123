@@ -95,7 +95,7 @@ class Vghtc_report_daily extends CI_Controller {
 						$dateba_lane_2=$dateba_lane_2+$sel_cario_count[$key];
 					}elseif($in_lane==3){
 						$dateba_lane_3=$dateba_lane_3+$sel_cario_count[$key];
-					}elseif($in_lane==4){
+					/*}elseif($in_lane==4){
 						$dateba_lane_4=$dateba_lane_4+$sel_cario_count[$key];
 					}elseif($in_lane==5){
 						$dateba_lane_5=$dateba_lane_5+$sel_cario_count[$key];
@@ -112,7 +112,7 @@ class Vghtc_report_daily extends CI_Controller {
 					}elseif($in_lane==11){
 						$dateba_lane_11=$dateba_lane_11+$sel_cario_count[$key];
 					}elseif($in_lane==12){
-						$dateba_lane_12=$dateba_lane_12+$sel_cario_count[$key];
+						$dateba_lane_12=$dateba_lane_12+$sel_cario_count[$key]; */
 					}
 				}
 
@@ -130,14 +130,14 @@ class Vghtc_report_daily extends CI_Controller {
 						"dateba_lane_1"		=>	$dateba_lane_1,
 						"dateba_lane_2"		=>	$dateba_lane_2,
 						"dateba_lane_3"		=>	$dateba_lane_3,
-						"dateba_lane_4"		=>	$dateba_lane_4,
+						/*"dateba_lane_4"		=>	$dateba_lane_4,
 						"dateba_lane_5"		=>	$dateba_lane_5,
 						"dateba_lane_6"		=>	$dateba_lane_6,
 						"dateba_lane_8"		=>	$dateba_lane_8,
 						"dateba_lane_9"		=>	$dateba_lane_9,
 						"dateba_lane_10"	=>	$dateba_lane_10,
 						"dateba_lane_11"	=>	$dateba_lane_11,
-						"dateba_lane_12"	=>	$dateba_lane_12,
+						"dateba_lane_12"	=>	$dateba_lane_12,*/
 				);
 				//		"sel_cario_tatal"	=>	$sel_cario_tatal
 				//		"dateba"			=>	$alltatle,
