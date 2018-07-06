@@ -1,0 +1,37 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Chk_bigcar extends CI_Controller {
+
+    public function __construct() {
+        parent::__construct();
+		$this->load->model('reports/Erpapidb_model','erpapidb');
+
+    }
+
+
+
+	public function index()
+	{
+		
+		$post_data= $this->input->post(NULL, TRUE);
+		$get_data= $this->input->get(NULL, TRUE);
+
+		if($post_data){
+			$lpr= isset($post_data['lpr']) ? $post_data['lpr']:''; 
+		}
+		if($get_data){
+			$lpr= isset($get_data['lpr']) ? $get_data['lpr']:''; 
+		}
+		
+		$sel_cario_lpr=$this->erpapidb->sel_cario_lpr($lpr);
+		
+		$this->front->sel_cario_lpr=$sel_cario_lpr;
+		$data=$this->front;
+        $this->load->view('reports/update_in_out',$data);              
+
+	}
+	
+
+}
+
