@@ -117,6 +117,20 @@
                                 </li>   
                             </ul>
                         </li-->
+			<li>
+                            <a href="#"><i class="fa fa-user fa-fw"></i>報表<span class="fa arrow"></span></a>
+                            <ul class="nav nav-second-level">     
+                                <li>
+									<a href="<?=SERVER_URL?>reports.html/Vghtc_report_month?month=<?php echo date('m',mktime(0,0,0,(date('m')-1),1,date('Y')));?>" target="_blank"><i class="fa fa-user fa-fw"></i>車流量表(日)</a>
+                                </li>
+                                <li>
+									<a href="<?=SERVER_URL?>reports.html/Vghtc_report_daily?month=<?php echo date('m',mktime(0,0,0,(date('m')-1),1,date('Y')));?>" target="_blank"><i class="fa fa-user fa-fw"></i>車流量表(時)</a>
+                                </li>
+                                <!--li>
+									<a href="<?=SERVER_URL?>reports.html/Cario_seat_report_day" target="_blank"><i class="fa fa-user fa-fw"></i>停車時間分析表</a>
+                                </li-->
+                            </ul>
+                        </li>							
 						
 						<li>
 							<a href="#" onclick="logout(event)">登出</a>
