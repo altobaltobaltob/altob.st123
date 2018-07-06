@@ -62,27 +62,6 @@ class Erpapidb_model extends CI_Model {
 
     }
 
-    public function sel_cario_lpr($obj_id) {
-
-                $this->db3->select('*')
-                 ->from('cario')
-                 ->where('obj_id',$obj_id)
-                 ->order_by('in_time desc')
-                 ->limit('1');
-
-        $rows = $this->db3->get();
-        return $rows->result_array();
-
-    }
-
-    public function save_cario_lpr($cario_no, $data) {
-
-		$this->db3->where('cario_no',$cario_no)
-                 ->update('cario',$data);
-
-        $sqlString = $this->db3->last_query();
-
-    }
 
 
 }
