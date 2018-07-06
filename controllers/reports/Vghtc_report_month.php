@@ -77,7 +77,8 @@ class Vghtc_report_month extends CI_Controller {
 					$name=$value['name'];
 					$note=$value['note'];
 					
-					if($in_lane==2 or $in_lane==3 or $in_lane==8 or $in_lane==9 or $in_lane==10 or $in_lane==11){
+					//if($in_lane==2 or $in_lane==3 or $in_lane==8 or $in_lane==9 or $in_lane==10 or $in_lane==11){
+					if($in_lane==0 or $in_lane==1){
 						$sel_cario=$this->erpapidb->sel_cario($in_lane,$start,$end);
 					}else{
 						$sel_cario=$this->erpapidb->sel_cario_out($in_lane,$start,$end);
@@ -130,14 +131,14 @@ class Vghtc_report_month extends CI_Controller {
 						"dateba_lane_1"		=>	$dateba_lane_1,
 						"dateba_lane_2"		=>	$dateba_lane_2,
 						"dateba_lane_3"		=>	$dateba_lane_3,
-						"dateba_lane_4"		=>	$dateba_lane_4,
+					/*	"dateba_lane_4"		=>	$dateba_lane_4,
 						"dateba_lane_5"		=>	$dateba_lane_5,
 						"dateba_lane_6"		=>	$dateba_lane_6,
 						"dateba_lane_8"		=>	$dateba_lane_8,
 						"dateba_lane_9"		=>	$dateba_lane_9,
 						"dateba_lane_10"	=>	$dateba_lane_10,
 						"dateba_lane_11"	=>	$dateba_lane_11,
-						"dateba_lane_12"	=>	$dateba_lane_12,
+						"dateba_lane_12"	=>	$dateba_lane_12,*/
 				);
 				//		"sel_cario_tatal"	=>	$sel_cario_tatal
 				//		"dateba"			=>	$alltatle,
