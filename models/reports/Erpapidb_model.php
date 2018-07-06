@@ -40,8 +40,8 @@ class Erpapidb_model extends CI_Model {
 		$this->db3->select('obj_id')
                  ->from('cario')
                  ->where('out_lane',$in_lane)
-                 ->where('in_time>=',$start)
-                 ->where('in_time<=',$end);
+                 ->where('out_time>=',$start)
+                 ->where('out_time<=',$end);
 				 
         $rows = $this->db3->get();
         return $rows->result_array();
