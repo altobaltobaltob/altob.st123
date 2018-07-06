@@ -129,9 +129,20 @@
                                 <!--li>
 									<a href="<?=SERVER_URL?>reports.html/Cario_seat_report_day" target="_blank"><i class="fa fa-user fa-fw"></i>停車時間分析表</a>
                                 </li-->
+
                             </ul>
                         </li>							
 						
+			<!--li>
+                            <a href="http://59.124.122.113/login" target="_blank"><i class="fa fa-user fa-fw"></i>QR Code申請列印<span class="fa arrow"></span></a>
+                        </li>
+			<li>
+                            <a href="http://61.219.172.11:60123/admins_station.html/" target="_blank"><i class="fa fa-user fa-fw"></i>月租系統<span class="fa arrow"></span></a>
+                        </li>
+			<li>
+                            <a href="http://61.219.172.11:60123/altob_service.html/" target="_blank"><i class="fa fa-user fa-fw"></i>營收回報系統<span class="fa arrow"></span></a>
+                        </li-->
+
 						<li>
 							<a href="#" onclick="logout(event)">登出</a>
 						</li>
@@ -905,8 +916,8 @@
                                             <th style="text-align:left;">樓層</th>
 											<th style="text-align:left;">樓層 ID</th>
                                             <th style="text-align:center;">車位總數</th>
-											<th style="text-align:center;">已使用</th>
-											<th style="text-align:center;">未使用</th>
+											<th style="text-align:center;">已使用(在席)</th>
+											<th style="text-align:center;">未使用(在席)</th>
 											<th style="text-align:center;">微調值</th>
                                             <th style="text-align:center;">剩餘車位數微調</th>
 											<th style="text-align:center;">空車位顯示值</th>
@@ -1125,13 +1136,18 @@ function show_item(tags, type)
 							"<td id='group_id_", mno, "' style='text-align:left; vertical-align:middle; '>", jdata[idx]['group_id'], "</td>", 	
 							"<td id='tot_", mno, "' style='text-align:center; vertical-align:middle; '>", jdata[idx]['tot'], "</td>", 
 							"<td id='parked_", mno, "' style='text-align:center; vertical-align:middle; '>", jdata[idx]['parked'], "</td>", 
-							"<td id='real_availables_", mno, "' style='text-align:center; vertical-align:middle; '>", jdata[idx]['availables'] - jdata[idx]['renum'], "</td>", 
+							"<td id='availables_", mno, "' style='text-align:center; vertical-align:middle; '>", jdata[idx]['availables'], "</td>", 
 							"<td id='renum_", mno, "' style='text-align:center; vertical-align:middle; color:blue; '>", jdata[idx]['renum'], "</td>", 
                     		"<td style='text-align:center;vertical-align:middle; '>", 
+								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", 999, ", jdata[idx]['station_no'],");'>滿車</button>&nbsp", 
+								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", 100, ", jdata[idx]['station_no'],");'>+100</button>&nbsp", 
+								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", 10, ", jdata[idx]['station_no'],");'>+10</button>&nbsp", 
 								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", 1, ", jdata[idx]['station_no'],");'>+1</button>&nbsp", 
+								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", 0, ", jdata[idx]['station_no'],");'>重設</button>&nbsp",
 								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", -1, ", jdata[idx]['station_no'],");'>-1</button>&nbsp", 
-								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", 0, ", jdata[idx]['station_no'],");'>重設</button>", 
-							"<td id='availables_", mno, "' style='text-align:center; vertical-align:middle; color:red; '>", jdata[idx]['availables'], "</td>", 
+								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", -10, ", jdata[idx]['station_no'],");'>-10</button>&nbsp", 
+								"<button class='btn btn-default' onclick='pks_availables_update(\"", mno, "\", -100, ", jdata[idx]['station_no'],");'>-100</button>&nbsp", 
+							"<td id='space_", mno, "' style='text-align:center; vertical-align:middle; color:red; '>", jdata[idx]['space'], "</td>", 
 							"</td>",
                     	"</tr>"]);
                     }
