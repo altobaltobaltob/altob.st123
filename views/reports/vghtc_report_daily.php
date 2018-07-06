@@ -11,7 +11,7 @@
         <td>
             <table align="center" border="0" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                    <td align="center" valign="middle">臺中榮總南區停車場&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $month;?>月車流量表<br></td>
+                    <td align="center" valign="middle"><?php echo $station_arr['results'][0]['short_name'];?>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $month;?>月車流量表<br></td>
                 </tr>
             </table>
         </td>
