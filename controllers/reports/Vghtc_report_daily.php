@@ -14,6 +14,25 @@ class Vghtc_report_daily extends CI_Controller {
 	public function index()
 	{
 		
+		define('SYNC_API_URL', 'http://61.219.172.11:60123/admins_station.html/');
+
+		$port_info = (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] != 60123) ? '/' . $_SERVER['SERVER_PORT'] : '';
+		$reload_url = SYNC_API_URL . 'station_setting_query' . $port_info;
+
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $reload_url);
+			curl_setopt($ch, CURLOPT_HEADER, FALSE);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
+			curl_setopt($ch, CURLOPT_POST, TRUE);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,10);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10); //timeout in seconds
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array()));
+			$output = curl_exec($ch);
+			curl_close($ch);
+
+		$station_arr=json_decode($output,true);
+
 		$post_data= $this->input->post(NULL, TRUE);
 		$get_data= $this->input->get(NULL, TRUE);
 
@@ -77,8 +96,8 @@ class Vghtc_report_daily extends CI_Controller {
 					$name=$value['name'];
 					$note=$value['note'];
 					
-					//if($in_lane==2 or $in_lane==3 or $in_lane==8 or $in_lane==9 or $in_lane==10 or $in_lane==11){
-					if($in_lane==0 or $in_lane==1){
+			//		if($in_lane==2 or $in_lane==3 or $in_lane==8 or $in_lane==9 or $in_lane==10 or $in_lane==11){
+					if($in_lane==0){
 						$sel_cario=$this->erpapidb->sel_cario($in_lane,$start,$end);
 					}else{
 						$sel_cario=$this->erpapidb->sel_cario_out($in_lane,$start,$end);
@@ -92,11 +111,11 @@ class Vghtc_report_daily extends CI_Controller {
 						$dateba_lane_0=$dateba_lane_0+$sel_cario_count[$key];
 					}elseif($in_lane==1){
 						$dateba_lane_1=$dateba_lane_1+$sel_cario_count[$key];
-					}elseif($in_lane==2){
+			/*		}elseif($in_lane==2){
 						$dateba_lane_2=$dateba_lane_2+$sel_cario_count[$key];
 					}elseif($in_lane==3){
 						$dateba_lane_3=$dateba_lane_3+$sel_cario_count[$key];
-					/*}elseif($in_lane==4){
+					}elseif($in_lane==4){
 						$dateba_lane_4=$dateba_lane_4+$sel_cario_count[$key];
 					}elseif($in_lane==5){
 						$dateba_lane_5=$dateba_lane_5+$sel_cario_count[$key];
@@ -113,7 +132,7 @@ class Vghtc_report_daily extends CI_Controller {
 					}elseif($in_lane==11){
 						$dateba_lane_11=$dateba_lane_11+$sel_cario_count[$key];
 					}elseif($in_lane==12){
-						$dateba_lane_12=$dateba_lane_12+$sel_cario_count[$key]; */
+						$dateba_lane_12=$dateba_lane_12+$sel_cario_count[$key];  */
 					}
 				}
 
@@ -129,9 +148,9 @@ class Vghtc_report_daily extends CI_Controller {
 				$dateba_lane00=array(
 						"dateba_lane_0"		=>	$dateba_lane_0,
 						"dateba_lane_1"		=>	$dateba_lane_1,
-						"dateba_lane_2"		=>	$dateba_lane_2,
+				/*		"dateba_lane_2"		=>	$dateba_lane_2,
 						"dateba_lane_3"		=>	$dateba_lane_3,
-						/*"dateba_lane_4"		=>	$dateba_lane_4,
+						"dateba_lane_4"		=>	$dateba_lane_4,
 						"dateba_lane_5"		=>	$dateba_lane_5,
 						"dateba_lane_6"		=>	$dateba_lane_6,
 						"dateba_lane_8"		=>	$dateba_lane_8,
@@ -153,6 +172,7 @@ class Vghtc_report_daily extends CI_Controller {
 		$this->front->dateba=$dateba;
 		$this->front->hourba=$dateba/24;
 		$this->front->month=$month;
+		$this->front->station_arr=$station_arr;
 		$this->front->dd=$dd;
 		$data=$this->front;
         $this->load->view('reports/vghtc_report_daily',$data);              
