@@ -125,23 +125,11 @@ class Vghtc_report_month extends CI_Controller {
 				
 				
 			}
-				$dateba_lane00=array(
-						"dateba_lane_0"		=>	$dateba_lane_0,
-						"dateba_lane_1"		=>	$dateba_lane_1,
-						"dateba_lane_2"		=>	$dateba_lane_2,
-						"dateba_lane_3"		=>	$dateba_lane_3,
-						"dateba_lane_4"		=>	$dateba_lane_4,
-						"dateba_lane_5"		=>	$dateba_lane_5,
-						"dateba_lane_6"		=>	$dateba_lane_6,
-						"dateba_lane_8"		=>	$dateba_lane_8,
-						"dateba_lane_9"		=>	$dateba_lane_9,
-						"dateba_lane_10"	=>	$dateba_lane_10,
-						"dateba_lane_11"	=>	$dateba_lane_11,
-						"dateba_lane_12"	=>	$dateba_lane_12,
-				);
-				//		"sel_cario_tatal"	=>	$sel_cario_tatal
-				//		"dateba"			=>	$alltatle,
-					//	"hourba"			=>	$alltatle/24
+			foreach($sel_in_lane as $key1 => $value1){
+				$sel_cario2=$this->erpapidb->sel_cario($value1['in_lane'],$start,$end);
+				$dateba_lane00[]=array("dateba_lane_0".$key1=>count($sel_cario2));
+			}
+
 			$this->front->sel_cario_tatal[$start0]=$sel_cario_tatal;
 			$this->front->dateba_lane[$start0]=$dateba_lane00;
 			$this->front->sel_in_lane[$start0]=$sel_in_lane;
@@ -177,3 +165,4 @@ class Vghtc_report_month extends CI_Controller {
 	
 	
 }
+
