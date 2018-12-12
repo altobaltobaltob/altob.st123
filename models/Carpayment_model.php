@@ -387,7 +387,8 @@ class Carpayment_model extends CI_Model
 	{	
 		// 北車西上特例
 		$station_local_ip = ($cario['station_no'] == 12304)? '192.168.10.203' : STATION_LOCAL_IP;
-	
+		//科博館新建特例
+		$station_local_ip = ($cario['station_no'] == 40709)? '192.168.9.201' : STATION_LOCAL_IP;
 		if(!empty($cario['in_pic_name']))
 		{
 			$pic_name_arr = explode('-', $cario['in_pic_name']);
