@@ -122,10 +122,11 @@ class Carpayment_model extends CI_Model
     // 通知付款完成
 	public function p2payed($parms, $opay=false, $finished=false) 
 	{           
-		$result = $this->db->select("in_time, cario_no, station_no, etag")
+		$result = $this->db->select("obj_id as lpr, in_time, cario_no, station_no, etag, obj_id as lpr")
         		->from('cario')	
                 ->where(array('obj_type' => 1, 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0))
-                ->order_by('cario_no', 'desc') 
+				->or_where(array('obj_type' => 1, 'ticket_no' => $parms['ticket_no'], 'finished' => 0, 'err' => 0));
+				->order_by('cario_no', 'desc') 
                 ->limit(1)
                 ->get()
                 ->row_array();
@@ -188,16 +189,48 @@ class Carpayment_model extends CI_Model
 			// 是否註記完結
 			if($finished)
 				$data['finished'] = 1;
-					
-			$this->db->where(array('cario_no' => $result['cario_no']))->update('cario', $data); 
+			if($parms['ticket_no'] == '000000000')
+			{		
+				$this->db->where(array('cario_no' => $result['cario_no']))->update('cario', $data); 
+				trigger_error("付款後更新時間:{$parms['lpr']}|{$data['out_before_time']}|". print_r($data, true));
+			}
+			else
+			{
+				// 快速進場之類會帶票卡號
+				$this->db
+					->where(array('obj_type' => 1, 'ticket_no' => $parms['ticket_no'], 'finished' => 0, 'err' => 0)) 
+					->update('cario', $data); 
 			
+				// 取得車牌號碼
+				$cario_result = $this->db->select("obj_id as lpr")
+					->from('cario')	
+					->where(array('obj_type' => 1, 'ticket_no' => $parms['ticket_no'], 'finished' => 0, 'err' => 0)) 
+					->order_by('cario_no', 'desc') 
+					->limit(1)
+					->get()
+					->row_array();
+		
+				$parms['lpr'] = $cario_result['lpr'];
+			
+				trigger_error("[票卡] 付款後更新時間:{$parms['ticket_no']}|{$data['out_before_time']}|rows:{$this->db->affected_rows()}");
+				
+				// 若車牌為空, 改為 NONE
+				if(empty($parms['lpr']))
+				{
+					$parms['lpr'] = 'NONE';
+				}
+			}
 			if (!$this->db->affected_rows())
 			{
+				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_POS.",2,{$parms['ticket_no']},{$parms['lpr']},{$parms['pay_time']},{$parms['in_time']}".MQ_ALTOB_POS_END_TAG);
 				trigger_error("付款失敗:{$parms['lpr']}|{$data['out_before_time']}");
 				return 'fail';
 			}
+			else
+			{
+				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_POS.",1,{$parms['ticket_no']},{$parms['lpr']},{$parms['pay_time']},{$parms['in_time']}".MQ_ALTOB_POS_END_TAG);
+			}
 			
-			trigger_error("付款後更新時間:{$parms['lpr']}|{$data['out_before_time']}|". print_r($data, true));
 		}
 		
 		// 付款後續流程
