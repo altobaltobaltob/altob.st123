@@ -101,7 +101,19 @@ class Carpayment extends CI_Controller
 	}    
 	
 	
-	
+	// http://localhost/carpayment.html/parktron001/ (post method)
+    // 博辰進場通知
+    public function parktron001()
+	{            
+		$parms['devno'] = $this->input->post('devno', true);
+    	$parms['token'] = $this->input->post('token', true);
+    	$parms['lpr'] = trim($this->input->post('lpr', true));
+    	$parms['in_time'] = $this->input->post('in_time', true);
+    	$parms['type'] = $this->input->post('type', true);
+        trigger_error('博辰進場參數:' . print_r($parms, true));
+        
+        $this->carpayment_model->parktron001($parms);
+    }
                  
                                                 
     // http://localhost/carpayment.html/p2payed/ (post method)

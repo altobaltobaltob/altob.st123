@@ -45,9 +45,25 @@ $tcp_worker->onMessage = function($connection, $tcp_in)
 			list($devno, $token, $lpr, $in_time, $last_field) = explode(chr(31), $data);		// 0x1F data欄位分隔
     		$type = substr($last_field, 0, -2); 
     		echo "{$devno}|{$token}|{$lpr}|{$in_time}|{$type}|\n"; 
-            $connection->send('OK');
-            break;
-        
+			$connection->send('OK');
+			
+			// 傳送入場資料 
+			$data = array
+			(
+				'devno' => $devno,			// 設備編號
+				'token' => $token,			// 票卡號碼
+	  			'lpr' => $lpr,				// 車號
+				'in_time' => $in_time,      // 入場時間
+				'type' => $type				// 票卡種類 (0:臨停票卡進場, 1:臨停無票卡進場, 2:月票, 3:多卡通進場)
+			);
+
+			curl_setopt($ch, CURLOPT_URL, 'http://localhost/carpayment.html/parktron001/'); 
+			curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data)); 
+			$results = curl_exec($ch);     
+
+			//file_put_contents('/tmp/aps.log.txt', date('Y-m-d H:i:s').":{$err_lpr}\n".print_r($data, true)."\n\n", FILE_APPEND);
+			file_put_contents('/tmp/aps.log.txt', date('Y-m-d H:i:s').":{$lpr}\n".print_r($data, true)."\n\n", FILE_APPEND);
+        break;
         case '002':		// APS詢問車牌入場時間 
 			list($token, $lpr, $last_field) = explode(chr(31), $data);		// 0x1F data欄位分隔 
             $lpr = str_replace('%', '', $lpr);   

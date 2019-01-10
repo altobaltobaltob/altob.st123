@@ -211,7 +211,8 @@ class Carpayment_model extends CI_Model
 		trigger_error( "..sync_st_pay.." .  $sync_result);
 		return 'ok';
     }                                 
-    
+	
+	
     
     // 行動支付, 手機告知已付款            
     // http://203.75.167.89/carpayment.html/m2payed/ABC1234/120/12112/12345/1f3870be274f6c49b3e31a0c6728957f 
@@ -253,7 +254,63 @@ class Carpayment_model extends CI_Model
 	//
 	////////////////////////////////////////
 
+	// 博辰票卡進場通知 (UPDATED 2016/08/23)
+	public function parktron001($parms)
+	{			
+		// 車道與裝置對應關係
+		$lanes = array
+          (
+  			11 => array ('in_lane' => '0'),		// 入口 1
+			12 => array ('in_lane' => '1')		// 入口 2
+          );
+		  
+		if(!array_key_exists($parms['devno'], $lanes))
+		{
+			trigger_error("[ERROR] 未知的裝置 | {$parms['devno']}"); 
+			return false;
+		}
+		
+		if($parms['token'] == '000000000')
+		{
+			trigger_error("[ERROR] 無卡號 | {$parms['devno']}"); 
+			return false;
+		}
 	
+		// 由設備編號對應攝影機編號, 再對應進場記錄
+		$result = $this->db->select("cario_no, in_time, obj_id as lpr")
+        		->from('cario')	
+                ->where(array(
+					'in_out' => 'CI', 'finished' => 0, 'err' => 0, 'obj_type' => 1, 'member_no' => 0, 
+					'in_time > ' => date("Y-m-d H:i:s", strtotime('- 1 minutes')), // 限時
+					'ticket_no' => '',
+					'in_lane' => $lanes[$parms['devno']]['in_lane']
+					))
+                ->order_by('cario_no', 'desc') 
+                ->limit(1)
+                ->get()
+                ->row_array();
+				
+		//trigger_error("[test] 車道 {$lanes[$parms['devno']]['in_lane']} test|".print_r($result, true)); 		
+            
+        if (empty($result['cario_no']))
+        {
+			trigger_error("[ERROR] 車道 {$lanes[$parms['devno']]['in_lane']} 查無進場記錄|".print_r($parms, true)); 
+			return false;
+		}
+
+		$data = array
+		(
+			'ticket_dev' =>  $parms['devno'],
+			'ticket_no' =>  $parms['token'],
+			'ticket_type' =>  $parms['type']
+		);
+			
+		$this->db
+				->where(array('cario_no' => $result['cario_no'])) 
+				->update('cario', $data); 
+					
+		trigger_error("博辰票卡進場更新記錄|{$result['lpr']}|{$result['in_time']}|{$result['cario_no']}|{$parms['token']}|rows:{$this->db->affected_rows()}"); 		
+	}
     
 	// 模糊比對
 	function getLevenshteinSQLStatement($word, $target)
