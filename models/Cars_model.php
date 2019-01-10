@@ -882,7 +882,7 @@ class Cars_model extends CI_Model
 		
         trigger_error('讀取會員:' . print_r($rows, true) . ", park_time_check: {$park_time_check}");
 		/*
-		// 20171025 強制先不導入會員
+		// 20171025 強制先不導入會員123
 		$rows = array
             (
             	'lpr_correct' => '',
