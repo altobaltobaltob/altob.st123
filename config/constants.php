@@ -78,6 +78,9 @@ define('MQ_ALTOB_MSG', 'msg');							// MQTT TOPIC: cmd: msg
 define('MQ_ALTOB_MSG_END_TAG', ',altob');				// MQTT TOPIC: cmd: msg end tag
 define('MQ_ALTOB_888', '888');							// MQTT TOPIC: cmd: 888
 define('MQ_ALTOB_888_END_TAG', ',altob');				// MQTT TOPIC: cmd: 888 end tag
+define('MQ_ALTOB_POS', 'pos');							// MQTT TOPIC: cmd: pos
+define('MQ_ALTOB_POS_END_TAG', ',altob');				// MQTT TOPIC: cmd: pos end tag
+
 
 define('MEMCACHE_HOST', 'localhost');					// memcache host   
 define('MEMCACHE_PORT', 11211);							// memcache post no (default:11211) 

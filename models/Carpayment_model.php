@@ -315,7 +315,7 @@ class Carpayment_model extends CI_Model
                 ->where(array(
 					'in_out' => 'CI', 'finished' => 0, 'err' => 0, 'obj_type' => 1, 'member_no' => 0, 
 					'in_time > ' => date("Y-m-d H:i:s", strtotime('- 1 minutes')), // 限時
-					'ticket_no' => '',
+					'ticket_dev' => '',
 					'in_lane' => $lanes[$parms['devno']]['in_lane']
 					))
                 ->order_by('cario_no', 'desc') 
