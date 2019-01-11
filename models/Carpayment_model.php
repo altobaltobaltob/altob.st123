@@ -125,7 +125,7 @@ class Carpayment_model extends CI_Model
 		$result = $this->db->select("obj_id as lpr, in_time, cario_no, station_no, etag, obj_id as lpr")
         		->from('cario')	
                 ->where(array('obj_type' => 1, 'obj_id' => $parms['lpr'], 'finished' => 0, 'err' => 0))
-				->or_where(array('obj_type' => 1, 'ticket_no' => $parms['ticket_no'], 'finished' => 0, 'err' => 0));
+				->or_where(array('obj_type' => 1, 'ticket_no' => $parms['ticket_no'], 'finished' => 0, 'err' => 0))
 				->order_by('cario_no', 'desc') 
                 ->limit(1)
                 ->get()
