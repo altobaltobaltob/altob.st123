@@ -56,12 +56,12 @@ class Carpayment extends CI_Controller
         // 共用記憶體 
         $this->vars['mcache'] = new Memcache;
 		$this->vars['mcache']->pconnect(MEMCACHE_HOST, MEMCACHE_POST) or die ('Could not connect memcache');   
-                                        
+             */                           
         // mqtt subscribe
 		$this->vars['mqtt'] = new phpMQTT(MQ_HOST, MQ_PORT, uniqid());  
 		if(!$this->vars['mqtt']->connect()){ die ('Could not connect mqtt');  }
         
-        */
+        
 		$this->load->model('carpayment_model'); 
         $this->carpayment_model->init($this->vars);
 	}
