@@ -2033,7 +2033,7 @@ function logout(event)
 	</td>
 </tr>
 <tr class="form-group">
-<td style="text-align:right;">時間</td>
+    <td style="text-align:right;">時間</td>
 	<td style="text-align:left;">
     <input id="cms_time_box" name="cms_time" type="datetime-local" class="form-control" style="font-size:36px;height:56px;" autocomplete="off" disabled="disabled"
         value="<?php echo substr(date("c"),0,16); ?>" 
@@ -2114,9 +2114,6 @@ function show_create_cario_dialog()
 	cms_io_content = cms_io_content.concat(["<option value='I'>進場</option>"]);
 	cms_io_content = cms_io_content.concat(["<option value='O'>離場</option>"]);
 	$("#cms_io_box").html('').html(cms_io_content.join(''));
-	
-    //時間
-    $("#cms_time_box").html('').text(date("Y-m-d H:m:s"));
 
 	// 車種
 	var cms_ctype_content = [];
