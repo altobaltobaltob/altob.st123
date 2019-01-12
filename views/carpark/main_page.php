@@ -2091,6 +2091,20 @@ function time_check()
     }
     else
     {
+        //編輯時間
+        var mydate = new Date();
+        var month = mydate.getMonth() + 1;
+        var day = mydate.getDate();
+        var hours = mydate.getHours();
+        var minutes = mydate.getMinutes();
+  
+        month = (month.toString().length == 1) ? ("0" + month) : month;
+        day = (day.toString().length == 1) ? ("0" + day) : day;
+        hours = (hours.toString().length == 1) ? ("0" + hours) : hours;
+        minutes = (minutes.toString().length == 1) ? ("0" + minutes) : minutes;
+        var result = mydate.getFullYear() + '-' + month + '-' + day+'T'+hours+':'+minutes;
+        //設定現在時間
+        $("#cms_time_box").val(result.toString());
         $("#cms_time_box").attr('disabled', true);
     }
 }
