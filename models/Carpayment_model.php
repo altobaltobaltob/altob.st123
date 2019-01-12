@@ -222,13 +222,13 @@ class Carpayment_model extends CI_Model
 			}
 			if (!$this->db->affected_rows())
 			{
-				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_POS.",2,{$parms['ticket_no']},{$parms['lpr']},{$parms['pay_time']},{$parms['in_time']}".MQ_ALTOB_POS_END_TAG);
+				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_POS.",1,{$parms['ticket_no']},{$parms['lpr']},{$parms['pay_time']},{$parms['in_time']}".MQ_ALTOB_POS_END_TAG);
 				trigger_error("付款失敗:{$parms['lpr']}|{$data['out_before_time']}");
 				return 'fail';
 			}
 			else
 			{
-				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_POS.",1,{$parms['ticket_no']},{$parms['lpr']},{$parms['pay_time']},{$parms['in_time']}".MQ_ALTOB_POS_END_TAG);
+				$this->mq_send(MQ_TOPIC_ALTOB, MQ_ALTOB_POS.",2,{$parms['ticket_no']},{$parms['lpr']},{$parms['pay_time']},{$parms['in_time']}".MQ_ALTOB_POS_END_TAG);
 			}
 			
 		}

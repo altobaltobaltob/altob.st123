@@ -7,7 +7,7 @@ http://192.168.10.201/carpayment.html/p2payed/
 
 */
        
-
+		require_once(MQ_CLASS_FILE);
         // ----- 定義常數(路徑, cache秒數) -----       
         define('APP_VERSION', '100');		// 版本號
                                         
