@@ -1269,32 +1269,6 @@ function show_item(tags, type)
             
         <?php /* 進出場現況表 */ ?>    
         case "cario_list":
-            $.ajax
-        	({
-        		url: "<?=APP_URL?>cario_list",
-            	type: "post", 
-            	dataType:"json",
-            	data: {},
-            	success: function(jdata)
-            	{       
-                	for(idx in jdata)
-                    {                                         
-                    	$("#cario_"+idx+">[data-tag=io_name]").text(jdata[idx]['io_name']);
-                    	$("#cario_"+idx+">[data-tag=io_time]").html(jdata[idx]['io_time']);
-						
-						// 車辨失敗可新增車號
-						if(jdata[idx]['lpr'] == 'NONE')
-							$("#cario_"+idx+">[data-tag=lpr]").html('<span style="font-size:16px;">車辨失敗</span><br/><button class="btn-default" onclick="show_upd_cario_dialog(' + jdata[idx]['cario_no'] + ', \'' + jdata[idx]['lpr'] + '\');">輸入車號</button>');
-						else
-							$("#cario_"+idx+">[data-tag=lpr]").html('<span style="font-size:28px;">' + jdata[idx]['lpr'] +'</span>');
-						
-                    	$("#cario_"+idx+">[data-tag=etag]").text(jdata[idx]['etag']);
-                    	$("#cario_"+idx+">[data-tag=owner]").text(jdata[idx]['owner']);
-                    	$("#cario_"+idx+">[data-tag=pic_name]>img").attr("src",jdata[idx]['pic_name']);   
-                    }
-            	}
-        	}); 
-            
             // connect the client
 			// client.connect({onSuccess:onConnect}); //mqtt
         	break;
@@ -1873,6 +1847,42 @@ $(document).ready(function()
   	});
 	
 }); 
+
+$(document).ready(function() 
+{
+    $returntrue=cario_listtable();
+    if($returntrue){
+        setInterval(function(){ cario_listtable(); }, 5000);  //預設10000毫秒自動重複執行cartnumber()函數
+    }
+
+                    function cario_listtable(){
+                    $.ajax
+        	        ({
+        		        url: "<?=APP_URL?>cario_list",
+            	        type: "post", 
+            	        dataType:"json",
+            	        data: {},
+            	        success: function(jdata)
+            	        {
+                            $("#cario_list_tbody").html("");
+                	        for(idx in jdata)
+                            {
+                                str = "<tr id='cario_"+idx+"'>"+
+                                    "<td class=\"cario_list\" data-tag=\"io_name\">"+jdata[idx]['io_name']+"</td>"+
+                                    "<td class=\"cario_list\" data-tag=\"io_time\">"+jdata[idx]['io_time']+"</td>"+
+                                    "<td class=\"cario_list\" data-tag=\"lpr\">"+jdata[idx]['lpr']+"</td>"+
+                                    "<td class=\"cario_list\" data-tag=\"etag\">"+jdata[idx]['etag']+"</td>"+
+                                    "<td class=\"cario_list\" data-tag=\"owner\">"+jdata[idx]['owner']+"</td>"+
+                                    "<td class=\"cario_list\" data-tag=\"pic_name\"><img height='57' width='150' class='resize' src="+jdata[idx]['pic_name']+"></td>"+
+                                    "</tr>"                              
+                                $("#cario_list_tbody").append(str);
+                            }
+                            set_resize();
+            	        }
+                    }); 
+                    return true; 
+                    }
+    });
 
 function opendoors(lane_no)
 {
