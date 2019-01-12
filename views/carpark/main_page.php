@@ -2032,9 +2032,13 @@ function logout(event)
 		<div id="cms_io_box"/>
 	</td>
 </tr>
+<tr class="form-group">
 <td style="text-align:right;">時間</td>
 	<td style="text-align:left;">
-		<input id="cms_time_box" name="cms_time" type="datetime" class="form-control" style="font-size:48px;height:56px;" readonly="" disabled="disabled">
+    <input id="cms_time_box" name="cms_time" type="datetime-local" class="form-control" style="font-size:36px;height:56px;" autocomplete="off" disabled="disabled"
+        value="<?php echo substr(date("c"),0,16); ?>" 
+        min="<?php echo substr(date("c",strtotime("-1months")),0,16); ?>" 
+        max="<?php echo substr(date("c"),0,16); ?>"/>
 	</td>
 </tr>
 <tr class="form-group">
@@ -2068,6 +2072,20 @@ function logout(event)
 
 
 <script>  
+//選擇進場車道時可以設定進場時間
+function time_check()
+{
+    var station_no = AltobObject.xvars["create_cario_info"]["station_no"];
+    var io = $("#sel_cms_io_" + station_no).val();
+    if(io == 'I')
+    {
+        $("#cms_time_box").attr('disabled', false);
+    }
+    else
+    {
+        $("#cms_time_box").attr('disabled', true);
+    }
+}
 
 // 顯示新增車辨記錄
 function show_create_cario_dialog()
@@ -2092,13 +2110,13 @@ function show_create_cario_dialog()
 	
 	// 進出場
 	var cms_io_content = [];
-	cms_io_content = cms_io_content.concat(["<select id='sel_cms_io_", AltobObject.station_no, "'><option value='choice'>請選擇</option>"]);
+	cms_io_content = cms_io_content.concat(["<select onClick=\"time_check();\" id='sel_cms_io_", AltobObject.station_no, "'><option value='choice'>請選擇</option>"]);
 	cms_io_content = cms_io_content.concat(["<option value='I'>進場</option>"]);
 	cms_io_content = cms_io_content.concat(["<option value='O'>離場</option>"]);
 	$("#cms_io_box").html('').html(cms_io_content.join(''));
 	
     //時間
-    $("#cms_time_box").html('').html(date("Y-m-d H:m:s"));
+    $("#cms_time_box").html('').text(date("Y-m-d H:m:s"));
 
 	// 車種
 	var cms_ctype_content = [];
@@ -2122,14 +2140,40 @@ function do_create_cario()
 	var io = $("#sel_cms_io_" + station_no).val();
 	var ctype = $("#sel_cms_ctype_" + station_no).val();
 	var lpr = $("#cms_lpr").val();
-	var time = $("#cms_time").val();
+	var time = $("#cms_time_box").val();
 
-	if(!(station_no && lpr))
+	if(!(station_no))
+    {
+        alertify_msg("系統錯誤");
+		return false;
+    }
+    if(io!='I' && io!='O')
+    {
+        alertify_msg("請選擇此車是進場還是出場?");
+		return false;
+    }
+    if(ctype!='C' && ctype!='M')
+    {
+        alertify_msg("請選擇車種");
+		return false;
+    }
+	if(lpr.length < 4 || lpr.length > 7)
 	{
-		alertify_msg("資料不足。。");
+		alertify_msg("請檢查車號是否正確?");
 		return false;
 	}
-	
+    var dt = new Date(time.replace("-", "/").replace("-", "/").replace("T", " "));
+    var dt1 = new Date();
+    var dt2 = new Date();
+    dt2.setMonth(dt1.getMonth() - 1);
+    if(dt > dt1 || dt < dt2)
+    {
+        alertify_msg("請注意：時間不能大於現在時間，以及不能低於1個月");
+		return false;
+    }
+
+    if (!confirm("確認資料無誤並送出 ?")) return false; 
+
 	$.ajax
     ({
         url: "<?=APP_URL?>local_lprio", 
@@ -2142,7 +2186,7 @@ function do_create_cario()
 			"ivsno": 0,	//  都帶 0
 			"io":io,
 			"ctype":ctype,
-            "time":time
+            "time":time,
 			"lpr":lpr
         },
 		error:function(xhr, ajaxOptions, thrownError)

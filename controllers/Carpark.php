@@ -187,6 +187,7 @@ class Carpark extends CC_Controller
 			$io = $this->input->post('io', true);
 			$ctype = $this->input->post('ctype', true);
 			$lpr = $this->input->post('lpr', true);
+			$time = $this->input->post('time', true);
 			
 			$parms = array();
 			$parms['sno'] = preg_replace('/[^0-9]/', '', strtoupper(urldecode($sno)));
@@ -200,6 +201,7 @@ class Carpark extends CC_Controller
 			$parms['sq2'] = 0;
 			$parms['etag'] = 'NONE';
 			$parms['ant'] = 1;
+			$parms['in_time'] = $time;
 			// 補充
 			$parms['obj_type'] = 1;
 			$parms['curr_time_str'] = date('Y-m-d H:i:s');

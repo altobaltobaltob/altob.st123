@@ -362,12 +362,13 @@ class Cars_model extends CI_Model
 							trigger_error("err://入場郤已有歷史進場記錄[{$affect_rows}]筆,已設成錯誤並結清記錄".print_r($parms, true));
 						}
 					}
-					
+
+					//20190113新增手動入場
 					// 15分鐘內, 可直接離場 (刷進刷出需過卡修正)
-					if(isset($parms['free_time']) && $parms['free_time'] > 0)
-						$out_before_time_value = date('Y-m-d H:i:s', strtotime(" + {$parms['free_time']} minutes"));
-					else
-						$out_before_time_value = date("Y-m-d H:i:s");
+					//if(isset($parms['free_time']) && $parms['free_time'] > 0)
+					//	$out_before_time_value = date('Y-m-d H:i:s', strtotime(" + {$parms['free_time']} minutes"));
+					//else
+					//	$out_before_time_value = date("Y-m-d H:i:s");
 					
 					$data = array
 					(
@@ -381,9 +382,18 @@ class Cars_model extends CI_Model
 						'in_time' => $this->now_str,
 						'in_lane' => $parms['ivsno'],
 						'in_pic_name' => empty($parms['pic_name']) ? '' : $parms['pic_name'],
-						'out_before_time' => $out_before_time_value,
+						'out_before_time' => $this->now_str,
 						'ticket_no' => $this->gen_pass_code()
 					);
+					$data['in_time'] = isset($parms['in_time']) ? $parms['in_time'] : $this->now_str;
+					if(isset($parms['free_time']) && $parms['free_time'] > 0)
+					{
+						$data['out_before_time'] = date('Y-m-d H:i:s', strtotime(" + {$parms['free_time']} minutes",strtotime($parms['in_time'])));
+					}
+					else
+					{
+						$data['out_before_time'] = $data['in_time'];
+					}
 					$this->db->insert('cario', $data);
 					trigger_error("新增入場資料:".print_r($parms, true));
 					
