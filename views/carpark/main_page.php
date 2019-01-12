@@ -2036,9 +2036,7 @@ function logout(event)
     <td style="text-align:right;">時間</td>
 	<td style="text-align:left;">
     <input id="cms_time_box" name="cms_time" type="datetime-local" class="form-control" style="font-size:36px;height:56px;" autocomplete="off" disabled="disabled"
-        value="<?php echo substr(date("c"),0,16); ?>" 
-        min="<?php echo substr(date("c",strtotime("-1months")),0,16); ?>" 
-        max="<?php echo substr(date("c"),0,16); ?>"/>
+        min="<?php echo substr(date("c",strtotime("-1months")),0,16); ?>" />
 	</td>
 </tr>
 <tr class="form-group">
@@ -2121,7 +2119,22 @@ function show_create_cario_dialog()
 	cms_ctype_content = cms_ctype_content.concat(["<option value='C'>汽車</option>"]);
 	cms_ctype_content = cms_ctype_content.concat(["<option value='M'>機車</option>"]);
 	$("#cms_ctype_box").html('').html(cms_ctype_content.join(''));
-	
+    
+    //編輯時間
+    var mydate = new Date();
+    var month = mydate.getMonth() + 1;
+    var day = mydate.getDate();
+    var hours = mydate.getHours();
+    var minutes = mydate.getMinutes();
+  
+    month = (month.toString().length == 1) ? ("0" + month) : month;
+    day = (day.toString().length == 1) ? ("0" + day) : day;
+    hours = (hours.toString().length == 1) ? ("0" + hours) : hours;
+    minutes = (minutes.toString().length == 1) ? ("0" + minutes) : minutes;
+    var result = mydate.getFullYear() + '-' + month + '-' + day+'T'+hours+':'+minutes;
+    //設定現在時間
+    $("#cms_time_box").val(result.toString());
+
 	// 車號
 	$("#cms_lpr").val('');
 	
