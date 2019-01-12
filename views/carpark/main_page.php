@@ -2131,8 +2131,6 @@ function show_create_cario_dialog()
 // 完成
 function do_create_cario()
 {
-	if (!confirm("確認資料無誤並送出 ?")) return false; 
-	
 	var station_no = AltobObject.xvars["create_cario_info"]["station_no"];
 	var io = $("#sel_cms_io_" + station_no).val();
 	var ctype = $("#sel_cms_ctype_" + station_no).val();
