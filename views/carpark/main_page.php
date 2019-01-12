@@ -2032,6 +2032,11 @@ function logout(event)
 		<div id="cms_io_box"/>
 	</td>
 </tr>
+<td style="text-align:right;">時間</td>
+	<td style="text-align:left;">
+		<input id="cms_time_box" name="cms_time" type="datetime" class="form-control" style="font-size:48px;height:56px;" readonly="" disabled="disabled">
+	</td>
+</tr>
 <tr class="form-group">
 <td style="text-align:right;">車種</td>
 	<td style="text-align:left;">
@@ -2092,6 +2097,9 @@ function show_create_cario_dialog()
 	cms_io_content = cms_io_content.concat(["<option value='O'>離場</option>"]);
 	$("#cms_io_box").html('').html(cms_io_content.join(''));
 	
+    //時間
+    $("#cms_time_box").html('').html(date("Y-m-d H:m:s"));
+
 	// 車種
 	var cms_ctype_content = [];
 	cms_ctype_content = cms_ctype_content.concat(["<select id='sel_cms_ctype_", AltobObject.station_no, "'><option value='choice'>請選擇</option>"]);
@@ -2114,7 +2122,8 @@ function do_create_cario()
 	var io = $("#sel_cms_io_" + station_no).val();
 	var ctype = $("#sel_cms_ctype_" + station_no).val();
 	var lpr = $("#cms_lpr").val();
-	
+	var time = $("#cms_time").val();
+
 	if(!(station_no && lpr))
 	{
 		alertify_msg("資料不足。。");
@@ -2133,6 +2142,7 @@ function do_create_cario()
 			"ivsno": 0,	//  都帶 0
 			"io":io,
 			"ctype":ctype,
+            "time":time
 			"lpr":lpr
         },
 		error:function(xhr, ajaxOptions, thrownError)
