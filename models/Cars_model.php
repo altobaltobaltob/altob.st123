@@ -389,6 +389,10 @@ class Cars_model extends CI_Model
 					if(isset($parms['free_time']) && $parms['free_time'] > 0)
 					{
 						$data['out_before_time'] = date('Y-m-d H:i:s', strtotime(" + {$parms['free_time']} minutes",strtotime($parms['in_time'])));
+						if($data['out_before_time'] < $data['in_time'])
+						{
+							$data['out_before_time']=$data['in_time'];
+						}
 					}
 					else
 					{
