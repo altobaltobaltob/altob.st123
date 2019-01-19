@@ -87,7 +87,7 @@ class Pks extends CC_Controller
 		
 		// 調整 pksno 為 pks 格式
 		if (strpos($parms['pksno'], 'B') !== false){
-			if($parms['sno'] = '40709')
+			if($parms['sno'] == '40709')
 				$parms['pksno'] = '8' . intval(preg_replace('/[^0-9\-]/', '', $parms['pksno']));	// 地下 B
 			else {
 				$parms['pksno'] = '9' . intval(preg_replace('/[^0-9\-]/', '', $parms['pksno']));	// 地下 B
