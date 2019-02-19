@@ -10,6 +10,9 @@ class Qcar extends CI_Controller
 
 	function __construct()
 	{
+
+		header('Location: http://59.120.213.62/qcar2.html');
+    	exit;
 		parent::__construct();
         // ----- 程式開發階段log設定 -----
         if (@ENVIRONMENT == 'development')
