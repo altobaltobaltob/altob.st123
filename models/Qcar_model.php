@@ -23,7 +23,7 @@ class Qcar_model extends CI_Model
                 limit 1"; 
         $rows = $this->db->query($sql)->row_array();
                 
-		/*123
+		/*123456
         if (!empty($rows['pic_name']))
         {   
         	// $rows['pic_name'] = str_replace('.jpg', '', $rows['pic_name']); 
