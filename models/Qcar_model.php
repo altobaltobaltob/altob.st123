@@ -30,7 +30,7 @@ class Qcar_model extends CI_Model
         	$rows['pic_name'] = $rows['pic_name']; 
         }   666
         else	// 查無資料, 啟用模糊比對
-        {                                
+        {                  777              
         	$len = strlen($lpr);
             if ($len >= 5)	// 檢查車牌號碼長度 
             {
