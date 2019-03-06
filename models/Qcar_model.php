@@ -28,7 +28,7 @@ class Qcar_model extends CI_Model
         {   123456
         	// $rows['pic_name'] = str_replace('.jpg', '', $rows['pic_name']); 
         	$rows['pic_name'] = $rows['pic_name']; 
-        }   
+        }   666
         else	// 查無資料, 啟用模糊比對
         {                                
         	$len = strlen($lpr);
