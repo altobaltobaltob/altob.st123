@@ -18,7 +18,7 @@ class Qcar_model extends CI_Model
         		from pks p, pks_group_member m, pks_groups g 
                 where p.pksno = m.pksno  
                 and m.group_id = g.group_id
-                and g.group_type > 0
+                and g.group_type = 1
                 and p.lpr = '{$lpr}'
                 limit 1"; 
         $rows = $this->db->query($sql)->row_array();
