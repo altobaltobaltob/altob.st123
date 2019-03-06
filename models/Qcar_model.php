@@ -25,7 +25,7 @@ class Qcar_model extends CI_Model
                 
 		/*123456
         if (!empty($rows['pic_name']))
-        {   
+        {   123456
         	// $rows['pic_name'] = str_replace('.jpg', '', $rows['pic_name']); 
         	$rows['pic_name'] = $rows['pic_name']; 
         }   
