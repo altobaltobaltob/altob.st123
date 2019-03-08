@@ -405,6 +405,12 @@ class Carpark extends CC_Controller
 			$group_id = isset($msg_arr[1]) && $msg_arr[1] == 2 ? 'M888' : 'C888';
 			$value = isset($msg_arr[2]) ? $msg_arr[2] : 0;
 			$result = $data_model->force_sync_888($first_station_no, $group_id, $value);
+
+			if($first_station_no = 40668)
+			{
+				$this->load->model('pks_model');
+				$this->pks_model->carno_updata_40668();
+			}
 			trigger_error($LOG_FLAG . __FUNCTION__ . "..{$first_station_no}|{$group_id}|{$value}..result..{$result}..");
 		}
 		
