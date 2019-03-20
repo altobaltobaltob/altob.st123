@@ -394,6 +394,10 @@ class Carpayment_model extends CI_Model
 		{
 			$station_local_ip = '192.168.9.201';
 		}
+		else if($cario['station_no'] == 12171)
+		{
+			$station_local_ip = '192.168.0.201';
+		}
 		else
 		{
 			$station_local_ip = STATION_LOCAL_IP;
