@@ -114,7 +114,13 @@ class Sync_data_model extends CI_Model
 			else
 			{
 				$data['renum'] = 0;
-				$this->db->where($where_group_arr)->update('pks_groups', $data);	
+				$this->db->where($where_group_arr)->update('pks_groups', $data);
+				//頂樓無在席的場
+				if($data['station_no'] = 12171)
+				{
+					$this->load->model('pks_model');
+					$this->pks_model->carno_updata_12171();
+				}
 			}
 		}
 		$this->db->trans_complete();
