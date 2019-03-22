@@ -362,7 +362,7 @@ class Pks_model extends CI_Model
 	//12171金城特殊計數
 	public function carno_updata_12171()
 	{
-		$sql = "SELECT (B.parked - A.sum_parked) as parked, (B.tot - A.sum_tot) - (B.parked - A.sum_parked) as availables FROM (SELECT SUM(parked) as sum_parked,SUM(tot) as sum_tot FROM pks_groups WHERE group_id !=\"RF\" AND group_type > 1) A, pks_groups B WHERE B.group_id = \"C888\"";
+		$sql = "SELECT (B.parked - A.sum_parked) as parked, (B.tot - A.sum_tot) - (B.parked - A.sum_parked) as availables FROM (SELECT SUM(parked) as sum_parked,SUM(tot) as sum_tot FROM pks_groups WHERE group_id !=\"RF\" AND group_type > 1) A, pks_groups B WHERE B.group_id = \"P1\"";
 		$result = $this->db->query($sql)->result_array();
 		$sql = "UPDATE `pks_groups` SET `parked`={$result[0]['parked']},`availables`={$result[0]['availables']} WHERE group_id = \"RF\";";
 		$this->db->query($sql);
