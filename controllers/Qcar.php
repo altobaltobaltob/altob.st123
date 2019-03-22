@@ -10,8 +10,9 @@ class Qcar extends CI_Controller
 
 	function __construct()
 	{
-
-		header('Location: http://59.120.213.62/qcar2.html');
+		$client_ip = $this->my_ip();
+		
+		header('Location: http://{$client_ip}/qcar2.html');
     	exit;
 		parent::__construct();
         // ----- 程式開發階段log設定 -----
@@ -67,7 +68,23 @@ class Qcar extends CI_Controller
 		// ----- 歐付寶金流 (end) -----
 	}
 
+	// 取得 IP
+	function my_ip()
+	{
+		if (getenv('HTTP_X_FORWARDED_FOR')) 
+		{
+			$ip = getenv('HTTP_X_FORWARDED_FOR');
+		}
+		elseif (getenv('HTTP_X_REAL_IP')) 
+		{
+			$ip = getenv('HTTP_X_REAL_IP');
+		}
+		else {
+			$ip = $_SERVER['REMOTE_ADDR'];
+		}
 
+		return $ip;
+	}
 
     // 發生錯誤時集中在此處理
 	public function error_handler($errno, $errstr, $errfile, $errline, $errcontext)
