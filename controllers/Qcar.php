@@ -12,7 +12,7 @@ class Qcar extends CI_Controller
 	{
 		$client_ip = $this->my_ip();
 		
-		header('Location: http://{$client_ip}/qcar2.html');
+		header('Location: http://'.$client_ip.'/qcar2.html');
     	exit;
 		parent::__construct();
         // ----- 程式開發階段log設定 -----
