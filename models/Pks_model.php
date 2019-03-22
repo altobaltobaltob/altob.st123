@@ -174,7 +174,7 @@ class Pks_model extends CI_Model
         }
 
 		// 找出與與此車位相關的群組
-    	$sql = "select group_id, tot, renum, availables
+    	$sql = "select group_id, tot, renum, availables, station_no
         		from pks_groups
 				where group_id in
         		(select group_id from pks_group_member where station_no = {$parms['sno']} and pksno = {$parms['pksno']})";
@@ -202,6 +202,15 @@ class Pks_model extends CI_Model
 
 				//$this->vars['mqtt']->publish(MQ_TOPIC_SUBLEVEL, "{$rows['group_id']},{$group_va_pad}", 0);			// 送出剩餘車位數給字幕機
 				$this->mq_send(MQ_TOPIC_SUBLEVEL, "{$rows['group_id']},{$group_va_pad}");
+
+				if($rows['station_no'] == 12171)
+				{
+					$this->carno_updata_12171();
+				}
+				else if($rows['station_no'] == 40668)
+				{
+					$this->carno_updata_40668();
+				}
 			}
         }
 		
