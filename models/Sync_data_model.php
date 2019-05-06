@@ -537,7 +537,48 @@ class Sync_data_model extends CI_Model
 				}
 		
 		//trigger_error(SYNC_DATA_LOG_TITLE . '.. test ..' . print_r($data_member_arr, true));
-		
+			
+				
+		$this->db->trans_start();
+		// 清空
+		$this->db->empty_table('members');
+		$this->db->trans_complete();
+		if ($this->db->trans_status() === FALSE)
+		{
+			trigger_error(SYNC_DATA_LOG_TITLE . '.. sync members Delete fail ..'. '| last_query: ' . $this->db->last_query());
+			$Sync_Ok = 0;
+		}
+		$this->db->empty_table('member_car');
+		$this->db->trans_complete();
+		if ($this->db->trans_status() === FALSE)
+		{
+			trigger_error(SYNC_DATA_LOG_TITLE . '.. sync member_car Delete fail ..'. '| last_query: ' . $this->db->last_query());
+			$Sync_Ok = 0;
+		}
+		// 建立 members
+		$this->db->insert_batch('members', $data_member_arr);
+		$this->db->trans_complete();
+		if ($this->db->trans_status() === FALSE)
+		{
+			trigger_error(SYNC_DATA_LOG_TITLE . '.. sync members Insert fail ..'. '| last_query: ' . $this->db->last_query());
+			$Sync_Ok = 0;
+		}
+
+		// 建立 member_car
+		$this->db->insert_batch('member_car', $data_car_arr);
+		$this->db->trans_complete();
+		if ($this->db->trans_status() === FALSE)
+		{
+			trigger_error(SYNC_DATA_LOG_TITLE . '.. sync member_car Insert fail ..'. '| last_query: ' . $this->db->last_query());
+			$Sync_Ok = 0;
+		}
+		if ($Sync_Ok == 0)
+		{
+			return 'fail';
+		}
+		else{
+		trigger_error(SYNC_DATA_LOG_TITLE . '.. sync completed ..');
+		return 'ok';}
 		
 	}
 	
