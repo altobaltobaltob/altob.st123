@@ -449,6 +449,10 @@ class Carpayment_model extends CI_Model
 				return 2;	// 2: 北車西上 (機車)
 			}
 		}
+		else if($cario['station_no'] == 40712)
+		{
+			return 2;
+		}
 		
 		return 1;			// 預設值
 	}
