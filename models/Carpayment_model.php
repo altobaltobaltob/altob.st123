@@ -300,7 +300,7 @@ class Carpayment_model extends CI_Model
 	// 取得進場資訊 (模糊比對)
 	function q_fuzzy_pks($word)
 	{
-		if(empty($word) || strlen($word) < 4 || strlen($word) > 10)
+		if(empty($word) || strlen($word) < 3 || strlen($word) > 8)
 		{
 			return null;
 		}
@@ -458,7 +458,7 @@ class Carpayment_model extends CI_Model
 	}
 	
 	// 建立博辰查詢入場時間資料
-	function gen_query_data($lpr)
+	function gen_query_data($lpr,$station_no)
 	{
 		$data = array();
 		
@@ -503,7 +503,8 @@ class Carpayment_model extends CI_Model
         $result = $this->db->select("date_format(start_date, '%Y/%m/%d') as start_date, date_format(end_date,'%Y/%m/%d') as end_date")
         		->from('members')	
                 ->where(array(
-						'lpr' => $lpr, 
+						'lpr' => $lpr,
+						'station_no' => $station_no,
 						'start_date <' => $this->vars['date_time'],
 						'end_date >=' => $this->vars['date_time'])
 						, false)
@@ -573,14 +574,14 @@ class Carpayment_model extends CI_Model
 			{
 				$result_lpr = $rows['lpr'];
 				$ticket_no = $rows['ticket_no'];
-				
+				$station_no = $rows['station_no'];
 				if($result_lpr == 'NONE')
 				{
 					$tmp_data = $this->gen_query_data_type4($ticket_no);	// 備緩搜尋
 				}
 				else
 				{
-					$tmp_data = $this->gen_query_data($result_lpr);			// 模糊搜尋
+					$tmp_data = $this->gen_query_data($result_lpr,$station_no);			// 模糊搜尋
 				}
 				
 				if($tmp_data['ticket'] == 1)

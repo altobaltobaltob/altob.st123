@@ -130,7 +130,7 @@ class Cars_model extends CI_Model
             }
         }
 
-        $rows = $this->get_member($parms['lpr']);
+        $rows = $this->get_member($parms['lpr'],$parms['sno']);
 
         return $this->save_db_io($parms, $rows, true);
     }
@@ -158,7 +158,7 @@ class Cars_model extends CI_Model
             }
         }
 
-        $rows = $this->get_member($parms['lpr']);
+        $rows = $this->get_member($parms['lpr'],$parms['sno']);
 
         return $this->save_db_io($parms, $rows);
     }
@@ -305,9 +305,18 @@ class Cars_model extends CI_Model
 					}
 					
 					// 訊息
-					if ($rows['member_no'] == 0)
+					// 訊息
+					if ($rows['member_no'] > 0)
 					{
-						$ck = md5($parms['lpr']);
+						// [msg] 4: 會員, 開門
+						$msg_id = 4;
+							
+						// 會員開門
+						$this->member_opendoors($parms);
+					}
+					else
+					{
+						/*$ck = md5($parms['lpr']);
 						$jdata = file_get_contents("http://localhost/allpa_service.html/get_allpa_valid_user/{$parms['lpr']}/{$ck}");
 						$results = json_decode($jdata, true);
 						if($results['result_code'] == 0)
@@ -319,21 +328,13 @@ class Cars_model extends CI_Model
 							$this->member_opendoors($parms);
 						}
 						else
-						{
+						{*/
 							// [msg] 11: 臨停車, 開門
 							$msg_id = 11;
 							
 							// 臨停開門
 							$this->temp_opendoors($parms);
-						}
-					}
-					else
-					{
-						// [msg] 4: 會員, 開門
-						$msg_id = 4;
-							
-						// 會員開門
-						$this->member_opendoors($parms);
+						//}
 					}
 					
 					// 字幕
@@ -768,7 +769,7 @@ class Cars_model extends CI_Model
 
 
     // 檢查是否合法會員或VIP資料
-	public function get_member($lpr)
+	public function get_member($lpr,$sno)
 	{
     	$where_arr = array
         (
@@ -794,8 +795,12 @@ class Cars_model extends CI_Model
                 where c.member_no = m.member_no
                 and c.start_time <= '{$this->now_str}'
                 and c.end_time >= '{$this->now_str}'
-                and c.lpr = '{$lpr}'
-                limit 1";
+                and c.lpr = '{$lpr}' ";
+				if(!empty($sno) && $sno > 0)
+				{
+					$sql = "{$sql}and c.station_no = {$sno} ";
+				}
+                $sql = "{$sql}limit 1";
 
         $rows = $this->db->query($sql)->row_array();
 		
