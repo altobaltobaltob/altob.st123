@@ -606,6 +606,13 @@ class Cars_model extends CI_Model
 									// [mitac] 要求 mitac 扣款 START
 									$this->call_mitac_pay($parms['lpr'], $parms['ivsno'], $rows_cario);
 									// [mitac] 要求 mitac 扣款 END
+
+									// [宏奇系統] 離場車辨成功流程 START
+									if($parms['sno'] == 40671 || $parms['sno'] == 40672 || $parms['sno'] == 40673)
+									{
+										$this->acarps($parms['lpr']);
+									}
+									// [宏奇系統] 離場車辨成功流程 END
 								}
 								
 								return true;
@@ -697,6 +704,13 @@ class Cars_model extends CI_Model
 								// [mitac] 要求 mitac 扣款 START
 								$this->call_mitac_pay($parms['lpr'], $parms['ivsno'], $rows_cario);
 								// [mitac] 要求 mitac 扣款 END
+
+								// [宏奇系統] 離場車辨成功流程 START
+								if($parms['sno'] == 40671 || $parms['sno'] == 40672 || $parms['sno'] == 40673)
+								{
+									$this->acarps($parms['lpr']);
+								}
+								// [宏奇系統] 離場車辨成功流程 END
 							}
 							
 							return true;
@@ -1675,6 +1689,89 @@ class Cars_model extends CI_Model
 		}catch (Exception $e){
 			trigger_error(__FUNCTION__ . 'error:'.$e->getMessage());
 		}
+	}
+
+	public function acarps($lpr) //出場車辨 送 API 至宏奇
+    {
+		$this->load->model('api/Master_db_model','master_db');
+        $sel_cario=$this->master_db->sel_cario($lpr);
+
+		if(count($sel_cario)>0)
+		{
+			$cario_no=$sel_cario[0]['cario_no'];            //入場流水號
+            $station_no=$sel_cario[0]['station_no'];        //場站代碼
+            $member_no=$sel_cario[0]['member_no'];          //會員代碼
+            $obj_id=$sel_cario[0]['obj_id'];                        //會員代碼
+            $in_out=$sel_cario[0]['in_out'];
+
+            $in_time=$sel_cario[0]['in_time']; //入場時間
+
+            $Get_billing_fee= "http://altapi.altob.com.tw/fee_api/Get_billing_fee"; //檢查現場入場時間
+
+            $start_time=$in_time;
+            $end_time=date('Y-m-d H:i:s');
+            $ch0 = curl_init();
+
+            curl_setopt($ch0, CURLOPT_HEADER, 0);
+            curl_setopt($ch0, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($ch0, CURLOPT_URL, $Get_billing_fee);
+            curl_setopt($ch0, CURLOPT_POST, true);
+            curl_setopt($ch0, CURLOPT_POSTFIELDS, http_build_query(array("station_no"=>$station_no, "start_time"=>$start_time, "end_time"=>$end_time)));
+
+            $totalfee0 = curl_exec($ch0);
+            curl_close($ch0);
+
+            $totalfee=isset($totalfee0) ? $totalfee0:0 ;
+			
+			//注意ip有轉port需確認SELINUX要=disabled，位於/etc/selinux/config
+            $acarps_ip="192.168.10.82";
+            $acarps_port="8081";
+            $apijson= "http://".$acarps_ip.":".$acarps_port."/lprpayout"; //送宏奇API
+            //print_r($apijson);exit;
+            $i=1;
+            $jsonarray=array("lpr"=>$obj_id, "start_time"=>$start_time, "end_time"=>$end_time, "totalfee"=>$totalfee);
+            $json=json_encode($jsonarray,true);
+			trigger_error("sendurl:".$apijson);
+			trigger_error( "sendacarps:".$json);
+            while(true){
+				try{
+					$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $apijson);
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
+					curl_setopt($ch, CURLOPT_POST, TRUE);
+					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,5);
+					curl_setopt($ch, CURLOPT_TIMEOUT, 5); //timeout in seconds
+					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array("data"=>$json)));
+					curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));  
+					$result = curl_exec($ch);
+					trigger_error(curl_error($ch));
+					curl_close($ch);
+					if($result != false)
+					{
+						if($result=="OK")
+						{
+							trigger_error( "sendacarps:ok");
+							break;
+						}
+					}
+					else{trigger_error( "sendacarps_error");}
+					
+					if($i==4)
+						break;
+				}catch (Exception $e)
+				{
+					trigger_error( "sendacarps_try_error".$e);
+					break;
+				}
+				$i++;
+            }
+        }
+    }
+
+	public function save_setting($data){
+    	$myfile = fopen("/home/data/alt_acarps_log.json", "a+") or die("Unable to open file!");
+		fwrite($myfile, $data);
+		fclose($myfile);
 	}
 	
 }
