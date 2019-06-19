@@ -1742,7 +1742,7 @@ class Cars_model extends CI_Model
 					curl_setopt($ch, CURLOPT_CONNECTTIMEOUT ,5);
 					curl_setopt($ch, CURLOPT_TIMEOUT, 5); //timeout in seconds
 					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query(array("data"=>$json)));
-					curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));  
+					curl_setopt($ch, CURLOPT_HTTPHEADER, false);  
 					$result = curl_exec($ch);
 					trigger_error(curl_error($ch));
 					curl_close($ch);
