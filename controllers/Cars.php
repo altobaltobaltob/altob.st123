@@ -132,7 +132,10 @@ class Cars extends CC_Controller
 		// 執行
 		$parms = $this->uri->uri_to_assoc(3);
 		$parms['lpr'] = urldecode($parms['lpr']); // 中文車牌
-		
+
+		//傳送進出資料給新後台
+		$this->app_model()->mq_send('opendoor_vm',json_encode($parms,true));
+
 		$return_msg = $this->app_model()->opendoor_lprio($parms);
 		trigger_error(__FUNCTION__ . "|{$parms['sno']}|{$parms['ivsno']}|{$parms['io']}|{$parms['lpr']}|return_msg|" . $return_msg);
 	}
