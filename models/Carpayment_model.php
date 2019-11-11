@@ -326,7 +326,7 @@ class Carpayment_model extends CI_Model
 		$sql = "SELECT obj_id as lpr, ticket_no
 				FROM cario
 				WHERE {$fuzzy_statement} AND finished = 0 AND err = 0
-				AND out_before_time > DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 5 DAY)
+				AND out_before_time > DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 30 DAY)
 				GROUP BY obj_id 
 				ORDER BY out_before_time DESC";
 		$retults = $this->db->query($sql)->result_array();
